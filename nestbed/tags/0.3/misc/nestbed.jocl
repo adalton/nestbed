@@ -1,0 +1,34 @@
+<object class="org.apache.commons.dbcp.PoolableConnectionFactory"
+        xmlns="http://apache.org/xml/xmlns/jakarta/commons/jocl">
+
+    <!-- The first argument is the ConnectionFactory -->
+    <object class="org.apache.commons.dbcp.DriverManagerConnectionFactory">
+        <string value="jdbc:mysql://localhost:3306/tosbed?user=tosbed&amp;password=1tos.bed9"/>
+        <object class="java.util.Properties" null="true"/>
+    </object>
+
+    <!-- The next argument is the ObjectPool -->
+    <object class="org.apache.commons.pool.impl.GenericObjectPool">
+        <object class="org.apache.commons.pool.PoolableObjectFactory" null="true"/>
+        <int     value="10"/>    <!-- Max active -->
+        <byte    value="1"/>     <!-- When exhausted action, 0 = fail, 1 = block, 2 = grow -->
+        <long    value="2000"/>  <!-- Max wait -->
+        <int     value="10"/>    <!-- Max idle -->
+        <boolean value="false"/> <!-- Test on borrow -->
+        <boolean value="false"/> <!-- Test on return -->
+        <long    value="10000"/> <!-- Time between eviction runs -->
+        <int     value="5"/>     <!-- Number of connections to test per eviction run -->
+        <long    value="5000"/>  <!-- Min evictable idle time -->
+        <boolean value="true"/>  <!-- Test while idle -->
+    </object>
+
+    <!-- The next argument is the KeyedObjectPoolFactory -->
+    <object class="org.apache.commons.pool.impl.StackKeyedObjectPoolFactory">
+        <int value="5"/> <!-- max idle -->
+    </object>
+
+    <string  value="SELECT COUNT(*) FROM DUAL"/> <!-- validation query -->
+    <boolean value="false"/>                     <!-- default read only -->
+    <boolean value="true"/>                      <!-- default auto commit -->
+</object>
+<!-- vim:  set filetype=xml: -->
