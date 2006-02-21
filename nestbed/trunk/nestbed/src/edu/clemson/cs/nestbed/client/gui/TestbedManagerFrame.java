@@ -34,6 +34,8 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -48,6 +50,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -130,6 +133,13 @@ public class TestbedManagerFrame extends JFrame {
         Container c = getContentPane();
         c.setLayout(new BorderLayout());
         c.add(buildListPanel(),   BorderLayout.CENTER);
+
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                doExit();
+            }
+        });
     }
 
 
@@ -187,7 +197,7 @@ public class TestbedManagerFrame extends JFrame {
         
         exit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+                doExit();
             }
         });
 
@@ -196,6 +206,19 @@ public class TestbedManagerFrame extends JFrame {
         return file;
     }
 
+    private void doExit() {
+        int choice;
+
+        choice = JOptionPane.showConfirmDialog(this,
+                                               "Do you with to exit NESTBed?",
+                                               "Exit Confirmation",
+                                               JOptionPane.YES_NO_OPTION,
+                                               JOptionPane.QUESTION_MESSAGE);
+        if (choice == JOptionPane.YES_OPTION) {
+            log.fatal("Application shutdown per user request.");
+            System.exit(0);
+        }
+    }
 
     private final JMenu buildProjectMenu() {
         final JMenu     menu          = new JMenu("Project");
