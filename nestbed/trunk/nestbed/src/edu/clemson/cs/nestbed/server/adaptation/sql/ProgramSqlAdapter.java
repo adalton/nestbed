@@ -110,6 +110,7 @@ public class ProgramSqlAdapter implements ProgramAdapter {
                            "'" + description + "', " +
                            "'" + "<unknown>" + "')";
 
+            log.debug("SQL Query:\n" + query);
             connection = DriverManager.getConnection(CONN_STR);
             statement  = connection.createStatement();
             statement.executeUpdate(query);

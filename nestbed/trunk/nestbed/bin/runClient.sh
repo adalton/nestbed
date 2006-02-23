@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CLASSPATH="/home/adalton/src/java/nestbed/dist/nestbed-0.3.jar"
+CLASSPATH="/home/adalton/src/java/nestbed/dist/nestbed.jar"
 CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/log4j.jar"
 CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/useful.jar"
 CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/commons-logging.jar"

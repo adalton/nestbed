@@ -170,6 +170,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     program = programAdapter.updateProgramPath(program.getID(),
                                                          dir.getAbsolutePath());
 
+                    weaveInComponents(dir);
+
                     notifyObservers(Message.COMPILE_STARTED, null);
 
                     StringBuffer output      = new StringBuffer();
@@ -232,6 +234,12 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         });
     }
 
+    private void weaveInComponents(File directory) {
+        log.debug("Weaving in components in directory " + directory);
+
+        File makefile = new File(directory + "/Makefile");
+        log.debug("Makefile:  " + makefile);
+    }
 
     public void deleteProgram(int programID) throws RemoteException {
         try {
