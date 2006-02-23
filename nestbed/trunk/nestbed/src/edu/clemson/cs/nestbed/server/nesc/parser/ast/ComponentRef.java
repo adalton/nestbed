@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * ComponentRef.java
  *

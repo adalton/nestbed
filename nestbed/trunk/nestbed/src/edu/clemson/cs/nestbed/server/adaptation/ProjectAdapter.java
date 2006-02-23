@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * ProjectAdapter.java
  *

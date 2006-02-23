@@ -1,4 +1,5 @@
 #!/bin/bash
+# $Id$
 java java_cup.Main -package edu.cs.clemson.nestbed.server.nesc.parser \
                    -parser  Parser \
                    -symbols Token < ../src/edu/clemson/cs/nestbed/server/nesc/parser/nesc.cup \

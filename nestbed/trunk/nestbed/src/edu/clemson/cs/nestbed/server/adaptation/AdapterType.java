@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * AdapterType.java
  *

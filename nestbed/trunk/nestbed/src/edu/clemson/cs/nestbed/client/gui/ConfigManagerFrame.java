@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * ConfigManagerFrame.java
  *

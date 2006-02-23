@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * AdaptationException.java
  *

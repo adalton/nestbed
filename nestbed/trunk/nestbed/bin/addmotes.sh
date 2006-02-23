@@ -1,4 +1,5 @@
 #!/bin/bash
+# $Id$
 
 MOTES=$(ls /dev/motes)
 

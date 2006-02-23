@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * MoteTypeAdapter.java
  *

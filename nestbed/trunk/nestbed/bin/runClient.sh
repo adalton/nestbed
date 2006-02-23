@@ -1,4 +1,5 @@
 #!/bin/bash
+# $Id$
 
 CLASSPATH="/home/adalton/src/java/nestbed/dist/nestbed.jar"
 CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/log4j.jar"

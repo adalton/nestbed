@@ -1,3 +1,4 @@
+/* $Id$ */
 module RadioControlM {
     provides interface StdControl;
     uses     interface Leds;

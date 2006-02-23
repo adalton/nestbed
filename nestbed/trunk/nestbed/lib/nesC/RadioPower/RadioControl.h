@@ -1,3 +1,4 @@
+/* $Id$ */
 #ifndef __RADIO_CONTROL_H
 #define __RADIO_CONTROL_H
 

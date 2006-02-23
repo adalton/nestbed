@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * ConfigurationDecls.java
  *

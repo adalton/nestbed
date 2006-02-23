@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * MoteManagerImpl.java
  *

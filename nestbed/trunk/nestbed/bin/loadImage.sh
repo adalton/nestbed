@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+# $Id$
 
 JAVA_OPTS="-Djdbc.drivers=com.mysql.jdbc.Driver:org.apache.commons.dbcp.PoolingDriver -Djava.security.policy=/home/adalton/src/java/nestbed/java.policy"
 

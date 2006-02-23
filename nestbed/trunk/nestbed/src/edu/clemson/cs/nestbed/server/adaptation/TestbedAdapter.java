@@ -1,3 +1,4 @@
+/* $Id$ */
 /*
  * TestbedAdapter.java
  *
