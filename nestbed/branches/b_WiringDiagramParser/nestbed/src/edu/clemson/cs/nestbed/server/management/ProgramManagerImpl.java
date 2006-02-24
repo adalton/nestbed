@@ -33,6 +33,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,9 +44,12 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -69,6 +73,7 @@ import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
+import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 
 
 public class ProgramManagerImpl extends    RemoteObservableImpl
@@ -230,17 +235,64 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     log.error(msg, ex);
                 } catch (AdaptationException ex) {
                     log.error("AdaptationException:", ex);
+                } catch (Exception ex) {
+                    log.error("Exception:", ex);
                 }
             }
         });
     }
 
-    private void weaveInComponents(File directory) {
+
+    private void weaveInComponents(File directory)
+                                    throws FileNotFoundException, Exception {
         log.debug("Weaving in components in directory " + directory);
 
-        File makefile = new File(directory + "/Makefile");
-        log.debug("Makefile:  " + makefile);
+        File   makefile      = new File(directory + "/Makefile");
+        String component     = findComponentFromMakefile(makefile);
+        File   componentNesc = new File(directory + "/" +
+                                        component + ".nc");
+
+        WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
+
+        weaver.addComponentReference("RadioControlC",
+                                     "NestbedRadioControl");
+        weaver.addConnection("Main",                "StdControl",
+                             "NestbedRadioControl", "StdControl");
+        weaver.regenerateNescSource();
     }
+
+
+    private String findComponentFromMakefile(File makefile)
+                                                throws FileNotFoundException,
+                                                       Exception {
+        Scanner scanner   = new Scanner(makefile);
+        String  component = null;
+
+        log.debug("Makefile:  " + makefile);
+
+        try {
+            while (scanner.hasNext() && component == null) {
+                String  line    = scanner.nextLine();
+                String  regExp  = "^COMPONENT=(\\S+)";
+                Pattern pattern = Pattern.compile(regExp);
+                Matcher matcher = pattern.matcher(line);
+
+                if (matcher.find()) {
+                    component = matcher.group(1);
+                }
+            }
+        } finally {
+            try { scanner.close(); } catch (Exception ex) { /* empty */ }
+        }
+
+
+        if (component == null) {
+            throw new Exception("No main component found in Makefile.");
+        }
+
+        return component;
+    }
+
 
     public void deleteProgram(int programID) throws RemoteException {
         try {
