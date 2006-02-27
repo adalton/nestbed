@@ -30,12 +30,9 @@ package edu.clemson.cs.nestbed.server.nesc.weaver;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,6 +51,7 @@ import edu.clemson.cs.nestbed.server.nesc.parser.ast.ComponentRef;
 import edu.clemson.cs.nestbed.server.nesc.parser.ast.Cuses;
 import edu.clemson.cs.nestbed.server.nesc.parser.ast.Endpoint;
 import edu.clemson.cs.nestbed.server.nesc.parser.ast.ParameterisedIdentifier;
+import edu.clemson.cs.nestbed.server.util.FileUtils;
 
 
 public class WiringDiagramWeaver {
@@ -65,13 +63,15 @@ public class WiringDiagramWeaver {
 
 
     public WiringDiagramWeaver(File nescFile) throws FileNotFoundException,
+                                                     IOException,
                                                      Exception {
-        log.debug("Parsing " + nescFile + " for wiring diagram.");
-
         this.nescFile       = nescFile;
         this.nescFileBackup = new File(nescFile + ".orig");
 
-        copyFile(nescFile, nescFileBackup);
+        FileUtils.copyFile(nescFile, nescFileBackup);
+
+
+        log.debug("Parsing " + nescFile + " for wiring diagram.");
 
         Lexer lexer   = new Lexer(nescFile);
         Parser parser = new Parser(lexer);
@@ -141,19 +141,5 @@ public class WiringDiagramWeaver {
         PrintWriter out = new PrintWriter(nescFile);
         out.println(component);
         out.close();
-    }
-
-
-    private void copyFile(File in, File out) throws FileNotFoundException,
-                                                    IOException {
-        FileChannel sourceChannel      = new FileInputStream(in).getChannel();
-        FileChannel destinationChannel = new FileOutputStream(out).getChannel();
-        try {
-            sourceChannel.transferTo(0, sourceChannel.size(),
-                                     destinationChannel);
-        } finally {
-            try { sourceChannel.close();      } catch (Exception ex) { }
-            try { destinationChannel.close(); } catch (Exception ex) { }
-        }
     }
 }
