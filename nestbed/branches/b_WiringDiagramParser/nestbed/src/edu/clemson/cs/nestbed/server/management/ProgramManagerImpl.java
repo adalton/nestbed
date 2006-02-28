@@ -67,9 +67,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.MoteManager;
 import edu.clemson.cs.nestbed.common.management.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
@@ -77,6 +79,8 @@ import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
+import edu.clemson.cs.nestbed.server.nesc.comm.MoteComm;
+import edu.clemson.cs.nestbed.server.nesc.comm.mig.PowerMessage;
 import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
 import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 
@@ -86,7 +90,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private final static Log log = LogFactory.getLog(ProgramManagerImpl.class);
 
-    //private final static int    MAX_THREADS = 20;
     private final static int    MAX_THREADS = 40;
     private final static File   TOS_ROOT    = new File("/tmp/nestbed");
     private final static String MAKE        = "/usr/bin/make";
@@ -97,6 +100,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
 
 
+    private MoteManager                          moteManager;
     private ProgramMessageSymbolManager          programMsgSymbolManager;
     private ProgramSymbolManager                 programSymbolManager;
     private MoteDeploymentConfigurationManager   mdcManager;
@@ -110,7 +114,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     public ProgramManagerImpl(ProgramMessageSymbolManager          pmtManager,
                               ProgramSymbolManager                 psManager,
-                              MoteDeploymentConfigurationManager   mdcManager)
+                              MoteDeploymentConfigurationManager   mdcManager,
+                              MoteManager                          moteManager)
                                                     throws RemoteException {
         super();
 
@@ -118,6 +123,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             this.programMsgSymbolManager = pmtManager;
             this.programSymbolManager    = psManager;
             this.mdcManager              = mdcManager;
+            this.moteManager             = moteManager;
             this.threadPool              = Executors.newFixedThreadPool(
                                                                 MAX_THREADS);
             this.managerLock             = new ReentrantReadWriteLock(true);
@@ -402,13 +408,14 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                         readLock.unlock();
                     }
 
+                    String          commPort       = "/dev/motes/" +
+                                                     moteSerialID;
                     ProcessBuilder  processBuilder = new ProcessBuilder(MAKE,
                                                   MAKEOPTS, 
                                                   program.getSourcePath(), 
                                                   tosPlatform, "nucleus",
                                                   "reinstall." + moteAddress,
-                                                  "bsl,/dev/motes/" +
-                                                  moteSerialID);
+                                                  "bsl," + commPort);
                     processBuilder.redirectErrorStream(true);
                     notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
                                     moteSerialID);
@@ -419,6 +426,10 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     int exitValue = process.exitValue();
 
                     if (exitValue == 0) {
+                        try { Thread.sleep(3000); } catch (Exception ex) { }
+                        setRadioPowerLevel(moteAddress, commPort, tosPlatform,
+                                           moteSerialID, programID);
+
                         notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
                                         moteSerialID);
                     } else {
@@ -429,15 +440,40 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     String msg = "process interrupted while waiting for " +
                                  "install";
                     log.error(msg, ex);
-                    //throw new RemoteException(msg, ex);
                 } catch (IOException ex) {
                     String msg = "I/O Exception while installing program";
 
                     log.error(msg, ex);
-                    //throw new RemoteException(msg, ex);
                 }
             }
         });
+    }
+
+
+    private void setRadioPowerLevel(int    address,     String commPort,
+                                    String tosPlatform, String moteSerialID,
+                                    int    programID) throws RemoteException,
+                                                             IOException {
+        log.debug("Setting radio power on mote with\n" +
+                  "    address:       " + address     + "\n" +
+                  "    commPort:      " + commPort    + "\n" +
+                  "    tosPlatform:   " + tosPlatform + "\n" +
+                  "    moteSerialID:  " + moteSerialID);
+
+        PowerMessage powerMessage = new PowerMessage();
+        Mote         mote         = moteManager.getMote(moteSerialID);
+        log.debug("Mote:  " + mote);
+        int          moteID       = mote.getID();
+        int          powerLevel   = mdcManager.
+                                      getMoteDeploymentConfigurationByProgramID(
+                                        moteID, programID).getRadioPowerLevel();
+        MoteComm     moteComm     = new MoteComm(address, commPort);
+
+        powerMessage.set_powerLevel((short) powerLevel);
+
+        moteComm.start();
+        moteComm.send(powerMessage);
+        moteComm.stop();
     }
 
 

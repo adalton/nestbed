@@ -47,6 +47,10 @@ public interface MoteDeploymentConfigurationManager extends RemoteObservable {
             getMoteDeploymentConfiguration(int projDepConfID,
                                            int moteID)  throws RemoteException;
 
+    public MoteDeploymentConfiguration
+                    getMoteDeploymentConfigurationByProgramID(int moteID,
+                                                              int programID)
+                                                        throws RemoteException;
 
     public List<MoteDeploymentConfiguration>
             getMoteDeploymentConfigurations(int projDepConfID)
