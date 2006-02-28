@@ -34,7 +34,7 @@ import java.util.List;
 
 
 public class AstNode {
-    public List<AstNode> getNodesOfType(Class<?extends AstNode> classType) {
+    public List<AstNode> getNodesOfType(Class classType) {
         List<AstNode> nodeList = new ArrayList<AstNode>();
         Field[]       fields   = this.getClass().getDeclaredFields();
 

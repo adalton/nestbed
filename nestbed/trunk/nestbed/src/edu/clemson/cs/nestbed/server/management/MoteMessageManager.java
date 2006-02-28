@@ -180,15 +180,11 @@ public class MoteMessageManager implements MessageListener {
             phoenixSource.shutdown();
             phoenixSource = null;
 
-            try {
-                packetSource.close();
-            } catch (IOException ex) {
-                log.warn("IOException while closing packet source\n", ex);
-            }
-            packetSource = null;
+            try { packetSource.close(); } catch (IOException ex) { }
 
-            moteIF  = null;
-            enabled = false;
+            packetSource = null;
+            moteIF       = null;
+            enabled      = false;
         }
     }
 

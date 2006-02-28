@@ -122,11 +122,12 @@ public class Server {
                                                 programSymbolManager);
 
         moteDepConfigManager  = new MoteDeploymentConfigurationManagerImpl();
+        moteManager           = new MoteManagerImpl();
         programManager        = new ProgramManagerImpl(progMsgSymbolManager,
                                                        programSymbolManager,
-                                                       moteDepConfigManager);
+                                                       moteDepConfigManager,
+                                                       moteManager);
         moteTypeManager       = new MoteTypeManagerImpl();
-        moteManager           = new MoteManagerImpl();
         moteTbAssignManager   = new MoteTestbedAssignmentManagerImpl();
         projDepConfigManager  = new ProjectDeploymentConfigurationManagerImpl(
                                                         moteTbAssignManager,

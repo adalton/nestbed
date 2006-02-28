@@ -30,6 +30,9 @@ package edu.clemson.cs.nestbed.server.nesc.parser;
 
 import java_cup.*;
 import java_cup.runtime.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 %%
 %public
@@ -48,12 +51,8 @@ import java_cup.runtime.*;
     private StringBuffer braceContent     = new StringBuffer();
     private int          braceCount       = 0;
 
-    public static void main(String[] args) throws Exception {
-        Lexer lexer = new Lexer(System.in);
-
-        while (!lexer.zzAtEOF) {
-            System.out.println(lexer.next_token());
-        }
+    public Lexer(File filename) throws FileNotFoundException {
+        this(new FileInputStream(filename));
     }
 
     private Symbol symbol(int type) {

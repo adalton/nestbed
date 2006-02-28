@@ -79,6 +79,20 @@ public class MoteManagerImpl extends    UnicastRemoteObject
     }
 
 
+    public synchronized Mote getMote(String moteSerialID)
+                                                    throws RemoteException {
+        Mote mote = null;
+
+        for (Mote i : motes.values()) {
+            if (i.getMoteSerialID().equals(moteSerialID)) {
+                mote = i;
+                break;
+            }
+        }
+
+        return mote;
+    }
+
     public synchronized List<Mote> getMoteList() throws RemoteException {
         return new ArrayList<Mote>(motes.values());
     }

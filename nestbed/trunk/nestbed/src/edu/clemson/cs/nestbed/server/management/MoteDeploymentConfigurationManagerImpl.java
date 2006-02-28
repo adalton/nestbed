@@ -87,6 +87,23 @@ public class MoteDeploymentConfigurationManagerImpl
         return findMoteDeploymentConfiguration(projDepConfID, moteID);
     }
 
+    public synchronized MoteDeploymentConfiguration
+                    getMoteDeploymentConfigurationByProgramID(int moteID,
+                                                              int programID)
+                                                        throws RemoteException {
+        MoteDeploymentConfiguration mdc = null;
+
+        for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+            if (       i.getMoteID() == moteID
+                    && i.getProgramID() == programID) {
+                mdc = i;
+                break;
+            }
+        }
+
+        return mdc;
+    }
+
 
     public List<MoteDeploymentConfiguration>
                     getMoteDeploymentConfigurations(int projDepConfID)
