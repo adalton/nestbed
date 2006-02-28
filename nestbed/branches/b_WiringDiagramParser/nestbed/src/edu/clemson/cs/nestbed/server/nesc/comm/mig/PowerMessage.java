@@ -9,7 +9,7 @@
  * mig java -java-classname=PowerMessage ../RadioControl.h PowerMessage -o PowerMessage.java
  */
 
-package edu.clemson.cs.nestbed.server.nesc.mig;
+package edu.clemson.cs.nestbed.server.nesc.comm.mig;
 
 
 public class PowerMessage extends net.tinyos.message.Message {
