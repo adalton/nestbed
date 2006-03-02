@@ -53,35 +53,29 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 public class ProjectManagerImpl extends    RemoteObservableImpl
                                 implements ProjectManager {
+    private final static ProjectManager instance;
+    private final static Log            log      = LogFactory.getLog(
+                                                    ProjectManagerImpl.class);
 
-    private final static Log log = LogFactory.getLog(ProjectManagerImpl.class);
+    private ProjectAdapter        projectAdapter;
+    private Map<Integer, Project> projects;
 
+    static {
+        ProjectManagerImpl impl = null;
 
-    private ProgramManager                        programManager;
-    private ProjectDeploymentConfigurationManager configManager;
-
-    private ProjectAdapter                        projectAdapter;
-    private Map<Integer, Project>                 projects;
-
-
-    public ProjectManagerImpl(
-                         ProgramManager                        programManager,
-                         ProjectDeploymentConfigurationManager configManager)
-                                                        throws RemoteException {
-        super();
         try {
-            this.programManager = programManager;
-            this.configManager  = configManager;
-
-            projectAdapter       = AdapterFactory.createProjectAdapter(
-                                                               AdapterType.SQL);
-            projects             = projectAdapter.readProjects();
-
-            log.debug("Projects read:\n" + projects);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProjectManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    public static ProjectManager getInstance() {
+        return instance;
     }
 
 
@@ -144,21 +138,40 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
 
     private void cleanupPrograms(int projectID) throws RemoteException {
-        List<Program> programList = programManager.getProgramList(projectID);
+        ProgramManager pm          = ProgramManagerImpl.getInstance();
+        List<Program>  programList = pm.getProgramList(projectID);
 
         for (Program i : programList) {
-            programManager.deleteProgram(i.getID());
+            pm.deleteProgram(i.getID());
         }
     }
 
 
     private void cleanupProjectDeploymentConfigurations(int projectID)
                                                         throws RemoteException {
+        ProjectDeploymentConfigurationManager pdcm =
+                        ProjectDeploymentConfigurationManagerImpl.getInstance();
         List<ProjectDeploymentConfiguration> configList =
-                           configManager.getProjectDeploymentConfigs(projectID);
+                                    pdcm.getProjectDeploymentConfigs(projectID);
 
         for (ProjectDeploymentConfiguration i : configList) {
-            configManager.deleteProjectDeploymentConfig(i.getID());
+            pdcm.deleteProjectDeploymentConfig(i.getID());
+        }
+    }
+
+
+    private ProjectManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            projectAdapter = AdapterFactory.createProjectAdapter(
+                                                              AdapterType.SQL);
+            projects       = projectAdapter.readProjects();
+
+            log.debug("Projects read:\n" + projects);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 }

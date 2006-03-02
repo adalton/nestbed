@@ -63,52 +63,29 @@ public class ProjectDeploymentConfigurationManagerImpl
                             extends    RemoteObservableImpl
                             implements ProjectDeploymentConfigurationManager {
 
-    private final static Log log =
-            LogFactory.getLog(ProjectDeploymentConfigurationManagerImpl.class);
+    private final static ProjectDeploymentConfigurationManager instance;
+    private final static Log log = LogFactory.getLog(
+                               ProjectDeploymentConfigurationManagerImpl.class);
 
-    private MoteTestbedAssignmentManager                 mtbaManager;
-    private MoteManager                                  moteManager;
-    private MoteTypeManager                              moteTypeManager;
-    private ProgramManager                               programManager;
-    private ProgramProfilingSymbolManager                progProfSymManager;
-    private ProgramProfilingMessageSymbolManager         progProfMsgSymManager;
-    private MoteDeploymentConfigurationManager           moteDepConfigMgr;
     private ProjectDeploymentConfigurationAdapter        projDepConfigAdapter;
     private Map<Integer, ProjectDeploymentConfiguration> projDepConfigs;
 
-
-    public ProjectDeploymentConfigurationManagerImpl(
-                MoteTestbedAssignmentManager         mtbaManager,
-                MoteDeploymentConfigurationManager   moteDepConfigMgr,
-                ProgramProfilingSymbolManager        progProfSymManager,
-                ProgramProfilingMessageSymbolManager progProfMsgSymManager,
-                MoteManager                          moteManager,
-                MoteTypeManager                      moteTypeManager,
-                ProgramManager                       programManager)
-                                                       throws RemoteException {
-        super();
+    static {
+        ProjectDeploymentConfigurationManagerImpl impl = null;
 
         try {
-            this.mtbaManager           = mtbaManager;
-            this.moteDepConfigMgr      = moteDepConfigMgr;
-            this.progProfSymManager    = progProfSymManager;
-            this.progProfMsgSymManager = progProfMsgSymManager;
-            this.moteManager           = moteManager;
-            this.moteTypeManager       = moteTypeManager;
-            this.programManager        = programManager;
-
-            projDepConfigAdapter  =
-                    AdapterFactory.createProjectDeploymentConfigurationAdapter(
-                                                            AdapterType.SQL);
-            projDepConfigs        =
-                    projDepConfigAdapter.readProjectDeploymentConfigurations();
-
-            log.debug("ProjectDeploymentConfigurations read:\n" +
-                      projDepConfigs);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProjectDeploymentConfigurationManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    public static ProjectDeploymentConfigurationManager getInstance() {
+        return instance;
     }
 
 
@@ -181,14 +158,17 @@ public class ProjectDeploymentConfigurationManagerImpl
             notifyObservers(Message.NEW_CONFIG, config);
 
 
-            moteDepConfigMgr.cloneMoteDeploymentConfigurations(sourceID,
-                                                               config.getID());
+            MoteDeploymentConfigurationManagerImpl.getInstance().
+                                  cloneMoteDeploymentConfigurations(sourceID,
+                                                                    config.getID());
 
-            progProfSymManager.cloneProfilingSymbol(sourceID, config.getID());
+            ProgramProfilingSymbolManagerImpl.getInstance().
+                                           cloneProfilingSymbol(sourceID,
+                                                                config.getID());
 
 
-            progProfMsgSymManager.cloneProfilingMessageSymbol(sourceID,
-                                                              config.getID());
+            ProgramProfilingMessageSymbolManagerImpl.getInstance().
+                        cloneProfilingMessageSymbol(sourceID, config.getID());
 
         } catch (AdaptationException ex) {
             log.error("AdaptationException:", ex);
@@ -222,8 +202,8 @@ public class ProjectDeploymentConfigurationManagerImpl
                                                         throws RemoteException {
         List<MoteDeploymentConfiguration> moteDeploymentConfigs;
 
-        moteDeploymentConfigs =
-                        moteDepConfigMgr.getMoteDeploymentConfigurations(id);
+        moteDeploymentConfigs = MoteDeploymentConfigurationManagerImpl.
+                             getInstance().getMoteDeploymentConfigurations(id);
 
         for (MoteDeploymentConfiguration i : moteDeploymentConfigs) {
             StringBuffer          output;
@@ -232,9 +212,11 @@ public class ProjectDeploymentConfigurationManagerImpl
             MoteTestbedAssignment mtba;
 
             output = new StringBuffer();
-            mote   = moteManager.getMote(i.getMoteID());
-            type   = moteTypeManager.getMoteType(mote.getMoteTypeID());
-            mtba   = mtbaManager.getMoteTestbedAssignment(mote.getID());
+            mote   = MoteManagerImpl.getInstance().getMote(i.getMoteID());
+            type   = MoteTypeManagerImpl.getInstance().
+                                         getMoteType(mote.getMoteTypeID());
+            mtba   = MoteTestbedAssignmentManagerImpl.getInstance().
+                                         getMoteTestbedAssignment(mote.getID());
 
             log.info("Installing\n" +
                      " program:  " + i.getProgramID() + "\n" +
@@ -243,11 +225,30 @@ public class ProjectDeploymentConfigurationManagerImpl
                      " address:  " + mtba.getMoteAddress());
 
 
-             programManager.installProgram(mtba.getMoteAddress(),
-                                           mote.getMoteSerialID(),
-                                           type.getTosPlatform(),
-                                           i.getProgramID(),
-                                           output);
+             ProgramManagerImpl.getInstance().installProgram(
+                                                        mtba.getMoteAddress(),
+                                                        mote.getMoteSerialID(),
+                                                        type.getTosPlatform(),
+                                                        i.getProgramID(),
+                                                        output);
+        }
+    }
+
+
+    private ProjectDeploymentConfigurationManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            projDepConfigAdapter  = AdapterFactory.
+                   createProjectDeploymentConfigurationAdapter(AdapterType.SQL);
+            projDepConfigs        = projDepConfigAdapter.
+                   readProjectDeploymentConfigurations();
+
+            log.debug("ProjectDeploymentConfigurations read:\n" +
+                      projDepConfigs);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 }

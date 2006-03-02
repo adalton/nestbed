@@ -78,18 +78,19 @@ import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
-import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 import edu.clemson.cs.nestbed.server.nesc.comm.MoteComm;
 import edu.clemson.cs.nestbed.server.nesc.comm.mig.PowerMessage;
 import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
 import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
+import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
 public class ProgramManagerImpl extends    RemoteObservableImpl
                                 implements ProgramManager {
 
-    private final static Log log = LogFactory.getLog(ProgramManagerImpl.class);
-
+    private final static ProgramManager instance;
+    private final static Log            log      = LogFactory.getLog(
+                                                      ProgramManagerImpl.class);
     private final static int    MAX_THREADS = 40;
     private final static File   TOS_ROOT    = new File("/tmp/nestbed");
     private final static String MAKE        = "/usr/bin/make";
@@ -98,47 +99,30 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     "/home/adalton/src/java/nestbed/bin/getMessageTypes.sh";
     private final static String GET_FILE   =
                     "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
-
-
-    private MoteManager                          moteManager;
-    private ProgramMessageSymbolManager          programMsgSymbolManager;
-    private ProgramSymbolManager                 programSymbolManager;
-    private MoteDeploymentConfigurationManager   mdcManager;
-    private ProgramAdapter                       programAdapter;
-    private Map<Integer, Program>                programs;
-    private ExecutorService                      threadPool;
-    private ReadWriteLock                        managerLock;
-    private Lock                                 readLock;
-    private Lock                                 writeLock;
-
-
-    public ProgramManagerImpl(ProgramMessageSymbolManager          pmtManager,
-                              ProgramSymbolManager                 psManager,
-                              MoteDeploymentConfigurationManager   mdcManager,
-                              MoteManager                          moteManager)
-                                                    throws RemoteException {
-        super();
+    static {
+        ProgramManagerImpl impl = null;
 
         try {
-            this.programMsgSymbolManager = pmtManager;
-            this.programSymbolManager    = psManager;
-            this.mdcManager              = mdcManager;
-            this.moteManager             = moteManager;
-            this.threadPool              = Executors.newFixedThreadPool(
-                                                                MAX_THREADS);
-            this.managerLock             = new ReentrantReadWriteLock(true);
-            this.readLock                = managerLock.readLock();
-            this.writeLock               = managerLock.writeLock();
-
-            programAdapter               = AdapterFactory.createProgramAdapter(
-                                                            AdapterType.SQL);
-            programs                     = programAdapter.readPrograms();
-
-            log.debug("Programs read:\n" + programs);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProgramManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    private ProgramAdapter        programAdapter;
+    private Map<Integer, Program> programs;
+    private ExecutorService       threadPool;
+    private ReadWriteLock         managerLock;
+    private Lock                  readLock;
+    private Lock                  writeLock;
+
+
+    public static ProgramManager getInstance() {
+        return instance;
     }
 
 
@@ -461,10 +445,11 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                   "    moteSerialID:  " + moteSerialID);
 
         PowerMessage powerMessage = new PowerMessage();
-        Mote         mote         = moteManager.getMote(moteSerialID);
-        log.debug("Mote:  " + mote);
+        Mote         mote         = MoteManagerImpl.getInstance().getMote(
+                                                                moteSerialID);
         int          moteID       = mote.getID();
-        int          powerLevel   = mdcManager.
+        int          powerLevel   = MoteDeploymentConfigurationManagerImpl.
+                                        getInstance().
                                       getMoteDeploymentConfigurationByProgramID(
                                         moteID, programID).getRadioPowerLevel();
         MoteComm     moteComm     = new MoteComm(address, commPort);
@@ -522,8 +507,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                 symbol = values[0];
             }
 
-            programSymbolManager.createProgramSymbol(
-                            program.getID(), module, symbol);
+            ProgramSymbolManagerImpl.getInstance().createProgramSymbol(
+                                              program.getID(), module, symbol);
         }
     }
 
@@ -539,8 +524,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             generateMigClass(headerFile, i, directory);
             byte[] bytecode = compileFile(directory, i, ".java");
 
-            programMsgSymbolManager.addProgramMessageSymbol(program.getID(), i,
-                                                            bytecode);
+            ProgramMessageSymbolManagerImpl.getInstance().
+                                        addProgramMessageSymbol(program.getID(),
+                                                                i, bytecode);
         }
     }
 
@@ -718,23 +704,27 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private void cleanupProgramSymbols(int programID) throws RemoteException {
         List<ProgramSymbol> programSymbolList;
-        programSymbolList = programSymbolManager.getProgramSymbols(programID);
+        ProgramSymbolManager psm = ProgramSymbolManagerImpl.getInstance();
+
+        programSymbolList = psm.getProgramSymbols(programID);
 
         for (ProgramSymbol i : programSymbolList) {
-            programSymbolManager.deleteProgramSymbol(i.getID());
+            psm.deleteProgramSymbol(i.getID());
         }
     }
 
 
     private void cleanupMoteDeploymentConfigurations(int programID)
                                                        throws RemoteException {
-        mdcManager.deleteConfigsForProgram(programID);
+        MoteDeploymentConfigurationManagerImpl.getInstance().
+                                    deleteConfigsForProgram(programID);
     }
 
 
     private void cleanupProgramMessageSymbols(int programID) 
                                                        throws RemoteException {
-        programMsgSymbolManager.deleteSymbolsForProgram(programID);
+        ProgramMessageSymbolManagerImpl.getInstance().deleteSymbolsForProgram(
+                                                                    programID);
     }
 
 
@@ -749,5 +739,24 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         dir.mkdir();
 
         return dir;
+    }
+
+
+    private ProgramManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            this.threadPool     = Executors.newFixedThreadPool(MAX_THREADS);
+            this.managerLock    = new ReentrantReadWriteLock(true);
+            this.readLock       = managerLock.readLock();
+            this.writeLock      = managerLock.writeLock();
+            this.programAdapter = AdapterFactory.createProgramAdapter(
+                                                            AdapterType.SQL);
+            this.programs       = programAdapter.readPrograms();
+            log.debug("Programs read:\n" + programs);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
     }
 }
