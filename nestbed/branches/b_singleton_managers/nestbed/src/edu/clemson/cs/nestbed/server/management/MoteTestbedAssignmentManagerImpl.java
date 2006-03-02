@@ -48,31 +48,30 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteTestbedAssignmentAdapter;
 
 public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
                                     implements MoteTestbedAssignmentManager {
-
-    private final static Log log =
-                LogFactory.getLog(MoteTestbedAssignmentManagerImpl.class);
+    private final static MoteTestbedAssignmentManager instance;
+    private final static Log log = LogFactory.getLog(
+                                        MoteTestbedAssignmentManagerImpl.class);
 
 
     private MoteTestbedAssignmentAdapter        moteTestbedAssignmentAdapter;
     private Map<Integer, MoteTestbedAssignment> moteTestbedAssignments;
 
-
-    public MoteTestbedAssignmentManagerImpl() throws RemoteException {
-        super();
+    static {
+        MoteTestbedAssignmentManagerImpl impl = null;
 
         try {
-            moteTestbedAssignmentAdapter =
-                    AdapterFactory.createMoteTestbedAssignmentAdapter(
-                                                            AdapterType.SQL);
-            moteTestbedAssignments       =
-                    moteTestbedAssignmentAdapter.readMoteTestbedAssignments();
-
-            log.debug("MoteTestbedAssignments read:\n" +
-                      moteTestbedAssignments);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new MoteTestbedAssignmentManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    public static MoteTestbedAssignmentManager getInstance() {
+        return instance;
     }
 
 
@@ -107,5 +106,24 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
         }
 
         return mtba;
+    }
+
+
+    private MoteTestbedAssignmentManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            moteTestbedAssignmentAdapter =
+                    AdapterFactory.createMoteTestbedAssignmentAdapter(
+                                                            AdapterType.SQL);
+            moteTestbedAssignments       =
+                    moteTestbedAssignmentAdapter.readMoteTestbedAssignments();
+
+            log.debug("MoteTestbedAssignments read:\n" +
+                      moteTestbedAssignments);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
     }
 }

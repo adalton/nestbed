@@ -63,25 +63,22 @@ import net.tinyos.sf.SerialForwarder;
 public class MoteMessageManager implements MessageListener {
     private final static Log log = LogFactory.getLog(MoteMessageManager.class);
 
-    private ProgramMessageSymbolManager progMsgSymbolManager;
     private Map<ProgramMessageSymbol,
-                List<RemoteObserver>>   messageObserverListMap;
-    private Mote                        mote;
+                List<RemoteObserver>> messageObserverListMap;
+    private Mote                      mote;
+    private PacketSource              packetSource;
+    private PhoenixSource             phoenixSource;
+    private MoteIF                    moteIF;
+    private boolean                   enabled;
+    private Thread                    mainThread;
+    private SerialForwarder           serialForwarder;
+    private boolean                   sfEnabled;
 
-    private PacketSource                packetSource;
-    private PhoenixSource               phoenixSource;
-    private MoteIF                      moteIF;
-    private boolean                     enabled;
-    private Thread                      mainThread;
-    private SerialForwarder             serialForwarder;
-    private boolean                     sfEnabled;
 
-
-    public MoteMessageManager(Mote mote, ProgramMessageSymbolManager pmsMgr) {
+    public MoteMessageManager(Mote mote) {
         messageObserverListMap    = new HashMap<ProgramMessageSymbol,
                                                 List<RemoteObserver>>();
         this.mote                 = mote;
-        this.progMsgSymbolManager = pmsMgr;
         this.enabled              = false;
         this.mainThread           = Thread.currentThread();
 
@@ -96,7 +93,8 @@ public class MoteMessageManager implements MessageListener {
         ProgramMessageSymbol pms;
         List<RemoteObserver> observers;
 
-        pms       = progMsgSymbolManager.getProgramMessageSymbol(pmsID);
+        pms       = ProgramMessageSymbolManagerImpl.getInstance().
+                                            getProgramMessageSymbol(pmsID);
         observers = messageObserverListMap.get(pms);
 
         if (observers == null) {
@@ -141,7 +139,8 @@ public class MoteMessageManager implements MessageListener {
         ProgramMessageSymbol pms;
         List<RemoteObserver> observers;
 
-        pms       = progMsgSymbolManager.getProgramMessageSymbol(pmsID);
+        pms       = ProgramMessageSymbolManagerImpl.getInstance().
+                                            getProgramMessageSymbol(pmsID);
         observers = messageObserverListMap.get(pms);
 
         if (observers != null) {

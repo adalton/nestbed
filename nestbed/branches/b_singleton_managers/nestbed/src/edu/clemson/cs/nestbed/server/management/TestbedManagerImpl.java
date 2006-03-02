@@ -49,14 +49,39 @@ import edu.clemson.cs.nestbed.server.adaptation.TestbedAdapter;
 public class TestbedManagerImpl extends    UnicastRemoteObject
                                 implements TestbedManager {
 
-    private final static Log log = LogFactory.getLog(TestbedManagerImpl.class);
-
+    private final static TestbedManager instance;
+    private final static Log            log      = LogFactory.getLog(
+                                                     TestbedManagerImpl.class);
 
     private TestbedAdapter        testbedAdapter;
     private Map<Integer, Testbed> testbeds;
 
+    static {
+        TestbedManagerImpl impl = null;
 
-    public TestbedManagerImpl() throws RemoteException {
+        try {
+            impl = new TestbedManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
+        }
+    }
+
+
+    public static TestbedManager getInstance() {
+        return instance;
+    }
+
+
+    public synchronized List<Testbed> getTestbedList() throws RemoteException {
+        log.debug("getTestbedList() called");
+        return new ArrayList<Testbed>(testbeds.values());
+    }
+
+
+    private TestbedManagerImpl() throws RemoteException {
         super();
 
         try {
@@ -70,11 +95,5 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
             throw new RemoteException("AdaptationException:", ex);
         }
         
-    }
-
-
-    public synchronized List<Testbed> getTestbedList() throws RemoteException {
-        log.debug("getTestbedList() called");
-        return new ArrayList<Testbed>(testbeds.values());
     }
 }

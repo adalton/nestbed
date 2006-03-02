@@ -51,35 +51,29 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 public class ProgramProfilingMessageSymbolManagerImpl
                             extends    RemoteObservableImpl
                             implements ProgramProfilingMessageSymbolManager {
-    private final static Log log =
-              LogFactory.getLog(ProgramProfilingMessageSymbolManagerImpl.class);
+    private final static ProgramProfilingMessageSymbolManager instance;
+    private final static Log log = LogFactory.getLog(
+                            ProgramProfilingMessageSymbolManagerImpl.class);
 
-
-    private ProgramMessageSymbolManager                 pmsManager;
     private ProgramProfilingMessageSymbolAdapter        ppmsAdapter;
     private Map<Integer, ProgramProfilingMessageSymbol> ppmSymbols;
 
-
-    public ProgramProfilingMessageSymbolManagerImpl(
-                ProgramMessageSymbolManager pmsm) throws RemoteException {
-        super();
+    static {
+        ProgramProfilingMessageSymbolManagerImpl impl = null;
 
         try {
-            this.pmsManager = pmsm;
-
-            ppmsAdapter =
-                    AdapterFactory.createProgramProfilingMessageSymbolAdapter(
-                                                              AdapterType.SQL);
-
-            ppmSymbols  = ppmsAdapter.readProgramProfilingMessageSymbols();
-
-            log.debug("ProgramProfilingMessageSymbols read:\n" +
-                      ppmSymbols);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProgramProfilingMessageSymbolManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
-        
+    }
+
+
+    public static ProgramProfilingMessageSymbolManager getInstance() {
+        return instance;
     }
 
 
@@ -104,7 +98,8 @@ public class ProgramProfilingMessageSymbolManagerImpl
         for (ProgramProfilingMessageSymbol i : symbolList) {
             ProgramMessageSymbol programMsgSymbol;
 
-            programMsgSymbol = pmsManager.getProgramMessageSymbol(
+            programMsgSymbol = ProgramMessageSymbolManagerImpl.getInstance().
+                                        getProgramMessageSymbol(
                                               i.getProgramMessageSymbolID());
 
             if (programMsgSymbol.getProgramID() == programID) {
@@ -221,5 +216,25 @@ public class ProgramProfilingMessageSymbolManagerImpl
                 deleteProgramProfilingMessageSymbol(i.getID());
             }
         }
+    }
+
+
+    private ProgramProfilingMessageSymbolManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            ppmsAdapter =
+                    AdapterFactory.createProgramProfilingMessageSymbolAdapter(
+                                                              AdapterType.SQL);
+
+            ppmSymbols  = ppmsAdapter.readProgramProfilingMessageSymbols();
+
+            log.debug("ProgramProfilingMessageSymbols read:\n" +
+                      ppmSymbols);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
+        
     }
 }

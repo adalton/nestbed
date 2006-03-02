@@ -56,35 +56,29 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 public class ProgramProfilingSymbolManagerImpl
                                     extends    RemoteObservableImpl
                                     implements ProgramProfilingSymbolManager {
-    private final static Log log =
-                    LogFactory.getLog(ProgramProfilingSymbolManagerImpl.class);
+    private final static ProgramProfilingSymbolManager instance;
+    private final static Log log = LogFactory.getLog(
+                                       ProgramProfilingSymbolManagerImpl.class);
 
-
-    private ProgramSymbolManager                 programSymbolManager;
     private ProgramProfilingSymbolAdapter        progProfSymbolAdapter;
     private Map<Integer, ProgramProfilingSymbol> progProfSymbols;
 
-
-    public ProgramProfilingSymbolManagerImpl()       throws RemoteException {
-        super();
+    static {
+        ProgramProfilingSymbolManagerImpl impl = null;
 
         try {
-            progProfSymbolAdapter =
-                        AdapterFactory.createProgramProfilingSymbolAdapter(
-                                                            AdapterType.SQL);
-            progProfSymbols       =
-                        progProfSymbolAdapter.readProgramProfilingSymbols();
-
-            log.debug("ProgramProfilingSymbols read:\n" + progProfSymbols);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProgramProfilingSymbolManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
     }
 
 
-    public void setProgramSymbolManager(ProgramSymbolManager psm) {
-        programSymbolManager = psm;
+    public static ProgramProfilingSymbolManager getInstance() {
+        return instance;
     }
 
 
@@ -118,8 +112,10 @@ public class ProgramProfilingSymbolManagerImpl
 
 
         for (ProgramProfilingSymbol i : symbolList) {
-            ProgramSymbol programSymbol = programSymbolManager.getProgramSymbol(
-                                                    i.getProgramSymbolID());
+            ProgramSymbol programSymbol = ProgramSymbolManagerImpl.
+                                            getInstance().
+                                                getProgramSymbol(
+                                                      i.getProgramSymbolID());
 
             if (programSymbol.getProgramID() == programID) {
                 symbolsForProg.add(i);
@@ -264,8 +260,10 @@ public class ProgramProfilingSymbolManagerImpl
                                                                      "telos");
 
             ProgramProfilingSymbol pps     = progProfSymbols.get(id);
-            ProgramSymbol    programSymbol = programSymbolManager.getProgramSymbol(
-                                                    pps.getProgramSymbolID());
+            ProgramSymbol    programSymbol = ProgramSymbolManagerImpl.
+                                                getInstance().
+                                                    getProgramSymbol(
+                                                      pps.getProgramSymbolID());
             String           moduleName    = programSymbol.getModule();
             String           symbolName    = programSymbol.getSymbol();
 
@@ -301,5 +299,23 @@ public class ProgramProfilingSymbolManagerImpl
         }
 
         return value;
+    }
+
+
+    private ProgramProfilingSymbolManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            progProfSymbolAdapter =
+                        AdapterFactory.createProgramProfilingSymbolAdapter(
+                                                            AdapterType.SQL);
+            progProfSymbols       =
+                        progProfSymbolAdapter.readProgramProfilingSymbols();
+
+            log.debug("ProgramProfilingSymbols read:\n" + progProfSymbols);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
     }
 }

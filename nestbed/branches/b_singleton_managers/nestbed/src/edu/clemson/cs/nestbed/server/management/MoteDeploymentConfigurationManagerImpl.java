@@ -51,29 +51,29 @@ public class MoteDeploymentConfigurationManagerImpl
                                 extends    RemoteObservableImpl
                                 implements MoteDeploymentConfigurationManager {
 
-    private final static Log log =
-                LogFactory.getLog(MoteDeploymentConfigurationManagerImpl.class);
-
+    private final static MoteDeploymentConfigurationManager instance;
+    private final static Log log = LogFactory.getLog(
+                                MoteDeploymentConfigurationManagerImpl.class);
 
     private MoteDeploymentConfigurationAdapter        moteDepConfigAdapter;
     private Map<Integer, MoteDeploymentConfiguration> moteDepConfigs;
 
-
-    public MoteDeploymentConfigurationManagerImpl() throws RemoteException {
-        super();
+    static {
+        MoteDeploymentConfigurationManagerImpl impl = null;
 
         try {
-            moteDepConfigAdapter =
-                AdapterFactory.createMoteDeploymentConfigurationAdapter(
-                                                            AdapterType.SQL);
-            moteDepConfigs       =
-                    moteDepConfigAdapter.readMoteDeploymentConfigurations();
-
-            log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException: ", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new MoteDeploymentConfigurationManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    public static MoteDeploymentConfigurationManager getInstance() {
+        return instance;
     }
 
 
@@ -236,5 +236,23 @@ public class MoteDeploymentConfigurationManagerImpl
         }
 
         return moteDeploymentConfiguration;
+    }
+
+
+    private MoteDeploymentConfigurationManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            moteDepConfigAdapter =
+                AdapterFactory.createMoteDeploymentConfigurationAdapter(
+                                                            AdapterType.SQL);
+            moteDepConfigs       =
+                    moteDepConfigAdapter.readMoteDeploymentConfigurations();
+
+            log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException: ", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
     }
 }

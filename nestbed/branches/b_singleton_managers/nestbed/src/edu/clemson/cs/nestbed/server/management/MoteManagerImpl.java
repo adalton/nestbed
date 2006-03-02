@@ -49,26 +49,28 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteAdapter;
 public class MoteManagerImpl extends    UnicastRemoteObject
                              implements MoteManager {
 
-    private final static Log log =
-                LogFactory.getLog(MoteManagerImpl.class);
-
-
+    private final static MoteManager instance;
+    private final static Log         log      = LogFactory.getLog(
+                                                        MoteManagerImpl.class);
     private MoteAdapter        moteAdapter;
     private Map<Integer, Mote> motes;
 
-
-    public MoteManagerImpl() throws RemoteException {
-        super();
+    static {
+        MoteManagerImpl impl = null;
 
         try {
-            moteAdapter = AdapterFactory.createMoteAdapter(AdapterType.SQL);
-            motes       = moteAdapter.readMotes();
-
-            log.debug("Motes read:\n" + motes);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new MoteManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
+    }
+
+
+    public static MoteManager getInstance() {
+        return instance;
     }
 
 
@@ -93,7 +95,23 @@ public class MoteManagerImpl extends    UnicastRemoteObject
         return mote;
     }
 
+
     public synchronized List<Mote> getMoteList() throws RemoteException {
         return new ArrayList<Mote>(motes.values());
+    }
+
+
+    private MoteManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            moteAdapter = AdapterFactory.createMoteAdapter(AdapterType.SQL);
+            motes       = moteAdapter.readMotes();
+
+            log.debug("Motes read:\n" + motes);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
     }
 }

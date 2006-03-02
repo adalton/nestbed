@@ -50,32 +50,30 @@ import edu.clemson.cs.nestbed.server.adaptation.ProgramMessageSymbolAdapter;
 public class ProgramMessageSymbolManagerImpl
                                         extends    UnicastRemoteObject
                                         implements ProgramMessageSymbolManager {
-    private final static Log log =
-                       LogFactory.getLog(ProgramMessageSymbolManagerImpl.class);
-
+    private final static ProgramMessageSymbolManager instance;
+    private final static Log log = LogFactory.getLog(
+                                        ProgramMessageSymbolManagerImpl.class);
 
     private ProgramProfilingMessageSymbolManager progProfMsgSymManager;
     private ProgramMessageSymbolAdapter          programMessageSymbolAdapter;
     private Map<Integer, ProgramMessageSymbol>   programMessageSymbols;
 
-
-    public ProgramMessageSymbolManagerImpl() throws RemoteException {
-        super();
+    static {
+        ProgramMessageSymbolManagerImpl impl = null;
 
         try {
-            programMessageSymbolAdapter =
-                            AdapterFactory.createProgramMessageSymbolAdapter(
-                                                              AdapterType.SQL);
-
-            programMessageSymbols       =
-                        programMessageSymbolAdapter.readProgramMessageSymbols();
-
-            log.debug("ProgramMessageSymbols read:\n" + programMessageSymbols);
-        } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            impl = new ProgramMessageSymbolManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
         }
-        
+    }
+
+
+    public static ProgramMessageSymbolManager getInstance() {
+        return instance;
     }
 
 
@@ -165,5 +163,25 @@ public class ProgramMessageSymbolManagerImpl
     public void setProgramProfilingMsgSymManagerImpl(
                                     ProgramProfilingMessageSymbolManager ppms) {
         progProfMsgSymManager = ppms;
+    }
+
+
+    private ProgramMessageSymbolManagerImpl() throws RemoteException {
+        super();
+
+        try {
+            programMessageSymbolAdapter =
+                            AdapterFactory.createProgramMessageSymbolAdapter(
+                                                              AdapterType.SQL);
+
+            programMessageSymbols       =
+                        programMessageSymbolAdapter.readProgramMessageSymbols();
+
+            log.debug("ProgramMessageSymbols read:\n" + programMessageSymbols);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
+        }
+        
     }
 }

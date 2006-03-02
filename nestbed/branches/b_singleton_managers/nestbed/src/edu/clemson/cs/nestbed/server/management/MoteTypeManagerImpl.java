@@ -47,14 +47,40 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteTypeAdapter;
 public class MoteTypeManagerImpl extends    UnicastRemoteObject
                                  implements MoteTypeManager {
 
-    private final static Log log = LogFactory.getLog(MoteTypeManagerImpl.class);
-
+    private final static MoteTypeManager instance;
+    private final static Log             log      = LogFactory.getLog(
+                                                     MoteTypeManagerImpl.class);
 
     private MoteTypeAdapter        moteTypeAdapter;
     private Map<Integer, MoteType> moteTypes;
 
+    static {
+        MoteTypeManagerImpl impl = null;
 
-    public MoteTypeManagerImpl() throws RemoteException {
+        try {
+            impl = new MoteTypeManagerImpl();
+        } catch (Exception ex) {
+            log.fatal("Unable to create singleton instance", ex);
+            System.exit(1);
+        } finally {
+            instance = impl;
+        }
+    }
+
+
+    public static MoteTypeManager getInstance() {
+        return instance;
+    }
+
+
+    public synchronized MoteType getMoteType(int id) throws RemoteException {
+        log.debug("getMoteType() called.");
+
+        return moteTypes.get(id);
+    }
+
+
+    private MoteTypeManagerImpl() throws RemoteException {
         super();
 
         try {
@@ -67,12 +93,5 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
             log.error("AdaptationException:", ex);
             throw new RemoteException("AdaptationException:", ex);
         }
-    }
-
-
-    public synchronized MoteType getMoteType(int id) throws RemoteException {
-        log.debug("getMoteType() called.");
-
-        return moteTypes.get(id);
     }
 }
