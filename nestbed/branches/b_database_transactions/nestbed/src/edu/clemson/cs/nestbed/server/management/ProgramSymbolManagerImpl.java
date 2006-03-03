@@ -90,10 +90,14 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
         programSymbolList = new ArrayList<ProgramSymbol>();
 
 
-        for (ProgramSymbol i : programSymbols.values()) {
-            if (i.getProgramID() == programID) {
-                programSymbolList.add(i);
+        try {
+            for (ProgramSymbol i : programSymbols.values()) {
+                if (i.getProgramID() == programID) {
+                    programSymbolList.add(i);
+                }
             }
+        } catch (Exception ex) {
+            throw new RemoteException(ex.toString());
         }
 
         return programSymbolList;
@@ -117,8 +121,12 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             return programSymbol;
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in deleteProgramSymbol");
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -136,8 +144,10 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             programSymbols.put(programSymbol.getID(), programSymbol);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in createProgramSymbol");
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -159,8 +169,10 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             log.debug("ProgramSymbols read:\n" + programSymbols);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in ProgramSymbolManagerImpl");
+            throw new RemoteException(ex.toString());
         }
     }
 }

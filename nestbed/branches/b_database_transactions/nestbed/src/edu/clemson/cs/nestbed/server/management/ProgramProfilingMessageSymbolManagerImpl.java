@@ -80,8 +80,17 @@ public class ProgramProfilingMessageSymbolManagerImpl
     public synchronized List<ProgramProfilingMessageSymbol>
                         getProgramProfilingMessageSymbolList() throws RemoteException {
         log.debug("getProgramProfilingMessageSymbolList() called");
-        return new ArrayList<ProgramProfilingMessageSymbol>(
-                                            ppmSymbols.values());
+        List<ProgramProfilingMessageSymbol> ppmsList = null;
+
+        try {
+            ppmsList = new ArrayList<ProgramProfilingMessageSymbol>(
+                                                    ppmSymbols.values());
+        } catch (Exception ex) {
+            log.error("Exception in getProgramProfilingMessageSymbolList", ex);
+            throw new RemoteException(ex.toString());
+        }
+
+        return ppmsList;
     }
 
 
@@ -92,19 +101,26 @@ public class ProgramProfilingMessageSymbolManagerImpl
         List<ProgramProfilingMessageSymbol> symbolList;
         List<ProgramProfilingMessageSymbol> symbolsForProg;
 
-        symbolList     = getProgramProfilingMessageSymbols(configID);
-        symbolsForProg = new ArrayList<ProgramProfilingMessageSymbol>();
+        try {
+            symbolList     = getProgramProfilingMessageSymbols(configID);
+            symbolsForProg = new ArrayList<ProgramProfilingMessageSymbol>();
 
-        for (ProgramProfilingMessageSymbol i : symbolList) {
-            ProgramMessageSymbol programMsgSymbol;
+            for (ProgramProfilingMessageSymbol i : symbolList) {
+                ProgramMessageSymbol programMsgSymbol;
 
-            programMsgSymbol = ProgramMessageSymbolManagerImpl.getInstance().
-                                        getProgramMessageSymbol(
-                                              i.getProgramMessageSymbolID());
+                programMsgSymbol = ProgramMessageSymbolManagerImpl.getInstance().
+                                            getProgramMessageSymbol(
+                                                i.getProgramMessageSymbolID());
 
-            if (programMsgSymbol.getProgramID() == programID) {
-                symbolsForProg.add(i);
+                if (programMsgSymbol.getProgramID() == programID) {
+                    symbolsForProg.add(i);
+                }
             }
+        }  catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in getProgramProfilingMessageSymbols", ex);
+            throw new RemoteException(ex.toString());
         }
 
         return symbolsForProg;
@@ -119,12 +135,17 @@ public class ProgramProfilingMessageSymbolManagerImpl
         List<ProgramProfilingMessageSymbol> symbolList;
         symbolList = new ArrayList<ProgramProfilingMessageSymbol>();
 
-        synchronized (this) {
-            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
-                if (i.getProjectDeploymentConfigurationID() == configID ) {
-                    symbolList.add(i);
+        try {
+            synchronized (this) {
+                for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+                    if (i.getProjectDeploymentConfigurationID() == configID ) {
+                        symbolList.add(i);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("Exception in getProgramProfilingMessageSymbols", ex);
+            throw new RemoteException(ex.toString());
         }
 
         return symbolList;
@@ -150,8 +171,10 @@ public class ProgramProfilingMessageSymbolManagerImpl
 
             notifyObservers(Message.NEW_SYMBOL, ppms);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in createNewProfilingMessageSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -183,8 +206,10 @@ public class ProgramProfilingMessageSymbolManagerImpl
                 notifyObservers(Message.NEW_SYMBOL, i);
             }
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in cloneProfilingMessageSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -203,18 +228,27 @@ public class ProgramProfilingMessageSymbolManagerImpl
 
             notifyObservers(Message.DELETE_SYMBOL, ppms);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in deleteProgramProfilingMessageSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
 
     public void deleteProgProfMsgSymsFor(int programMessageSymbolID)
                                                         throws RemoteException {
-        for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
-            if (i.getProgramMessageSymbolID() == programMessageSymbolID) {
-                deleteProgramProfilingMessageSymbol(i.getID());
+        try {
+            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+                if (i.getProgramMessageSymbolID() == programMessageSymbolID) {
+                    deleteProgramProfilingMessageSymbol(i.getID());
+                }
             }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in deleteProgProfMsgSymsFor", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -232,9 +266,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
             log.debug("ProgramProfilingMessageSymbols read:\n" +
                       ppmSymbols);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in ProgramProfilingMessageSymbolManagerImpl",
+                      ex);
+            throw new RemoteException(ex.toString());
         }
-        
     }
 }

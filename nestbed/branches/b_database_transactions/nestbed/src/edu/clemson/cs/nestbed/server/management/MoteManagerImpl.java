@@ -85,11 +85,16 @@ public class MoteManagerImpl extends    UnicastRemoteObject
                                                     throws RemoteException {
         Mote mote = null;
 
-        for (Mote i : motes.values()) {
-            if (i.getMoteSerialID().equals(moteSerialID)) {
-                mote = i;
-                break;
+        try {
+            for (Mote i : motes.values()) {
+                if (i.getMoteSerialID().equals(moteSerialID)) {
+                    mote = i;
+                    break;
+                }
             }
+        } catch (Exception ex) {
+            log.error("Exception in getMote", ex);
+            throw new RemoteException(ex.toString());
         }
 
         return mote;
@@ -97,7 +102,15 @@ public class MoteManagerImpl extends    UnicastRemoteObject
 
 
     public synchronized List<Mote> getMoteList() throws RemoteException {
-        return new ArrayList<Mote>(motes.values());
+        List<Mote> moteList = null;
+
+        try {
+            moteList = new ArrayList<Mote>(motes.values());
+        } catch (Exception ex) {
+            throw new RemoteException(ex.toString());
+        }
+
+        return moteList;
     }
 
 
@@ -110,8 +123,10 @@ public class MoteManagerImpl extends    UnicastRemoteObject
 
             log.debug("Motes read:\n" + motes);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in MoteManagerImpl");
+            throw new RemoteException(ex.toString());
         }
     }
 }

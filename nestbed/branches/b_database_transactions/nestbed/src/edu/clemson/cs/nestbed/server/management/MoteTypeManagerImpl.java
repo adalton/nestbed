@@ -90,8 +90,10 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
 
             log.debug("MoteTypes read:\n" + moteTypes);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in MoteTypeManagerImpl");
+            throw new RemoteException(ex.toString());
         }
     }
 }
