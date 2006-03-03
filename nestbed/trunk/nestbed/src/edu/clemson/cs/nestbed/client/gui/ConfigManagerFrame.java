@@ -792,6 +792,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException:", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
 
             return value;
@@ -876,6 +877,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException:", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
 
             return value;
@@ -916,10 +918,13 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("Remote Exception", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (FileNotFoundException ex) {
                 log.error("File '" + filename + "' not found.", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (IOException ex) {
                 log.error("Error reading file '" + filename + "'", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -939,6 +944,7 @@ public class ConfigManagerFrame extends JFrame {
                 programManager.deleteProgram(program.getID());
             } catch (RemoteException ex) {
                 log.error("Remote exception while deleting program", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -999,6 +1005,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -1023,6 +1030,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -1114,6 +1122,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException:", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -1165,6 +1174,7 @@ public class ConfigManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException:", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -1203,9 +1213,11 @@ public class ConfigManagerFrame extends JFrame {
             } catch (UnsupportedFlavorException ex) {
                 log.error("DataFlavor " + programSymbolFlavor +
                           " unsupported", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (IOException ex) {
                 log.error("I/O exception on data flavor " +
                           programSymbolFlavor, ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }
@@ -1245,9 +1257,11 @@ public class ConfigManagerFrame extends JFrame {
             } catch (UnsupportedFlavorException ex) {
                 log.error("DataFlavor " + programMessageSymbolFlavor +
                           " unsupported", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (IOException ex) {
                 log.error("I/O exception on data flavor " +
                           programMessageSymbolFlavor, ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
     }

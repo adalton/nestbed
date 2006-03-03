@@ -144,16 +144,21 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         Collection<Program> allPrograms;
 
         try {
-            readLock.lock();
-            allPrograms = programs.values();
-        } finally {
-            readLock.unlock();
-        }
-
-        for (Program i : allPrograms) {
-            if (i.getProjectID() == projectID) {
-                programList.add(i);
+            try {
+                readLock.lock();
+                allPrograms = programs.values();
+            } finally {
+                readLock.unlock();
             }
+
+            for (Program i : allPrograms) {
+                if (i.getProjectID() == projectID) {
+                    programList.add(i);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("Exception in getProgramList");
+            throw new RemoteException(ex.toString());
         }
 
         return programList;
@@ -364,8 +369,12 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             cleanupParentDirectories(sourcePath);
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in deleteProgram", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -531,8 +540,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     }
 
 
-    void generateMigClass(File headerFile, String messageType,
-                          File directory)     throws IOException {
+    private void generateMigClass(File headerFile, String messageType,
+                                  File directory)     throws IOException {
 
         log.info("Generating MIG classes for messageType: " + messageType +
                  " to directory " + directory.getAbsolutePath());
@@ -755,8 +764,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             this.programs       = programAdapter.readPrograms();
             log.debug("Programs read:\n" + programs);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 }

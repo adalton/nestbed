@@ -38,16 +38,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.clemson.cs.nestbed.common.model.Mote;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.MoteAdapter;
 
 
-public class MoteSqlAdapter implements MoteAdapter {
-    private final static String CONN_STR;
+public class MoteSqlAdapter extends   SqlAdapter
+                            implements MoteAdapter {
 
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
+    private final static Log log = LogFactory.getLog(MoteSqlAdapter.class);
 
     private enum Index {
         ID,
@@ -61,7 +63,7 @@ public class MoteSqlAdapter implements MoteAdapter {
     }
 
 
-    public Map<Integer, Mote> readMotes() {
+    public Map<Integer, Mote> readMotes() throws AdaptationException {
         Map<Integer, Mote> motes      = new HashMap<Integer, Mote>();
         Connection         connection = null;
         Statement          statement  = null;
@@ -89,12 +91,14 @@ public class MoteSqlAdapter implements MoteAdapter {
 
                 motes.put(id, mote);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readMotes";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return motes;

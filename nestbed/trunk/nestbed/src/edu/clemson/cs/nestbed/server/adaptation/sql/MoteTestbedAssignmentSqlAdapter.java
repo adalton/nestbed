@@ -38,19 +38,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.MoteTestbedAssignmentAdapter;
 
 
-public class MoteTestbedAssignmentSqlAdapter
+public class MoteTestbedAssignmentSqlAdapter extends SqlAdapter
                                     implements MoteTestbedAssignmentAdapter {
-
-    private final static String CONN_STR;
-
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
-
+    private final static Log log = LogFactory.getLog(
+                                         MoteTestbedAssignmentSqlAdapter.class);
     private enum Index {
         ID,
         TESTBEDID,
@@ -66,14 +65,14 @@ public class MoteTestbedAssignmentSqlAdapter
     }
 
 
-    public Map<Integer, MoteTestbedAssignment> readMoteTestbedAssignments() {
+    public Map<Integer, MoteTestbedAssignment> readMoteTestbedAssignments()
+                                                    throws AdaptationException {
         Map<Integer, MoteTestbedAssignment> tbAssignments =
                                 new HashMap<Integer, MoteTestbedAssignment>();
 
         Connection  connection  = null;
         Statement   statement   = null;
         ResultSet   resultSet   = null;
-
 
         try {
             String query = "SELECT * FROM MoteTestbedAssignments";
@@ -107,12 +106,14 @@ public class MoteTestbedAssignmentSqlAdapter
                                                     timestamp);
                 tbAssignments.put(id, mta);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readMoteTestbedAssignments";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();     } catch (Exception ex) { }
+            try { statement.close();     } catch (Exception ex) { }
+            try { connection.close();    } catch (Exception ex) { }
         }
 
         return tbAssignments;

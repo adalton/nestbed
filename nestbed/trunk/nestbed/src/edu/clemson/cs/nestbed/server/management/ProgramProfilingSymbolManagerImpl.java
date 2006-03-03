@@ -33,7 +33,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.comm.NoSuchPortException;
 
 import net.tinyos.nucleus.NucleusInterface;
 import net.tinyos.nucleus.NucleusResult;
@@ -90,10 +89,15 @@ public class ProgramProfilingSymbolManagerImpl
         List<ProgramProfilingSymbol> symbolList;
         symbolList = new ArrayList<ProgramProfilingSymbol>();
 
-        for (ProgramProfilingSymbol i : progProfSymbols.values()) {
-            if (i.getProjectDeploymentConfigurationID() == configID ) {
-                symbolList.add(i);
+        try {
+            for (ProgramProfilingSymbol i : progProfSymbols.values()) {
+                if (i.getProjectDeploymentConfigurationID() == configID ) {
+                    symbolList.add(i);
+                }
             }
+        } catch (Exception ex) {
+            log.error("Exception in getProgramProfilingSymbols", ex);
+            throw new RemoteException(ex.toString());
         }
 
         return symbolList;
@@ -110,16 +114,23 @@ public class ProgramProfilingSymbolManagerImpl
         List<ProgramProfilingSymbol> symbolsForProg =
                                     new ArrayList<ProgramProfilingSymbol>();
 
+        try {
 
-        for (ProgramProfilingSymbol i : symbolList) {
-            ProgramSymbol programSymbol = ProgramSymbolManagerImpl.
-                                            getInstance().
-                                                getProgramSymbol(
-                                                      i.getProgramSymbolID());
+            for (ProgramProfilingSymbol i : symbolList) {
+                ProgramSymbol programSymbol = ProgramSymbolManagerImpl.
+                                                getInstance().
+                                                    getProgramSymbol(
+                                                        i.getProgramSymbolID());
 
-            if (programSymbol.getProgramID() == programID) {
-                symbolsForProg.add(i);
+                if (programSymbol.getProgramID() == programID) {
+                    symbolsForProg.add(i);
+                }
             }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in getProgramProfilingSymbols", ex);
+            throw new RemoteException(ex.toString());
         }
 
         return symbolsForProg;
@@ -144,8 +155,10 @@ public class ProgramProfilingSymbolManagerImpl
 
             notifyObservers(Message.NEW_SYMBOL, profilingSymbol);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in createNewProfilingSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -177,14 +190,15 @@ public class ProgramProfilingSymbolManagerImpl
                 notifyObservers(Message.NEW_SYMBOL, i);
             }
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in cloneProfilingSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
 
-    public void deleteProfilingSymbol(int symbolID) 
-                                                        throws RemoteException {
+    public void deleteProfilingSymbol(int symbolID) throws RemoteException {
         try {
             log.info("Request to delete ProgramProfilingSymbol with id: " +
                      symbolID);
@@ -198,8 +212,10 @@ public class ProgramProfilingSymbolManagerImpl
 
             notifyObservers(Message.DELETE_SYMBOL, profilingSymbol);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in deleteProfilingSymbol", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -209,12 +225,19 @@ public class ProgramProfilingSymbolManagerImpl
         log.info("Request to delete ProgramProfilingSymbol with " +
                  "programSymbolID: " + programSymbolID);
 
-        for (ProgramProfilingSymbol i :
-                    new ArrayList<ProgramProfilingSymbol>(
-                                                progProfSymbols.values())) {
-            if (i.getProgramSymbolID() == programSymbolID) {
-                deleteProfilingSymbol(i.getID());
+        try {
+            for (ProgramProfilingSymbol i :
+                        new ArrayList<ProgramProfilingSymbol>(
+                                                    progProfSymbols.values())) {
+                if (i.getProgramSymbolID() == programSymbolID) {
+                    deleteProfilingSymbol(i.getID());
+                }
             }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in deleteProfilingSymbolWithID");
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -240,8 +263,10 @@ public class ProgramProfilingSymbolManagerImpl
                 log.error("Unable to update symbol with id: " + id);
             }
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in updateProgramProfilingSymbol");
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -293,9 +318,11 @@ public class ProgramProfilingSymbolManagerImpl
             } else {
                 throw new RemoteException("Error reading symbol");
             }
-        } catch (NoSuchPortException ex) {
-            log.error("NoSuchPortException\n", ex);
-            throw new RemoteException("No such port", ex);
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in querySymbol");
+            throw new RemoteException(ex.toString());
         }
 
         return value;
@@ -314,8 +341,10 @@ public class ProgramProfilingSymbolManagerImpl
 
             log.debug("ProgramProfilingSymbols read:\n" + progProfSymbols);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
-            throw new RemoteException("AdaptationException:", ex);
+            throw new RemoteException(ex.toString());
+        } catch (Exception ex) {
+            log.error("Exception in ProgramProfilingSymbolManagerImpl");
+            throw new RemoteException(ex.toString());
         }
     }
 }

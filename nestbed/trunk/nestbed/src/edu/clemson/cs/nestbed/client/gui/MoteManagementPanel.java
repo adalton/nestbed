@@ -373,6 +373,7 @@ public class MoteManagementPanel extends MotePanel {
 
                     } catch (RemoteException ex) {
                         log.error("Remote Exception", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
                     }
                 }
             });
@@ -389,6 +390,7 @@ public class MoteManagementPanel extends MotePanel {
                         moteDetailFrame.setVisible(true);
                     } catch (Exception ex) {
                         log.error("Exception", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
                     }
                 }
             });
@@ -412,6 +414,7 @@ public class MoteManagementPanel extends MotePanel {
                         serialForwarderRunning = !serialForwarderRunning;
                     } catch (Exception ex) {
                         log.error("Exception\n", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
                     }
                 }
             });

@@ -81,7 +81,6 @@ public class MoteMessageManager implements MessageListener {
         this.mote                 = mote;
         this.enabled              = false;
         this.mainThread           = Thread.currentThread();
-
     }
 
 
@@ -110,22 +109,12 @@ public class MoteMessageManager implements MessageListener {
             Message     msg         = (Message) constructor.newInstance();
 
             moteIF.registerListener(msg, this);
-        } catch (NoSuchMethodException ex) {
+        } catch (Exception ex) {
             observers.remove(observer);
-            log.error("Cannot create message type object", ex);
-            throw new RemoteException("Cannot create message type object", ex);
-        } catch (InstantiationException ex) {
-            observers.remove(observer);
-            log.error("Cannot create message type object", ex);
-            throw new RemoteException("Cannot create message type object", ex);
-        } catch (IllegalAccessException ex) {
-            observers.remove(observer);
-            log.error("Cannot create message type object", ex);
-            throw new RemoteException("Cannot create message type object", ex);
-        } catch (InvocationTargetException ex) {
-            observers.remove(observer);
-            log.error("Cannot create message type object", ex);
-            throw new RemoteException("Cannot create message type object", ex);
+
+            String msg = "Cannot create message type object: ";
+            log.error(msg, ex);
+            throw new RemoteException(msg + ex.toString());
         }
     }
 
@@ -139,12 +128,19 @@ public class MoteMessageManager implements MessageListener {
         ProgramMessageSymbol pms;
         List<RemoteObserver> observers;
 
-        pms       = ProgramMessageSymbolManagerImpl.getInstance().
-                                            getProgramMessageSymbol(pmsID);
-        observers = messageObserverListMap.get(pms);
+        try {
+            pms       = ProgramMessageSymbolManagerImpl.getInstance().
+                                                getProgramMessageSymbol(pmsID);
+            observers = messageObserverListMap.get(pms);
 
-        if (observers != null) {
-            observers.remove(observer);
+            if (observers != null) {
+                observers.remove(observer);
+            }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in removeMessageObserver");
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -154,8 +150,8 @@ public class MoteMessageManager implements MessageListener {
             log.info("Enabling messages for mote: " + mote.getID());
 
             packetSource  = BuildSource.makePacketSource("serial@/dev/motes/" +
-                                                         mote.getMoteSerialID() +
-                                                         ":telos");
+                                                        mote.getMoteSerialID() +
+                                                        ":telos");
             phoenixSource = BuildSource.makePhoenix(packetSource, null);
 
             phoenixSource.setPacketErrorHandler(new PhoenixError() {
@@ -202,11 +198,9 @@ public class MoteMessageManager implements MessageListener {
                     "-quiet"});
             }
             sfEnabled = !sfEnabled;
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             log.error("Exception while enabling serial forwarder\n", ex);
-            ex.printStackTrace();
-            throw new RemoteException("Exception while enabling serial " +
-                                      "forwarder", ex);
+            throw new RemoteException(ex.toString());
         }
     }
 
@@ -252,7 +246,7 @@ public class MoteMessageManager implements MessageListener {
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception:\n", ex);
+            log.error("Exception while receiving message:\n", ex);
         }
     }
 }

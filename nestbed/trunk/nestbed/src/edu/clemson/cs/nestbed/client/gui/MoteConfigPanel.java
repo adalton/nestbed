@@ -236,6 +236,7 @@ log.debug("moteDepConfig:  " + moteDepConfig);
                 this.programFlavor = new DataFlavor(MIME_TYPE);
             } catch (ClassNotFoundException ex) {
                 log.error("ClassNotFoundException:\n", ex);
+                ClientUtils.displayErrorMessage(MoteConfigPanel.this, ex);
             }
         }
 
@@ -249,8 +250,10 @@ log.debug("moteDepConfig:  " + moteDepConfig);
                                 mote.getID(), program.getID(), MAX_RADIO_POWER);
             } catch (UnsupportedFlavorException ex) {
                 log.error("DataFlavor " + programFlavor + " unsupported", ex);
+                ClientUtils.displayErrorMessage(MoteConfigPanel.this, ex);
             } catch (IOException ex) {
                 log.error("I/O exception on data flavor " + programFlavor, ex);
+                ClientUtils.displayErrorMessage(MoteConfigPanel.this, ex);
             }
         }
     }
@@ -266,6 +269,7 @@ log.debug("moteDepConfig:  " + moteDepConfig);
                                                           pow);
             } catch (RemoteException ex) {
                 log.error("Remote exception while setting config", ex);
+                ClientUtils.displayErrorMessage(MoteConfigPanel.this, ex);
             }
         }
     }
@@ -367,6 +371,8 @@ log.debug("moteDepConfig:  " + moteDepConfig);
                                                         moteDepConfig.getID());
                     } catch (RemoteException ex) {
                         log.error("Remote Exception", ex);
+                        ClientUtils.displayErrorMessage(MoteConfigPanel.this,
+                                                        ex);
                     }
                 }
             });

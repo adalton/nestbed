@@ -39,16 +39,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.clemson.cs.nestbed.common.model.MoteType;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.MoteTypeAdapter;
 
 
-public class MoteTypeSqlAdapter implements MoteTypeAdapter {
-    private final static String CONN_STR;
+public class MoteTypeSqlAdapter extends   SqlAdapter
+                                implements MoteTypeAdapter {
 
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
+    private final static Log log = LogFactory.getLog(MoteTypeSqlAdapter.class);
 
     private enum Index {
         ID,
@@ -66,7 +68,7 @@ public class MoteTypeSqlAdapter implements MoteTypeAdapter {
     }
 
 
-    public Map<Integer, MoteType> readMoteTypes() {
+    public Map<Integer, MoteType> readMoteTypes() throws AdaptationException {
         Map<Integer, MoteType> moteTypes  = new HashMap<Integer, MoteType>();
         Connection             connection = null;
         Statement              statement  = null;
@@ -107,12 +109,14 @@ public class MoteTypeSqlAdapter implements MoteTypeAdapter {
                                             image, tosPlatform, timestamp);
                 moteTypes.put(id, moteType);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readMoteTypes";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return moteTypes;

@@ -42,16 +42,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.Project;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.ProjectAdapter;
 
 
-public class ProjectSqlAdapter implements ProjectAdapter {
-    private final static String CONN_STR;
-    private final static Log    log      =
-                                    LogFactory.getLog(ProjectSqlAdapter.class);
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
+public class ProjectSqlAdapter extends    SqlAdapter
+                               implements ProjectAdapter {
+
+    private final static Log log = LogFactory.getLog(ProjectSqlAdapter.class);
 
     private enum Index {
         ID,
@@ -66,7 +64,7 @@ public class ProjectSqlAdapter implements ProjectAdapter {
     }
 
 
-    public Map<Integer, Project> readProjects() {
+    public Map<Integer, Project> readProjects() throws AdaptationException {
         Map<Integer, Project>  projects   = new HashMap<Integer, Project>();
         Connection             connection = null;
         Statement              statement  = null;
@@ -83,12 +81,14 @@ public class ProjectSqlAdapter implements ProjectAdapter {
                 Project project = getProject(resultSet);
                 projects.put(project.getID(), project);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readProjects";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return projects;
@@ -96,8 +96,8 @@ public class ProjectSqlAdapter implements ProjectAdapter {
 
 
     public Project createProject(int testbedID, String name,
-                                 String description) {
-
+                                 String description)
+                                                    throws AdaptationException {
         Project    project    = null;
         Connection connection = null;
         Statement  statement  = null;
@@ -119,25 +119,32 @@ public class ProjectSqlAdapter implements ProjectAdapter {
 
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                project = getProject(resultSet);
-            } else {
-                log.error("Attempt to create project failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to create project failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "create project.", e);
+
+            project = getProject(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in createProject";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return project;
     }
 
 
-    public Project deleteProject(int projectID) {
+    public Project deleteProject(int projectID) throws AdaptationException {
         Project    project    = null;
         Connection connection = null;
         Statement  statement  = null;
@@ -150,21 +157,28 @@ public class ProjectSqlAdapter implements ProjectAdapter {
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                project = getProject(resultSet);
-                query   = "DELETE FROM Projects WHERE id = " + projectID;
-
-                statement.executeUpdate(query);
-            } else {
-                log.error("Attempt to delete project failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to delete project failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "delete project.", e);
+
+            project = getProject(resultSet);
+            query   = "DELETE FROM Projects WHERE id = " + projectID;
+
+            statement.executeUpdate(query);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in deleteProject";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return project;

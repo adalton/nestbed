@@ -42,18 +42,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramSymbolAdapter;
 
 
-public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
+public class ProgramSymbolSqlAdapter extends    SqlAdapter
+                                     implements ProgramSymbolAdapter {
 
-    private final static String CONN_STR;
-    private final static Log    log = LogFactory.getLog(
-                                        ProgramSymbolSqlAdapter.class);
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
-
+    private final static Log log = LogFactory.getLog(
+                                                ProgramSymbolSqlAdapter.class);
     private enum Index {
         ID,
         PROGID,
@@ -67,7 +64,8 @@ public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
     }
 
 
-    public Map<Integer, ProgramSymbol> readProgramSymbols() {
+    public Map<Integer, ProgramSymbol> readProgramSymbols()
+                                                    throws AdaptationException {
         Map<Integer, ProgramSymbol>  programSymbols =
                                 new HashMap<Integer, ProgramSymbol>();
 
@@ -86,12 +84,14 @@ public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
                 ProgramSymbol programSymbol = getProgramSymbol(resultSet);
                 programSymbols.put(programSymbol.getID(), programSymbol);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readProgramSymbols";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return programSymbols;
@@ -100,7 +100,8 @@ public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
 
     public ProgramSymbol createNewProgramSymbol(int    programID,
                                                 String module,
-                                                String symbol) {
+                                                String symbol)
+                                                    throws AdaptationException {
         ProgramSymbol programSymbol = null;
         Connection    connection    = null;
         Statement     statement     = null;
@@ -124,25 +125,33 @@ public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
 
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                programSymbol = getProgramSymbol(resultSet);
-            } else {
-                log.error("Attempt to create program symbol failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to create program symbol failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "create program symbol.", e);
+
+            programSymbol = getProgramSymbol(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in createNewProgramSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return programSymbol;
     }
 
 
-    public ProgramSymbol deleteProgramSymbol(int id) {
+    public ProgramSymbol deleteProgramSymbol(int id) 
+                                                    throws AdaptationException {
         ProgramSymbol programSymbol = null;
         Connection    connection    = null;
         Statement     statement     = null;
@@ -156,22 +165,29 @@ public class ProgramSymbolSqlAdapter implements ProgramSymbolAdapter {
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                programSymbol = getProgramSymbol(resultSet);
-                query           = "DELETE FROM ProgramSymbols " +
-                                  "WHERE id = " + id;
-
-                statement.executeUpdate(query);
-            } else {
-                log.error("Attempt to delete program symbol failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to delete program symbol failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "delete program symbol.", e);
+
+            programSymbol = getProgramSymbol(resultSet);
+            query           = "DELETE FROM ProgramSymbols " +
+                              "WHERE id = " + id;
+
+            statement.executeUpdate(query);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in deleteProgramSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return programSymbol;

@@ -261,6 +261,7 @@ public class MessageMonitorFrame extends JFrame {
                         constructor.newInstance(MessageMonitorFrame.this);
             } catch (Exception ex) {
                 log.error("Exception:\n", ex);
+                ClientUtils.displayErrorMessage(MessageMonitorFrame.this, ex);
             }
         }
 
@@ -292,6 +293,7 @@ public class MessageMonitorFrame extends JFrame {
                 running = !running;
             } catch (RemoteException ex) {
                 log.error("RemoteException:\n", ex);
+                ClientUtils.displayErrorMessage(MessageMonitorFrame.this, ex);
             }
         }
     }
@@ -325,6 +327,7 @@ public class MessageMonitorFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 log.error("Exception:\n", ex);
+                ClientUtils.displayErrorMessage(MessageMonitorFrame.this, ex);
             }
         }
 
@@ -371,6 +374,7 @@ public class MessageMonitorFrame extends JFrame {
 
             } catch (Exception ex) {
                 log.error("Exception:\n", ex);
+                ClientUtils.displayErrorMessage(MessageMonitorFrame.this, ex);
             }
         }
     }
