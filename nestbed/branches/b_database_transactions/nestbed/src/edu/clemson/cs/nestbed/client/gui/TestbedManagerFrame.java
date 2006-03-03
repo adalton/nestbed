@@ -682,6 +682,7 @@ public class TestbedManagerFrame extends JFrame {
             } catch (RemoteException ex) {
                 log.error("Exception occured while attemting " +
                           "to get project list.", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -718,6 +719,7 @@ public class TestbedManagerFrame extends JFrame {
             } catch (RemoteException ex) {
                 log.error("Exception occured while attemting " +
                           "to get project config list.", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -763,6 +765,7 @@ public class TestbedManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -775,6 +778,7 @@ public class TestbedManagerFrame extends JFrame {
                 projectManager.deleteProject(project.getID());
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -837,6 +841,7 @@ public class TestbedManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -865,6 +870,7 @@ public class TestbedManagerFrame extends JFrame {
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -881,6 +887,7 @@ public class TestbedManagerFrame extends JFrame {
                 configManager.deleteProjectDeploymentConfig(config.getID());
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -954,6 +961,7 @@ public class TestbedManagerFrame extends JFrame {
             } catch (Exception ex) {
                 log.error("Exception occured while opening config " +
                           "manager frame", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
@@ -978,6 +986,7 @@ public class TestbedManagerFrame extends JFrame {
             } catch (Exception ex) {
                 log.error("Exception occured while opening network " +
                           "monitor frame", ex);
+                ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
             }
         }
     }
