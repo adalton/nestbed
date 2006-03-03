@@ -42,20 +42,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.MoteDeploymentConfigurationAdapter;
 
 
-public class MoteDeploymentConfigurationSqlAdapter
+public class MoteDeploymentConfigurationSqlAdapter extends SqlAdapter
                                 implements MoteDeploymentConfigurationAdapter {
 
-    private final static Log    log = LogFactory.getLog(
+    private final static Log log = LogFactory.getLog(
                                    MoteDeploymentConfigurationSqlAdapter.class);
-    private final static String CONN_STR;
-
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
-
     private enum Index {
         ID,
         PROJECTCONFID,
@@ -71,7 +66,8 @@ public class MoteDeploymentConfigurationSqlAdapter
 
 
     public Map<Integer, MoteDeploymentConfiguration>
-                                        readMoteDeploymentConfigurations() {
+                                        readMoteDeploymentConfigurations()
+                                                    throws AdaptationException {
 
         Map<Integer, MoteDeploymentConfiguration>  moteDepConfigs =
                         new HashMap<Integer, MoteDeploymentConfiguration>();
@@ -94,12 +90,14 @@ public class MoteDeploymentConfigurationSqlAdapter
                 moteDepConfigs.put(moteDepConfiguration.getID(),
                                    moteDepConfiguration);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readMoteDeploymentConfigurations";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return moteDepConfigs;
@@ -109,7 +107,8 @@ public class MoteDeploymentConfigurationSqlAdapter
     public MoteDeploymentConfiguration updateMoteDeploymentConfiguration(
                                                     int mdConfigID,
                                                     int programID,
-                                                    int radioPowerLevel) {
+                                                    int radioPowerLevel)
+                                                    throws AdaptationException {
         MoteDeploymentConfiguration mdc        = null;
         Connection                  connection = null;
         Statement                   statement  = null;
@@ -129,19 +128,25 @@ public class MoteDeploymentConfigurationSqlAdapter
                     "id = " + mdConfigID;
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                mdc = getMoteDeploymentConfiguration(resultSet);
-            } else {
-                log.error("Attempt to update mote deployment configuration " +
-                          "failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Unable to select updated config.";
+                log.error(msg);;
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "update mote deployment configuration.", e);
+
+            mdc = getMoteDeploymentConfiguration(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in updateMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return mdc;
@@ -152,7 +157,8 @@ public class MoteDeploymentConfigurationSqlAdapter
                                                     int projectDepConfID,
                                                     int moteID,
                                                     int programID,
-                                                    int radioPowerLevel) {
+                                                    int radioPowerLevel)
+                                                    throws AdaptationException {
         MoteDeploymentConfiguration mdc        = null;
         Connection                  connection = null;
         Statement                   statement  = null;
@@ -175,19 +181,25 @@ public class MoteDeploymentConfigurationSqlAdapter
 
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                mdc = getMoteDeploymentConfiguration(resultSet);
-            } else {
-                log.error("Attempt to add new mote deployment " +
-                          "configuration failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Unable to select newly added config.";
+                log.error(msg);;
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "add mote deployment configuration.", e);
+
+            mdc = getMoteDeploymentConfiguration(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in addMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return mdc;
@@ -195,8 +207,8 @@ public class MoteDeploymentConfigurationSqlAdapter
 
 
     public MoteDeploymentConfiguration
-                                deleteMoteDeploymentConfiguration(int id) {
-
+                                deleteMoteDeploymentConfiguration(int id)
+                                                    throws AdaptationException {
         MoteDeploymentConfiguration mdc        = null;
         Connection                  connection = null;
         Statement                   statement  = null;
@@ -210,23 +222,29 @@ public class MoteDeploymentConfigurationSqlAdapter
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                mdc   = getMoteDeploymentConfiguration(resultSet);
-                query = "DELETE FROM MoteDeploymentConfigurations " +
-                        "WHERE id = " + id;
-
-                statement.executeUpdate(query);
-            } else {
-                log.error("Attempt to delete mote deployment configuration " +
-                          "failed.");
+            if (!resultSet.next()) {
+                String msg = "Unable to select config to delete.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "delete mote deployment configuration.", e);
+
+            mdc   = getMoteDeploymentConfiguration(resultSet);
+            query = "DELETE FROM MoteDeploymentConfigurations " +
+                    "WHERE id = " + id;
+
+            statement.executeUpdate(query);
+            connection.commit();
+
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in deleteMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return mdc;

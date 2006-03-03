@@ -46,21 +46,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
+import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProjectAdapter;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramMessageSymbolAdapter;
 
 
-public class ProgramMessageSymbolSqlAdapter
+public class ProgramMessageSymbolSqlAdapter extends SqlAdapter
                                         implements ProgramMessageSymbolAdapter {
-    private final static String CONN_STR;
-    private final static Log    log      =
-                           LogFactory.getLog(ProgramMessageSymbolAdapter.class);
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
-
+    private final static Log log = LogFactory.getLog(
+                                            ProgramMessageSymbolAdapter.class);
     private enum Index {
         ID,
         PROGRAMID,
@@ -74,7 +70,8 @@ public class ProgramMessageSymbolSqlAdapter
     }
 
 
-    public Map<Integer, ProgramMessageSymbol> readProgramMessageSymbols() {
+    public Map<Integer, ProgramMessageSymbol> readProgramMessageSymbols()
+                                                throws AdaptationException {
         Map<Integer, ProgramMessageSymbol> programMessageSymbols;
         Connection                         connection;
         Statement                          statement;
@@ -102,12 +99,14 @@ public class ProgramMessageSymbolSqlAdapter
                 programMessageSymbols.put(programMessageSymbol.getID(),
                                         programMessageSymbol);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readProgramMessageSymbols";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { /* empty */ }
-            try { statement.close();  } catch (Exception e) { /* empty */ }
-            try { connection.close(); } catch (Exception e) { /* empty */ }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return programMessageSymbols;
@@ -116,7 +115,8 @@ public class ProgramMessageSymbolSqlAdapter
 
     public ProgramMessageSymbol addProgramMessageSymbol(int    programID,
                                                         String name,
-                                                        byte[] bytecode) {
+                                                        byte[] bytecode)
+                                                    throws AdaptationException {
         ProgramMessageSymbol programMessageSymbol = null;
         Connection           connection           = null;
         PreparedStatement    preparedStatement    = null;
@@ -144,26 +144,34 @@ public class ProgramMessageSymbolSqlAdapter
                     "name      = '" + name      + "'";
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                programMessageSymbol = getProgramMessageSymbol(resultSet);
-            } else {
-                log.error("Attempt to add program message type failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to add program message symbol failed.";
+                log.error(msg);;
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "add program message type.", e);
+
+            programMessageSymbol = getProgramMessageSymbol(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in addProgramMessageSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();         } catch (Exception e) { }
-            try { preparedStatement.close(); } catch (Exception e) { }
-            try { statement.close();         } catch (Exception e) { }
-            try { connection.close();        } catch (Exception e) { }
+            try { resultSet.close();         } catch (Exception ex) { }
+            try { preparedStatement.close(); } catch (Exception ex) { }
+            try { statement.close();         } catch (Exception ex) { }
+            try { connection.close();        } catch (Exception ex) { }
         }
 
         return programMessageSymbol;
     }
 
 
-    public ProgramMessageSymbol deleteProgramMessageSymbol(int id) {
+    public ProgramMessageSymbol deleteProgramMessageSymbol(int id)
+                                                    throws AdaptationException {
         ProgramMessageSymbol pmt        = null;
         Connection           connection = null;
         Statement            statement  = null;
@@ -177,23 +185,29 @@ public class ProgramMessageSymbolSqlAdapter
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                pmt   = getProgramMessageSymbol(resultSet);
-                query = "DELETE FROM ProgramMessageSymbols " +
-                        "WHERE id = " + id;
-
-                statement.executeUpdate(query);
-            } else {
-                log.error("Attempt to delete program message type " +
-                          "failed.");
+            if (!resultSet.next()) {
+                String msg = "Attempt to delete program message type " +
+                             "failed.";
+                log.error(msg);;
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "delete program message type.", e);
+
+            pmt   = getProgramMessageSymbol(resultSet);
+            query = "DELETE FROM ProgramMessageSymbols " +
+                    "WHERE id = " + id;
+
+            statement.executeUpdate(query);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in deleteProgramMessageSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { }
-            try { statement.close();  } catch (Exception e) { }
-            try { connection.close(); } catch (Exception e) { }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return pmt;

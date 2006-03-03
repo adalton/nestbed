@@ -42,20 +42,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.ProgramProfilingMessageSymbol;
-import edu.clemson.cs.nestbed.server.adaptation.ProgramProfilingMessageSymbolAdapter;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
+import edu.clemson.cs.nestbed.server.adaptation.ProgramProfilingMessageSymbolAdapter;
 
 
-public class ProgramProfilingMessageSymbolSqlAdapter
+public class ProgramProfilingMessageSymbolSqlAdapter extends SqlAdapter
                             implements ProgramProfilingMessageSymbolAdapter {
 
-    private final static String CONN_STR;
-    private final static Log    log = LogFactory.getLog(
+    private final static Log log = LogFactory.getLog(
                                 ProgramProfilingMessageSymbolSqlAdapter.class);
-    static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
-    }
-
     private enum Index {
         ID,
         PDCONFID,
@@ -69,7 +64,8 @@ public class ProgramProfilingMessageSymbolSqlAdapter
 
 
     public Map<Integer, ProgramProfilingMessageSymbol>
-                               readProgramProfilingMessageSymbols() {
+                               readProgramProfilingMessageSymbols()
+                                                    throws AdaptationException {
         Map<Integer, ProgramProfilingMessageSymbol>  profilingMessageSymbols;
 
         profilingMessageSymbols =
@@ -92,12 +88,14 @@ public class ProgramProfilingMessageSymbolSqlAdapter
                 profilingMessageSymbols.put(profilingMessageSymbol.getID(),
                                             profilingMessageSymbol);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            String msg = "SQLException in readProgramProfilingMessageSymbols";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { }
-            try { statement.close();  } catch (Exception e) { }
-            try { connection.close(); } catch (Exception e) { }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return profilingMessageSymbols;
@@ -105,7 +103,8 @@ public class ProgramProfilingMessageSymbolSqlAdapter
 
 
     public ProgramProfilingMessageSymbol createNewProfilingMessageSymbol(
-                                            int configID, int programMessageSymbolID) {
+                                            int configID, int programMessageSymbolID)
+                                                    throws AdaptationException {
         ProgramProfilingMessageSymbol profilingMessageSymbol = null;
         Connection                    connection             = null;
         Statement                     statement              = null;
@@ -128,19 +127,26 @@ public class ProgramProfilingMessageSymbolSqlAdapter
 
             resultSet = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                profilingMessageSymbol = getProfilingMessageSymbol(resultSet);
-            } else {
-                log.error("Attempt to create program profiling message " +
-                          "symbol failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to create program profiling message " +
+                             "symbol failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "create program profiling message symbol.", e);
+
+            profilingMessageSymbol = getProfilingMessageSymbol(resultSet);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in createNewProfilingMessageSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { }
-            try { statement.close();  } catch (Exception e) { }
-            try { connection.close(); } catch (Exception e) { }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return profilingMessageSymbol;
@@ -163,73 +169,36 @@ public class ProgramProfilingMessageSymbolSqlAdapter
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (resultSet.next()) {
-                profilingMessageSymbol = getProfilingMessageSymbol(resultSet);
-                query           = "DELETE FROM ProgramProfilingMessageSymbols " +
-                                  "WHERE id = " + id;
-
-                statement.executeUpdate(query);
-            } else {
-                log.error("Attempt to delete program profiling message " +
-                          "symbol failed.");
+            if (!resultSet.next()) {
+                connection.rollback();
+                String msg = "Attempt to delete program profiling message " +
+                             "symbol failed.";
+                log.error(msg);
+                throw new AdaptationException(msg);
             }
-        } catch (SQLException ex) {
-            log.error("SQLException occured while attempting to " +
-                      "delete program profiling message symbol.", ex);
 
-            throw new AdaptationException("SQLException", ex);
+            profilingMessageSymbol = getProfilingMessageSymbol(resultSet);
+            query           = "DELETE FROM ProgramProfilingMessageSymbols " +
+                              "WHERE id = " + id;
+
+            statement.executeUpdate(query);
+            connection.commit();
+        } catch (SQLException ex) {
+            try { connection.rollback(); } catch (Exception e) { }
+
+            String msg = "SQLException in deleteProfilingMessageSymbol";
+            log.error(msg, ex);
+            throw new AdaptationException(msg, ex);
         } finally {
-            try { resultSet.close();  } catch (Exception e) { }
-            try { statement.close();  } catch (Exception e) { }
-            try { connection.close(); } catch (Exception e) { }
+            try { resultSet.close();  } catch (Exception ex) { }
+            try { statement.close();  } catch (Exception ex) { }
+            try { connection.close(); } catch (Exception ex) { }
         }
 
         return profilingMessageSymbol;
 
     }
 
-/*
-
-    public ProgramProfilingMessageSymbol updateProgramProfilingMessageSymbol(
-                                            int id,              int configID,
-                                            int programMessageSymbolID) {
-        ProgramProfilingMessageSymbol pps        = null;
-        Connection             connection = null;
-        Statement              statement  = null;
-        ResultSet              resultSet  = null;
-
-        try {
-            String query =
-                "UPDATE ProgramProfilingMessageSymbols SET " +
-                "projectDeploymentConfigurationID = " + configID        + ", " +
-                "programMessageSymbolID                  = " + programMessageSymbolID + ", " +
-                "WHERE id = " + id;
-
-            connection = DriverManager.getConnection(CONN_STR);
-            statement  = connection.createStatement();
-            statement.executeUpdate(query);
-
-            query = "SELECT * from ProgramProfilingMessageSymbols WHERE " +
-                    "id = " + id;
-            resultSet = statement.executeQuery(query);
-
-            if (resultSet.next()) {
-                pps = getProfilingMessageSymbol(resultSet);
-            } else {
-                log.error("Attempt to update program profiling symbol " +
-                          "failed.");
-            }
-        } catch (SQLException e) {
-            log.error("SQLException occured while attempting to " +
-                      "update program profiling symbol.", e);
-        } finally {
-            try { resultSet.close();  } catch (Exception e) { }
-            try { statement.close();  } catch (Exception e) { }
-            try { connection.close(); } catch (Exception e) { }
-        }
-        return pps;
-    }
-*/
 
     private final ProgramProfilingMessageSymbol getProfilingMessageSymbol(
                                     ResultSet resultSet) throws SQLException {
