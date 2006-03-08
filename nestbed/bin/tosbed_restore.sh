@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 export PATH=/usr/bin
 
 if [ $# -ne 1 ]; then

@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteTestbedAssignmentAdapter.java
  *

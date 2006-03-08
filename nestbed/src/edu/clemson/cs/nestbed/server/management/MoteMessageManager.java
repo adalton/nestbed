@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteMessageManager.java
  *
@@ -63,24 +62,28 @@ import net.tinyos.sf.SerialForwarder;
 public class MoteMessageManager implements MessageListener {
     private final static Log log = LogFactory.getLog(MoteMessageManager.class);
 
+    private ProgramMessageSymbolManager progMsgSymbolManager;
     private Map<ProgramMessageSymbol,
-                List<RemoteObserver>> messageObserverListMap;
-    private Mote                      mote;
-    private PacketSource              packetSource;
-    private PhoenixSource             phoenixSource;
-    private MoteIF                    moteIF;
-    private boolean                   enabled;
-    private Thread                    mainThread;
-    private SerialForwarder           serialForwarder;
-    private boolean                   sfEnabled;
+                List<RemoteObserver>>   messageObserverListMap;
+    private Mote                        mote;
+
+    private PacketSource                packetSource;
+    private PhoenixSource               phoenixSource;
+    private MoteIF                      moteIF;
+    private boolean                     enabled;
+    private Thread                      mainThread;
+    private SerialForwarder             serialForwarder;
+    private boolean                     sfEnabled;
 
 
-    public MoteMessageManager(Mote mote) {
+    public MoteMessageManager(Mote mote, ProgramMessageSymbolManager pmsMgr) {
         messageObserverListMap    = new HashMap<ProgramMessageSymbol,
                                                 List<RemoteObserver>>();
         this.mote                 = mote;
+        this.progMsgSymbolManager = pmsMgr;
         this.enabled              = false;
         this.mainThread           = Thread.currentThread();
+
     }
 
 
@@ -92,8 +95,7 @@ public class MoteMessageManager implements MessageListener {
         ProgramMessageSymbol pms;
         List<RemoteObserver> observers;
 
-        pms       = ProgramMessageSymbolManagerImpl.getInstance().
-                                            getProgramMessageSymbol(pmsID);
+        pms       = progMsgSymbolManager.getProgramMessageSymbol(pmsID);
         observers = messageObserverListMap.get(pms);
 
         if (observers == null) {
@@ -109,12 +111,22 @@ public class MoteMessageManager implements MessageListener {
             Message     msg         = (Message) constructor.newInstance();
 
             moteIF.registerListener(msg, this);
-        } catch (Exception ex) {
+        } catch (NoSuchMethodException ex) {
             observers.remove(observer);
-
-            String msg = "Cannot create message type object: ";
-            log.error(msg, ex);
-            throw new RemoteException(msg + ex.toString());
+            log.error("Cannot create message type object", ex);
+            throw new RemoteException("Cannot create message type object", ex);
+        } catch (InstantiationException ex) {
+            observers.remove(observer);
+            log.error("Cannot create message type object", ex);
+            throw new RemoteException("Cannot create message type object", ex);
+        } catch (IllegalAccessException ex) {
+            observers.remove(observer);
+            log.error("Cannot create message type object", ex);
+            throw new RemoteException("Cannot create message type object", ex);
+        } catch (InvocationTargetException ex) {
+            observers.remove(observer);
+            log.error("Cannot create message type object", ex);
+            throw new RemoteException("Cannot create message type object", ex);
         }
     }
 
@@ -128,19 +140,11 @@ public class MoteMessageManager implements MessageListener {
         ProgramMessageSymbol pms;
         List<RemoteObserver> observers;
 
-        try {
-            pms       = ProgramMessageSymbolManagerImpl.getInstance().
-                                                getProgramMessageSymbol(pmsID);
-            observers = messageObserverListMap.get(pms);
+        pms       = progMsgSymbolManager.getProgramMessageSymbol(pmsID);
+        observers = messageObserverListMap.get(pms);
 
-            if (observers != null) {
-                observers.remove(observer);
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in removeMessageObserver");
-            throw new RemoteException(ex.toString());
+        if (observers != null) {
+            observers.remove(observer);
         }
     }
 
@@ -150,8 +154,8 @@ public class MoteMessageManager implements MessageListener {
             log.info("Enabling messages for mote: " + mote.getID());
 
             packetSource  = BuildSource.makePacketSource("serial@/dev/motes/" +
-                                                        mote.getMoteSerialID() +
-                                                        ":telos");
+                                                         mote.getMoteSerialID() +
+                                                         ":telos");
             phoenixSource = BuildSource.makePhoenix(packetSource, null);
 
             phoenixSource.setPacketErrorHandler(new PhoenixError() {
@@ -175,11 +179,15 @@ public class MoteMessageManager implements MessageListener {
             phoenixSource.shutdown();
             phoenixSource = null;
 
-            try { packetSource.close(); } catch (IOException ex) { }
-
+            try {
+                packetSource.close();
+            } catch (IOException ex) {
+                log.warn("IOException while closing packet source\n", ex);
+            }
             packetSource = null;
-            moteIF       = null;
-            enabled      = false;
+
+            moteIF  = null;
+            enabled = false;
         }
     }
 
@@ -198,9 +206,11 @@ public class MoteMessageManager implements MessageListener {
                     "-quiet"});
             }
             sfEnabled = !sfEnabled;
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             log.error("Exception while enabling serial forwarder\n", ex);
-            throw new RemoteException(ex.toString());
+            ex.printStackTrace();
+            throw new RemoteException("Exception while enabling serial " +
+                                      "forwarder", ex);
         }
     }
 
@@ -246,7 +256,7 @@ public class MoteMessageManager implements MessageListener {
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception while receiving message:\n", ex);
+            log.error("Exception:\n", ex);
         }
     }
 }

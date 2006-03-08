@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteTypeManager.java
  *

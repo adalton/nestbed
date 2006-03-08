@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProjectManagerImpl.java
  *
@@ -53,29 +52,35 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 public class ProjectManagerImpl extends    RemoteObservableImpl
                                 implements ProjectManager {
-    private final static ProjectManager instance;
-    private final static Log            log      = LogFactory.getLog(
-                                                    ProjectManagerImpl.class);
 
-    private ProjectAdapter        projectAdapter;
-    private Map<Integer, Project> projects;
+    private final static Log log = LogFactory.getLog(ProjectManagerImpl.class);
 
-    static {
-        ProjectManagerImpl impl = null;
 
+    private ProgramManager                        programManager;
+    private ProjectDeploymentConfigurationManager configManager;
+
+    private ProjectAdapter                        projectAdapter;
+    private Map<Integer, Project>                 projects;
+
+
+    public ProjectManagerImpl(
+                         ProgramManager                        programManager,
+                         ProjectDeploymentConfigurationManager configManager)
+                                                        throws RemoteException {
+        super();
         try {
-            impl = new ProjectManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+            this.programManager = programManager;
+            this.configManager  = configManager;
+
+            projectAdapter       = AdapterFactory.createProjectAdapter(
+                                                               AdapterType.SQL);
+            projects             = projectAdapter.readProjects();
+
+            log.debug("Projects read:\n" + projects);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
-    }
-
-
-    public static ProjectManager getInstance() {
-        return instance;
     }
 
 
@@ -84,15 +89,10 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         log.debug("getProjectList() called");
         List<Project> projectList = new ArrayList<Project>();
 
-        try {
-            for (Project i : projects.values()) {
-                if (i.getTestbedID() == testbedID) {
-                    projectList.add(i);
-                }
+        for (Project i : projects.values()) {
+            if (i.getTestbedID() == testbedID) {
+                projectList.add(i);
             }
-        } catch (Exception ex) {
-            log.error("Exception in getProjectList", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return projectList;
@@ -116,10 +116,8 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.NEW_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in createNewProject", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -138,69 +136,28 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.DELETE_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in deleteProject", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
 
     private void cleanupPrograms(int projectID) throws RemoteException {
-        ProgramManager pm          = ProgramManagerImpl.getInstance();
-        List<Program>  programList = pm.getProgramList(projectID);
+        List<Program> programList = programManager.getProgramList(projectID);
 
-        try {
-            for (Program i : programList) {
-                pm.deleteProgram(i.getID());
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in cleanupPrograms", ex);
-            throw new RemoteException(ex.toString());
+        for (Program i : programList) {
+            programManager.deleteProgram(i.getID());
         }
     }
 
 
     private void cleanupProjectDeploymentConfigurations(int projectID)
                                                         throws RemoteException {
-        ProjectDeploymentConfigurationManager pdcm =
-                        ProjectDeploymentConfigurationManagerImpl.getInstance();
+        List<ProjectDeploymentConfiguration> configList =
+                           configManager.getProjectDeploymentConfigs(projectID);
 
-        try {
-            List<ProjectDeploymentConfiguration> configList =
-                                    pdcm.getProjectDeploymentConfigs(projectID);
-
-            for (ProjectDeploymentConfiguration i : configList) {
-                pdcm.deleteProjectDeploymentConfig(i.getID());
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in cleanupProjectDeploymentConfigurations",
-                      ex);
-            throw new RemoteException(ex.toString());
-        }
-    }
-
-
-    private ProjectManagerImpl() throws RemoteException {
-        super();
-
-        try {
-            projectAdapter = AdapterFactory.createProjectAdapter(
-                                                              AdapterType.SQL);
-            projects       = projectAdapter.readProjects();
-
-            log.debug("Projects read:\n" + projects);
-        } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in ProjectManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+        for (ProjectDeploymentConfiguration i : configList) {
+            configManager.deleteProjectDeploymentConfig(i.getID());
         }
     }
 }

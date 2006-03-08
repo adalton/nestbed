@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProjectManager.java
  *

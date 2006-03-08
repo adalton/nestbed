@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteTestbedAssignmentManagerImpl.java
  *
@@ -48,79 +47,16 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteTestbedAssignmentAdapter;
 
 public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
                                     implements MoteTestbedAssignmentManager {
-    private final static MoteTestbedAssignmentManager instance;
-    private final static Log log = LogFactory.getLog(
-                                        MoteTestbedAssignmentManagerImpl.class);
+
+    private final static Log log =
+                LogFactory.getLog(MoteTestbedAssignmentManagerImpl.class);
 
 
     private MoteTestbedAssignmentAdapter        moteTestbedAssignmentAdapter;
     private Map<Integer, MoteTestbedAssignment> moteTestbedAssignments;
 
-    static {
-        MoteTestbedAssignmentManagerImpl impl = null;
 
-        try {
-            impl = new MoteTestbedAssignmentManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
-        }
-    }
-
-
-    public static MoteTestbedAssignmentManager getInstance() {
-        return instance;
-    }
-
-
-    public List<MoteTestbedAssignment>
-                            getMoteTestbedAssignmentList(int testbedID)
-                                                        throws RemoteException {
-        log.debug("getMoteTestbedAssignmentList() called");
-        List<MoteTestbedAssignment> mtbaList =
-                                        new ArrayList<MoteTestbedAssignment>();
-        try {
-            synchronized (this) {
-                for (MoteTestbedAssignment i :
-                                            moteTestbedAssignments.values()) {
-                    if (i.getTestbedID() == testbedID) {
-                        mtbaList.add(i);
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignmentList");
-            throw new RemoteException(ex.toString());
-        }
-
-        return mtbaList;
-    }
-
-
-    public synchronized MoteTestbedAssignment
-                                getMoteTestbedAssignment(int moteID)
-                                                       throws RemoteException {
-        MoteTestbedAssignment mtba = null;
-
-        try {
-            for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
-                if (i.getMoteID() == moteID) {
-                    mtba = i;
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignment");
-            throw new RemoteException(ex.toString());
-        }
-
-        return mtba;
-    }
-
-
-    private MoteTestbedAssignmentManagerImpl() throws RemoteException {
+    public MoteTestbedAssignmentManagerImpl() throws RemoteException {
         super();
 
         try {
@@ -133,10 +69,42 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
             log.debug("MoteTestbedAssignments read:\n" +
                       moteTestbedAssignments);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in MoteTestbedAssignmentManagerImpl");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
+    }
+
+
+    public List<MoteTestbedAssignment>
+                                    getMoteTestbedAssignmentList(int testbedID)
+                                            throws RemoteException {
+        log.debug("getMoteTestbedAssignmentList() called");
+        List<MoteTestbedAssignment> mtbaList =
+                                        new ArrayList<MoteTestbedAssignment>();
+        synchronized (this) {
+            for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
+                if (i.getTestbedID() == testbedID) {
+                    mtbaList.add(i);
+                }
+            }
+        }
+
+        return mtbaList;
+    }
+
+
+    public synchronized MoteTestbedAssignment
+                                getMoteTestbedAssignment(int moteID)
+                                                       throws RemoteException {
+        MoteTestbedAssignment mtba = null;
+
+        for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
+            if (i.getMoteID() == moteID) {
+                mtba = i;
+                break;
+            }
+        }
+
+        return mtba;
     }
 }

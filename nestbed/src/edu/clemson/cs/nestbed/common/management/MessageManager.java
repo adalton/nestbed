@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MessageManager.java
  *

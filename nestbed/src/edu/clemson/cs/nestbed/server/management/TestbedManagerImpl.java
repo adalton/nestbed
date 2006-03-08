@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * TestbedManagerImpl.java
  *
@@ -49,48 +48,14 @@ import edu.clemson.cs.nestbed.server.adaptation.TestbedAdapter;
 public class TestbedManagerImpl extends    UnicastRemoteObject
                                 implements TestbedManager {
 
-    private final static TestbedManager instance;
-    private final static Log            log      = LogFactory.getLog(
-                                                     TestbedManagerImpl.class);
+    private final static Log log = LogFactory.getLog(TestbedManagerImpl.class);
+
 
     private TestbedAdapter        testbedAdapter;
     private Map<Integer, Testbed> testbeds;
 
-    static {
-        TestbedManagerImpl impl = null;
 
-        try {
-            impl = new TestbedManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
-        }
-    }
-
-
-    public static TestbedManager getInstance() {
-        return instance;
-    }
-
-
-    public synchronized List<Testbed> getTestbedList() throws RemoteException {
-        log.debug("getTestbedList() called");
-        List<Testbed> testbedList = null;
-
-        try {
-            testbedList = new ArrayList<Testbed>(testbeds.values());
-        } catch (Exception ex) {
-            log.error("Exception in getTestbedList", ex);
-            throw new RemoteException(ex.toString());
-        }
-
-        return testbedList;
-    }
-
-
-    private TestbedManagerImpl() throws RemoteException {
+    public TestbedManagerImpl() throws RemoteException {
         super();
 
         try {
@@ -100,10 +65,15 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
 
             log.debug("Testbeds read:\n" + testbeds);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in TestbedManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
+        
+    }
+
+
+    public synchronized List<Testbed> getTestbedList() throws RemoteException {
+        log.debug("getTestbedList() called");
+        return new ArrayList<Testbed>(testbeds.values());
     }
 }

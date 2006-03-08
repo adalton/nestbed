@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * BuildTestbed.java
  *

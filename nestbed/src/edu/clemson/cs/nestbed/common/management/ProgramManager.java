@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProgramManager.java
  *

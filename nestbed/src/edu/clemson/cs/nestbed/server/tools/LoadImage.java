@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * LoadImage.java
  *

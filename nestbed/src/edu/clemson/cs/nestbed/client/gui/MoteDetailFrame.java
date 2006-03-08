@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteDetailFrame.java
  *
@@ -523,7 +522,6 @@ public class MoteDetailFrame extends JFrame {
                 }
             } catch (Exception ex) {
                 log.error("Exception", ex);
-                ClientUtils.displayErrorMessage(MoteDetailFrame.this, ex);
             }
         }
     }
@@ -544,7 +542,6 @@ public class MoteDetailFrame extends JFrame {
                 monitor.setVisible(true);
             } catch (Exception ex) {
                 log.error("Exception: ", ex);
-                ClientUtils.displayErrorMessage(MoteDetailFrame.this, ex);
             }
         }
     }

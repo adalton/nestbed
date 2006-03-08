@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 
 PATH=/bin:/usr/bin
 

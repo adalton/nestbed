@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * RemoteObserver.java
  *

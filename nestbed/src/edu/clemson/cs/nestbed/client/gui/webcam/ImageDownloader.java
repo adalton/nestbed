@@ -1,4 +1,3 @@
-/* $Id$ */
 package edu.clemson.cs.nestbed.client.gui.webcam;
 /*
  * ImageDownloader.java

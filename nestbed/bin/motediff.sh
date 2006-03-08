@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 
 while [ true ]; do
     PREMOTES=$(ls /dev/motes/)

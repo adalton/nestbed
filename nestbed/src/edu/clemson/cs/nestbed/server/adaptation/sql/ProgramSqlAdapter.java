@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProgramSqlAdapter.java
  *
@@ -42,14 +41,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.Program;
-import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
 
 
-public class ProgramSqlAdapter extends    SqlAdapter
-                               implements ProgramAdapter {
-
-    private final static Log log = LogFactory.getLog(ProgramSqlAdapter.class);
+public class ProgramSqlAdapter implements ProgramAdapter {
+    private final static String CONN_STR;
+    private final static Log    log = LogFactory.getLog(
+                                                    ProgramSqlAdapter.class);
+    static {
+        CONN_STR = System.getProperty("testbed.database.connectionString");
+    }
 
     private enum Index {
         ID,
@@ -65,7 +66,7 @@ public class ProgramSqlAdapter extends    SqlAdapter
     }
 
 
-    public Map<Integer, Program> readPrograms() throws AdaptationException {
+    public Map<Integer, Program> readPrograms() {
         Map<Integer, Program>  programs   = new HashMap<Integer, Program>();
         Connection             connection = null;
         Statement              statement  = null;
@@ -82,14 +83,12 @@ public class ProgramSqlAdapter extends    SqlAdapter
                 Program program = getProgram(resultSet);
                 programs.put(program.getID(), program);
             }
-        } catch (SQLException ex) {
-            String msg = "SQLException in readPrograms";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
-            try { resultSet.close();     } catch (Exception ex) { }
-            try { statement.close();     } catch (Exception ex) { }
-            try { connection.close();    } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return programs;
@@ -97,18 +96,13 @@ public class ProgramSqlAdapter extends    SqlAdapter
 
 
     public Program createNewProgram(int    projectID, String name,
-                                    String description)
-                                                    throws AdaptationException {
+                                    String description) {
         Program    program    = null;
         Connection connection = null;
         Statement  statement  = null;
         ResultSet  resultSet  = null;
 
         try {
-            connection = DriverManager.getConnection(CONN_STR);
-            connection.setAutoCommit(false);
-            statement  = connection.createStatement();
-
             String query = "INSERT INTO Programs(projectID, name, " +
                            "description, sourcePath) VALUES ( "     +
                            projectID         + ", " +
@@ -116,7 +110,8 @@ public class ProgramSqlAdapter extends    SqlAdapter
                            "'" + description + "', " +
                            "'" + "<unknown>" + "')";
 
-            log.debug("SQL Query:\n" + query);
+            connection = DriverManager.getConnection(CONN_STR);
+            statement  = connection.createStatement();
             statement.executeUpdate(query);
 
             query = "SELECT * FROM Programs WHERE " +
@@ -126,33 +121,25 @@ public class ProgramSqlAdapter extends    SqlAdapter
 
             resultSet = statement.executeQuery(query);
 
-            if (!resultSet.next()) {
-                connection.rollback();
-                String msg = "Attempt to create program failed";
-                log.error(msg);
-                throw new AdaptationException(msg);
+            if (resultSet.next()) {
+                program = getProgram(resultSet);
+            } else {
+                log.error("Attempt to create program failed.");
             }
-
-            program = getProgram(resultSet);
-            connection.commit();
-        } catch (SQLException ex) {
-            try { connection.rollback(); } catch (Exception e) { }
-
-            String msg = "SQLException in createNewProgram";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            log.error("SQLException occured while attempting to " +
+                      "create program.", e);
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return program;
     }
 
 
-    public Program updateProgramPath(int id, String sourcePath)
-                                                    throws AdaptationException {
+    public Program updateProgramPath(int id, String sourcePath) {
         Program    program    = null;
         Connection connection = null;
         Statement  statement  = null;
@@ -170,32 +157,25 @@ public class ProgramSqlAdapter extends    SqlAdapter
             query     = "SELECT * from Programs WHERE id = " + id;
             resultSet = statement.executeQuery(query);
 
-            if (!resultSet.next()) {
-                connection.rollback();
-                String msg = "Attempt to update program failed.";
-                log.error(msg);
-                throw new AdaptationException(msg);
+            if (resultSet.next()) {
+                program = getProgram(resultSet);
+            } else {
+                log.error("Attempt to update program failed.");
             }
-
-            program = getProgram(resultSet);
-            connection.commit();
-        } catch (SQLException ex) {
-            try { connection.rollback(); } catch (Exception e) { }
-
-            String msg = "SQLException in updateProgramPath";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            log.error("SQLException occured while attempting to " +
+                      "update program.", e);
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return program;
     }
 
 
-    public Program deleteProgram(int id) throws AdaptationException {
+    public Program deleteProgram(int id) {
         Program    program    = null;
         Connection connection = null;
         Statement  statement  = null;
@@ -208,28 +188,21 @@ public class ProgramSqlAdapter extends    SqlAdapter
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (!resultSet.next()) {
-                connection.rollback();
-                String msg = "Attempt to delete program failed.";
-                log.error(msg);
-                throw new AdaptationException(msg);
+            if (resultSet.next()) {
+                program = getProgram(resultSet);
+                query   = "DELETE FROM Programs WHERE id = " + id;
+
+                statement.executeUpdate(query);
+            } else {
+                log.error("Attempt to delete program failed.");
             }
-
-            program = getProgram(resultSet);
-            query   = "DELETE FROM Programs WHERE id = " + id;
-
-            statement.executeUpdate(query);
-            connection.commit();
-        } catch (SQLException ex) {
-            try { connection.rollback(); } catch (Exception e) { }
-
-            String msg = "SQLException in deleteProgram";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            log.error("SQLException occured while attempting to " +
+                      "delete program.", e);
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return program;

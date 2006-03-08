@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MotePanel.java
  *

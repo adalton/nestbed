@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteManager.java
  *
@@ -37,7 +36,6 @@ import edu.clemson.cs.nestbed.common.model.Mote;
 
 
 public interface MoteManager extends Remote {
-    public Mote       getMote(int moteID)          throws RemoteException;
-    public Mote       getMote(String moteSerialID) throws RemoteException;
-    public List<Mote> getMoteList()                throws RemoteException;
+    public Mote       getMote(int moteID) throws RemoteException;
+    public List<Mote> getMoteList()       throws RemoteException;
 }

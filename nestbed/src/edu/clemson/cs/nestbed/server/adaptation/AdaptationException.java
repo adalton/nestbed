@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * AdaptationException.java
  *
@@ -65,16 +64,5 @@ public class AdaptationException extends Exception {
 
     public Throwable getCause() {
         return detail;
-    }
-
-
-    public String toString() {
-        String str = super.toString();
-
-        if (detail != null) {
-            str += "\n  caused by:\n" + detail.toString();
-        }
-
-        return str;
     }
 }

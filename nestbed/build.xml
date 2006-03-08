@@ -1,17 +1,15 @@
-<!-- $Id$ -->
 <project name="nestbed" default="dist" basedir=".">
     <property file="build.properties"/>
     <property file="${user.home}/build.properties"/>
 
     <property name="app.name"            value="nestbed"/>
-    <property name="app.version"         value="0.4"/>
+    <property name="app.version"         value="0.3"/>
 
     <property name="src.home"            value="src"/>
     <property name="classes.home"        value="classes"/>
     <property name="lib.home"            value="lib"/>
     <property name="dist.home"           value="dist"/>
     <property name="misc.home"           value="misc"/>
-    <property name="bin.home"            value="bin"/>
 
     <property name="compile.debug"       value="true"/>
     <property name="compile.deprecation" value="true"/>
@@ -30,13 +28,10 @@
             description="Delete old build and dist directories">
         <delete dir="${classes.home}"/>
         <delete dir="${dist.home}"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Parser.java"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Token.java"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Lexer.java"/>
     </target>
 
 
-    <target name="compile" depends="prepare,parser"
+    <target name="compile" depends="prepare"
             description="Compile Java sources">
 
         <javac      srcdir="${src.home}"
@@ -72,27 +67,6 @@
               basedir="${misc.home}"
                update="true"
              includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
-
-        <delete file="${dist.home}/nestbed.jar"/>
-        <symlink        link="${dist.home}/nestbed.jar"
-                    resource="${app.name}-${app.version}.jar"
-                   overwrite="true"/>
-    </target>
-
-    <target name="parser" depends="prepare"
-            description="Parse the java_cup nesC grammar">
-        <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
-            <arg line="parser.sh"/>
-        </exec>
-        <!--
-        For now, I'm sticking this in parser.sh since there isn't a jflex ebuild
-
-        <jflex    file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/nesc.jflex"
-               destdir="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/"
-                 nobak="on"/>
-        -->
-
-
     </target>
 
     <target name="javadoc" depends="compile"

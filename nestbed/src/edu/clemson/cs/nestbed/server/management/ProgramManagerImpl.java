@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProgramManagerImpl.java
  *
@@ -33,7 +32,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,18 +40,11 @@ import java.io.OutputStreamWriter;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -67,30 +58,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.MoteManager;
 import edu.clemson.cs.nestbed.common.management.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
-import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
-import edu.clemson.cs.nestbed.server.nesc.comm.MoteComm;
-import edu.clemson.cs.nestbed.server.nesc.comm.mig.PowerMessage;
-import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
-import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
 public class ProgramManagerImpl extends    RemoteObservableImpl
                                 implements ProgramManager {
 
-    private final static ProgramManager instance;
-    private final static Log            log      = LogFactory.getLog(
-                                                      ProgramManagerImpl.class);
+    private final static Log log = LogFactory.getLog(ProgramManagerImpl.class);
+
+    //private final static int    MAX_THREADS = 20;
     private final static int    MAX_THREADS = 40;
     private final static File   TOS_ROOT    = new File("/tmp/nestbed");
     private final static String MAKE        = "/usr/bin/make";
@@ -99,79 +84,69 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     "/home/adalton/src/java/nestbed/bin/getMessageTypes.sh";
     private final static String GET_FILE   =
                     "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
-    static {
-        ProgramManagerImpl impl = null;
+
+
+    private ProgramMessageSymbolManager          programMsgSymbolManager;
+    private ProgramSymbolManager                 programSymbolManager;
+    private MoteDeploymentConfigurationManager   mdcManager;
+    private ProgramAdapter                       programAdapter;
+    private Map<Integer, Program>                programs;
+    private ExecutorService                      threadPool;
+
+
+    public ProgramManagerImpl(ProgramMessageSymbolManager          pmtManager,
+                              ProgramSymbolManager                 psManager,
+                              MoteDeploymentConfigurationManager   mdcManager)
+                                                    throws RemoteException {
+        super();
 
         try {
-            impl = new ProgramManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+            this.programMsgSymbolManager = pmtManager;
+            this.programSymbolManager    = psManager;
+            this.mdcManager              = mdcManager;
+            this.threadPool              = Executors.newFixedThreadPool(
+                                                                MAX_THREADS);
+
+            programAdapter               = AdapterFactory.createProgramAdapter(
+                                                            AdapterType.SQL);
+            programs                     = programAdapter.readPrograms();
+
+            log.debug("Programs read:\n" + programs);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
 
-    private ProgramAdapter        programAdapter;
-    private Map<Integer, Program> programs;
-    private ExecutorService       threadPool;
-    private ReadWriteLock         managerLock;
-    private Lock                  readLock;
-    private Lock                  writeLock;
-
-
-    public static ProgramManager getInstance() {
-        return instance;
-    }
-
-
-    public Program getProgram(int id) throws RemoteException {
+    public synchronized Program getProgram(int id) throws RemoteException {
         log.debug("getProgram() called.");
-
-        readLock.lock();
-        try {
-            return programs.get(id);
-        } finally {
-            readLock.unlock();
-        }
+        return programs.get(id);
     }
 
 
-    public List<Program> getProgramList(int projectID) throws RemoteException {
+    public synchronized List<Program> getProgramList(int projectID)
+                                                       throws RemoteException {
         log.debug("getProgramList() called");
-        List<Program>       programList = new ArrayList<Program>();
-        Collection<Program> allPrograms;
+        List<Program> programList = new ArrayList<Program>();
 
-        try {
-            try {
-                readLock.lock();
-                allPrograms = programs.values();
-            } finally {
-                readLock.unlock();
+        for (Program i : programs.values()) {
+            if (i.getProjectID() == projectID) {
+                programList.add(i);
             }
-
-            for (Program i : allPrograms) {
-                if (i.getProjectID() == projectID) {
-                    programList.add(i);
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Exception in getProgramList");
-            throw new RemoteException(ex.toString());
         }
 
         return programList;
     }
 
 
-    public void createNewProgram(final int    testbedID,
-                                 final int    projectID,
-                                 final String name,
-                                 final String description,
-                                 final byte[] buffer,
-                                 final String tosPlatform)
-                                                   throws RemoteException {
+    public synchronized void createNewProgram(final int    testbedID,
+                                              final int    projectID,
+                                              final String name,
+                                              final String description,
+                                              final byte[] buffer,
+                                              final String tosPlatform)
+                                                       throws RemoteException {
         log.info("Request to create new program:\n"        +
                  "  testbedID:    " + testbedID     + "\n" +
                  "  projectID:    " + projectID     + "\n" +
@@ -194,8 +169,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
                     program = programAdapter.updateProgramPath(program.getID(),
                                                          dir.getAbsolutePath());
-
-                    weaveInComponents(dir);
 
                     notifyObservers(Message.COMPILE_STARTED, null);
 
@@ -233,13 +206,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                             loadProgramSymbols(program, tosPlatform);
                             loadProgramMessageTypes(program, tosPlatform);
 
-                            writeLock.lock();
-                            try {
-                                programs.put(program.getID(), program);
-                            } finally {
-                                writeLock.unlock();
-                            }
-
+                            programs.put(program.getID(), program);
                             notifyObservers(Message.NEW_PROGRAM, program);
                         } catch (JDOMException ex) {
                             log.error("JDOMException:", ex);
@@ -260,90 +227,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     log.error(msg, ex);
                 } catch (AdaptationException ex) {
                     log.error("AdaptationException:", ex);
-                } catch (Exception ex) {
-                    log.error("Exception:", ex);
                 }
             }
         });
-    }
-
-
-    private void weaveInComponents(File directory)
-                                    throws FileNotFoundException, Exception {
-        log.debug("Weaving in components in directory " + directory);
-
-        File   makefile      = new File(directory + "/Makefile");
-        String component     = findComponentFromMakefile(makefile);
-        File   componentNesc = new File(directory + "/" +
-                                        component + ".nc");
-
-        updateWiringDiagram(componentNesc);
-        updateMakefile(makefile);
-
-    }
-
-
-    private void updateWiringDiagram(File componentNesc)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
-        weaver.addComponentReference("RadioControlC",
-                                     "NestbedRadioControl");
-        weaver.addConnection("Main",                "StdControl",
-                             "NestbedRadioControl", "StdControl");
-        weaver.regenerateNescSource();
-    }
-
-
-    // TODO:  This should really not be hard-coded like this.  It should
-    //        be externally configurable.
-    private void updateMakefile(File makefile) throws FileNotFoundException,
-                                                      Exception {
-        MakefileWeaver mfWeaver = new MakefileWeaver(makefile);
-        mfWeaver.addLine("TOSMAKE_PATH += " +
-                         "$(TOSDIR)/../contrib/nucleus/scripts");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drip");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drain");
-        mfWeaver.addLine("CFLAGS += " +
-                         "-I$(TOSDIR)/../contrib/nucleus/tos/lib/Nucleus");
-        mfWeaver.addLine("CFLAGS += -I/opt/nestbed/lib/RadioPower");
-
-        mfWeaver.addLine("# The following line *MUST* be last");
-        mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");
-
-        mfWeaver.regenerateMakefile();
-    }
-
-
-    private String findComponentFromMakefile(File makefile)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        Scanner scanner   = new Scanner(makefile);
-        String  component = null;
-
-        log.debug("Makefile:  " + makefile);
-
-        try {
-            while (scanner.hasNext() && component == null) {
-                String  line    = scanner.nextLine();
-                String  regExp  = "^COMPONENT=(\\S+)";
-                Pattern pattern = Pattern.compile(regExp);
-                Matcher matcher = pattern.matcher(line);
-
-                if (matcher.find()) {
-                    component = matcher.group(1);
-                }
-            }
-        } finally {
-            try { scanner.close(); } catch (Exception ex) { /* empty */ }
-        }
-
-
-        if (component == null) {
-            throw new Exception("No main component found in Makefile.");
-        }
-
-        return component;
     }
 
 
@@ -357,24 +243,18 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             cleanupProgramMessageSymbols(programID);
 
             Program program = programAdapter.deleteProgram(programID);
-            writeLock.lock();
-            try {
+            synchronized (this) {
                 programs.remove(program.getID());
-            } finally {
-                writeLock.unlock();
+
+                File sourcePath = new File(program.getSourcePath());
+                deleteDirectory(sourcePath);
+                cleanupParentDirectories(sourcePath);
             }
 
-            File sourcePath = new File(program.getSourcePath());
-            deleteDirectory(sourcePath);
-            cleanupParentDirectories(sourcePath);
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in deleteProgram", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -392,23 +272,14 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                    // make -C <sourcePath> \
                    //     <tosPlatform> reinstall.<moteAddress> \
                    //     bsl,/dev/motes/<moteSerialID>
-                    Program         program;
-
-                    readLock.lock();
-                    try {
-                        program = programs.get(programID);
-                    } finally {
-                        readLock.unlock();
-                    }
-
-                    String          commPort       = "/dev/motes/" +
-                                                     moteSerialID;
+                    Program         program        = programs.get(programID);
                     ProcessBuilder  processBuilder = new ProcessBuilder(MAKE,
                                                   MAKEOPTS, 
                                                   program.getSourcePath(), 
                                                   tosPlatform, "nucleus",
                                                   "reinstall." + moteAddress,
-                                                  "bsl," + commPort);
+                                                  "bsl,/dev/motes/" +
+                                                  moteSerialID);
                     processBuilder.redirectErrorStream(true);
                     notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
                                     moteSerialID);
@@ -419,10 +290,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     int exitValue = process.exitValue();
 
                     if (exitValue == 0) {
-                        try { Thread.sleep(3000); } catch (Exception ex) { }
-                        setRadioPowerLevel(moteAddress, commPort, tosPlatform,
-                                           moteSerialID, programID);
-
                         notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
                                         moteSerialID);
                     } else {
@@ -433,41 +300,15 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     String msg = "process interrupted while waiting for " +
                                  "install";
                     log.error(msg, ex);
+                    //throw new RemoteException(msg, ex);
                 } catch (IOException ex) {
                     String msg = "I/O Exception while installing program";
 
                     log.error(msg, ex);
+                    //throw new RemoteException(msg, ex);
                 }
             }
         });
-    }
-
-
-    private void setRadioPowerLevel(int    address,     String commPort,
-                                    String tosPlatform, String moteSerialID,
-                                    int    programID) throws RemoteException,
-                                                             IOException {
-        log.debug("Setting radio power on mote with\n" +
-                  "    address:       " + address     + "\n" +
-                  "    commPort:      " + commPort    + "\n" +
-                  "    tosPlatform:   " + tosPlatform + "\n" +
-                  "    moteSerialID:  " + moteSerialID);
-
-        PowerMessage powerMessage = new PowerMessage();
-        Mote         mote         = MoteManagerImpl.getInstance().getMote(
-                                                                moteSerialID);
-        int          moteID       = mote.getID();
-        int          powerLevel   = MoteDeploymentConfigurationManagerImpl.
-                                        getInstance().
-                                      getMoteDeploymentConfigurationByProgramID(
-                                        moteID, programID).getRadioPowerLevel();
-        MoteComm     moteComm     = new MoteComm(address, commPort);
-
-        powerMessage.set_powerLevel((short) powerLevel);
-
-        moteComm.start();
-        moteComm.send(powerMessage);
-        moteComm.stop();
     }
 
 
@@ -516,8 +357,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                 symbol = values[0];
             }
 
-            ProgramSymbolManagerImpl.getInstance().createProgramSymbol(
-                                              program.getID(), module, symbol);
+            programSymbolManager.createProgramSymbol(
+                            program.getID(), module, symbol);
         }
     }
 
@@ -533,15 +374,14 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             generateMigClass(headerFile, i, directory);
             byte[] bytecode = compileFile(directory, i, ".java");
 
-            ProgramMessageSymbolManagerImpl.getInstance().
-                                        addProgramMessageSymbol(program.getID(),
-                                                                i, bytecode);
+            programMsgSymbolManager.addProgramMessageSymbol(program.getID(), i,
+                                                            bytecode);
         }
     }
 
 
-    private void generateMigClass(File headerFile, String messageType,
-                                  File directory)     throws IOException {
+    void generateMigClass(File headerFile, String messageType,
+                          File directory)     throws IOException {
 
         log.info("Generating MIG classes for messageType: " + messageType +
                  " to directory " + directory.getAbsolutePath());
@@ -713,27 +553,23 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private void cleanupProgramSymbols(int programID) throws RemoteException {
         List<ProgramSymbol> programSymbolList;
-        ProgramSymbolManager psm = ProgramSymbolManagerImpl.getInstance();
-
-        programSymbolList = psm.getProgramSymbols(programID);
+        programSymbolList = programSymbolManager.getProgramSymbols(programID);
 
         for (ProgramSymbol i : programSymbolList) {
-            psm.deleteProgramSymbol(i.getID());
+            programSymbolManager.deleteProgramSymbol(i.getID());
         }
     }
 
 
     private void cleanupMoteDeploymentConfigurations(int programID)
                                                        throws RemoteException {
-        MoteDeploymentConfigurationManagerImpl.getInstance().
-                                    deleteConfigsForProgram(programID);
+        mdcManager.deleteConfigsForProgram(programID);
     }
 
 
     private void cleanupProgramMessageSymbols(int programID) 
                                                        throws RemoteException {
-        ProgramMessageSymbolManagerImpl.getInstance().deleteSymbolsForProgram(
-                                                                    programID);
+        programMsgSymbolManager.deleteSymbolsForProgram(programID);
     }
 
 
@@ -748,23 +584,5 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         dir.mkdir();
 
         return dir;
-    }
-
-
-    private ProgramManagerImpl() throws RemoteException {
-        super();
-
-        try {
-            this.threadPool     = Executors.newFixedThreadPool(MAX_THREADS);
-            this.managerLock    = new ReentrantReadWriteLock(true);
-            this.readLock       = managerLock.readLock();
-            this.writeLock      = managerLock.writeLock();
-            this.programAdapter = AdapterFactory.createProgramAdapter(
-                                                            AdapterType.SQL);
-            this.programs       = programAdapter.readPrograms();
-            log.debug("Programs read:\n" + programs);
-        } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        }
     }
 }

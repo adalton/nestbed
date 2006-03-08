@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProgramSymbolManagerImpl.java
  *
@@ -50,29 +49,29 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
                                       implements ProgramSymbolManager {
-    private final static ProgramSymbolManager instance;
-    private final static Log log = LogFactory.getLog(
-                                                ProgramSymbolManagerImpl.class);
+    private final static Log log =
+                    LogFactory.getLog(ProgramSymbolManagerImpl.class);
 
+    private ProgramProfilingSymbolManager progProfSymManager;
     private ProgramSymbolAdapter          programSymbolAdapter;
     private Map<Integer, ProgramSymbol>   programSymbols;
 
-    static {
-        ProgramSymbolManagerImpl impl = null;
+
+    public ProgramSymbolManagerImpl(ProgramProfilingSymbolManager ppsm)
+                                                    throws RemoteException {
+        super();
 
         try {
-            impl = new ProgramSymbolManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+            progProfSymManager   = ppsm;
+            programSymbolAdapter = AdapterFactory.createProgramSymbolAdapter(
+                                                               AdapterType.SQL);
+            programSymbols       = programSymbolAdapter.readProgramSymbols();
+
+            log.debug("ProgramSymbols read:\n" + programSymbols);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
-    }
-
-
-    public static ProgramSymbolManager getInstance() {
-        return instance;
     }
 
 
@@ -90,14 +89,10 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
         programSymbolList = new ArrayList<ProgramSymbol>();
 
 
-        try {
-            for (ProgramSymbol i : programSymbols.values()) {
-                if (i.getProgramID() == programID) {
-                    programSymbolList.add(i);
-                }
+        for (ProgramSymbol i : programSymbols.values()) {
+            if (i.getProgramID() == programID) {
+                programSymbolList.add(i);
             }
-        } catch (Exception ex) {
-            throw new RemoteException(ex.toString());
         }
 
         return programSymbolList;
@@ -121,12 +116,8 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             return programSymbol;
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in deleteProgramSymbol");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -144,35 +135,14 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             programSymbols.put(programSymbol.getID(), programSymbol);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in createProgramSymbol");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
 
     private void cleanupProgramProfilingSymbol(int programSymbolID) 
                                                         throws RemoteException {
-        ProgramProfilingSymbolManagerImpl.getInstance().
-                                deleteProfilingSymbolWithID(programSymbolID);
-    }
-
-
-    private ProgramSymbolManagerImpl() throws RemoteException {
-        super();
-
-        try {
-            programSymbolAdapter = AdapterFactory.createProgramSymbolAdapter(
-                                                               AdapterType.SQL);
-            programSymbols       = programSymbolAdapter.readProgramSymbols();
-
-            log.debug("ProgramSymbols read:\n" + programSymbols);
-        } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in ProgramSymbolManagerImpl");
-            throw new RemoteException(ex.toString());
-        }
+        progProfSymManager.deleteProfilingSymbolWithID(programSymbolID);
     }
 }

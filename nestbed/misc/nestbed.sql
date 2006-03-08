@@ -1,4 +1,3 @@
--- $Id$
 -- MySQL dump 9.11
 --
 -- Host: localhost    Database: tosbed

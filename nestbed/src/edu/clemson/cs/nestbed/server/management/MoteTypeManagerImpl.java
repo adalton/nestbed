@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MoteTypeManagerImpl.java
  *
@@ -47,40 +46,14 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteTypeAdapter;
 public class MoteTypeManagerImpl extends    UnicastRemoteObject
                                  implements MoteTypeManager {
 
-    private final static MoteTypeManager instance;
-    private final static Log             log      = LogFactory.getLog(
-                                                     MoteTypeManagerImpl.class);
+    private final static Log log = LogFactory.getLog(MoteTypeManagerImpl.class);
+
 
     private MoteTypeAdapter        moteTypeAdapter;
     private Map<Integer, MoteType> moteTypes;
 
-    static {
-        MoteTypeManagerImpl impl = null;
 
-        try {
-            impl = new MoteTypeManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
-        }
-    }
-
-
-    public static MoteTypeManager getInstance() {
-        return instance;
-    }
-
-
-    public synchronized MoteType getMoteType(int id) throws RemoteException {
-        log.debug("getMoteType() called.");
-
-        return moteTypes.get(id);
-    }
-
-
-    private MoteTypeManagerImpl() throws RemoteException {
+    public MoteTypeManagerImpl() throws RemoteException {
         super();
 
         try {
@@ -90,10 +63,15 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
 
             log.debug("MoteTypes read:\n" + moteTypes);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in MoteTypeManagerImpl");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
+    }
+
+
+    public synchronized MoteType getMoteType(int id) throws RemoteException {
+        log.debug("getMoteType() called.");
+
+        return moteTypes.get(id);
     }
 }

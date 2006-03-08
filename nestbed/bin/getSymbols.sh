@@ -1,5 +1,4 @@
-#!/bin/bash
-# $Id$
+#!/bin/sh
 
 export PATH="/bin:/usr/bin"
 

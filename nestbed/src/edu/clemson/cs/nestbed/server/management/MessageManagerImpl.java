@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * MessageManagerImpl.java
  *
@@ -38,6 +37,7 @@ import java.util.Map;
 
 import edu.clemson.cs.nestbed.common.management.MessageManager;
 import edu.clemson.cs.nestbed.common.management.MoteManager;
+import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
@@ -47,29 +47,25 @@ import org.apache.commons.logging.LogFactory;
 
 public class MessageManagerImpl extends    UnicastRemoteObject
                                 implements MessageManager {
-
-    private final static MessageManager instance;
-    private final static Log            log      = LogFactory.getLog(
-                                                      MessageManagerImpl.class);
+    private final static Log log =
+                LogFactory.getLog(MessageManagerImpl.class);
 
     private Map<Integer, MoteMessageManager> moteMessageManagerMap;
 
-    static {
-        MessageManagerImpl impl = null;
 
-        try {
-            impl = new MessageManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+    public MessageManagerImpl(MoteManager                 moteManager,
+                              ProgramMessageSymbolManager pmsMgr)
+                                                    throws RemoteException {
+        super();
+
+        moteMessageManagerMap = new HashMap<Integer, MoteMessageManager>();
+        List<Mote> moteList = moteManager.getMoteList();
+
+
+        for (Mote i : moteList) {
+            moteMessageManagerMap.put(i.getID(), new MoteMessageManager(i,
+                                                                    pmsMgr));
         }
-    }
-
-
-    public static MessageManager getInstance() {
-        return instance;
     }
 
 
@@ -126,18 +122,5 @@ public class MessageManagerImpl extends    UnicastRemoteObject
         moteMessageManager = moteMessageManagerMap.get(moteID);
 
         moteMessageManager.disableSerialForwarder(moteAddress);
-    }
-
-
-    private MessageManagerImpl() throws RemoteException {
-        super();
-
-        moteMessageManagerMap = new HashMap<Integer, MoteMessageManager>();
-        List<Mote> moteList = MoteManagerImpl.getInstance().getMoteList();
-
-
-        for (Mote i : moteList) {
-            moteMessageManagerMap.put(i.getID(), new MoteMessageManager(i));
-        }
     }
 }

@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * ProgramMessageSymbolAdapter.java
  *

@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * TestbedSqlAdapter.java
  *
@@ -39,20 +38,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import edu.clemson.cs.nestbed.common.model.Testbed;
-import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProjectAdapter;
 import edu.clemson.cs.nestbed.server.adaptation.TestbedAdapter;
 
 
-public class TestbedSqlAdapter extends    SqlAdapter
-                               implements TestbedAdapter {
-    private final static Log log = LogFactory.getLog(TestbedSqlAdapter.class);
+public class TestbedSqlAdapter implements TestbedAdapter {
+    private final static String CONN_STR;
+
+    static {
+        CONN_STR = System.getProperty("testbed.database.connectionString");
+    }
 
     private enum Index {
         ID,
@@ -67,7 +65,7 @@ public class TestbedSqlAdapter extends    SqlAdapter
     }
 
 
-    public Map<Integer, Testbed> readTestbeds() throws AdaptationException {
+    public Map<Integer, Testbed> readTestbeds() {
         Map<Integer, Testbed> testbeds   = new HashMap<Integer, Testbed>();
         Connection            connection = null;
         Statement             statement  = null;
@@ -105,14 +103,12 @@ public class TestbedSqlAdapter extends    SqlAdapter
                                               image, timestamp);
                 testbeds.put(id, testbed);
             }
-        } catch (SQLException ex) {
-            String msg = "SQLException in readTestbeds";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return testbeds;
