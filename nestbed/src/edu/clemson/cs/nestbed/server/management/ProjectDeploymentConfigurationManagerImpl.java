@@ -97,15 +97,10 @@ public class ProjectDeploymentConfigurationManagerImpl
         List<ProjectDeploymentConfiguration> configList;
         configList = new ArrayList<ProjectDeploymentConfiguration>();
 
-        try {
-            for (ProjectDeploymentConfiguration i : projDepConfigs.values()) {
-                if (i.getProjectID() == projectID) {
-                    configList.add(i);
-                }
+        for (ProjectDeploymentConfiguration i : projDepConfigs.values()) {
+            if (i.getProjectID() == projectID) {
+                configList.add(i);
             }
-        } catch (Exception ex) {
-            log.error("Exception in getProjectDeploymentConfigs", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return configList;
@@ -133,10 +128,8 @@ public class ProjectDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.NEW_CONFIG, config);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in createNewProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -178,12 +171,8 @@ public class ProjectDeploymentConfigurationManagerImpl
                         cloneProfilingMessageSymbol(sourceID, config.getID());
 
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in cloneProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -203,10 +192,8 @@ public class ProjectDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.DELETE_CONFIG, config);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in deleteProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -215,42 +202,35 @@ public class ProjectDeploymentConfigurationManagerImpl
                                                         throws RemoteException {
         List<MoteDeploymentConfiguration> moteDeploymentConfigs;
 
-        try {
-            moteDeploymentConfigs = MoteDeploymentConfigurationManagerImpl.
+        moteDeploymentConfigs = MoteDeploymentConfigurationManagerImpl.
                              getInstance().getMoteDeploymentConfigurations(id);
 
-            for (MoteDeploymentConfiguration i : moteDeploymentConfigs) {
-                StringBuffer          output;
-                Mote                  mote;
-                MoteType              type;
-                MoteTestbedAssignment mtba;
+        for (MoteDeploymentConfiguration i : moteDeploymentConfigs) {
+            StringBuffer          output;
+            Mote                  mote;
+            MoteType              type;
+            MoteTestbedAssignment mtba;
 
-                output = new StringBuffer();
-                mote   = MoteManagerImpl.getInstance().getMote(i.getMoteID());
-                type   = MoteTypeManagerImpl.getInstance().
+            output = new StringBuffer();
+            mote   = MoteManagerImpl.getInstance().getMote(i.getMoteID());
+            type   = MoteTypeManagerImpl.getInstance().
                                          getMoteType(mote.getMoteTypeID());
-                mtba   = MoteTestbedAssignmentManagerImpl.getInstance().
+            mtba   = MoteTestbedAssignmentManagerImpl.getInstance().
                                          getMoteTestbedAssignment(mote.getID());
 
-                log.info("Installing\n" +
-                         " program:  " + i.getProgramID() + "\n" +
-                         " on mote:  " + mote.getID()     + "\n" +
-                         " type:     " + type.getName()   + "\n" +
-                         " address:  " + mtba.getMoteAddress());
+            log.info("Installing\n" +
+                     " program:  " + i.getProgramID() + "\n" +
+                     " on mote:  " + mote.getID()     + "\n" +
+                     " type:     " + type.getName()   + "\n" +
+                     " address:  " + mtba.getMoteAddress());
 
 
-                 ProgramManagerImpl.getInstance().installProgram(
+             ProgramManagerImpl.getInstance().installProgram(
                                                         mtba.getMoteAddress(),
                                                         mote.getMoteSerialID(),
                                                         type.getTosPlatform(),
                                                         i.getProgramID(),
                                                         output);
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in deployConfiguration", ex);
-            throw new RemoteException(ex.toString());
         }
     }
 
@@ -267,11 +247,8 @@ public class ProjectDeploymentConfigurationManagerImpl
             log.debug("ProjectDeploymentConfigurations read:\n" +
                       projDepConfigs);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in ProjectDeploymentConfigurationManagerImpl",
-                      ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 }

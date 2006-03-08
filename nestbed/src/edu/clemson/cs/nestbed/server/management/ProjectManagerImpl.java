@@ -84,15 +84,10 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         log.debug("getProjectList() called");
         List<Project> projectList = new ArrayList<Project>();
 
-        try {
-            for (Project i : projects.values()) {
-                if (i.getTestbedID() == testbedID) {
-                    projectList.add(i);
-                }
+        for (Project i : projects.values()) {
+            if (i.getTestbedID() == testbedID) {
+                projectList.add(i);
             }
-        } catch (Exception ex) {
-            log.error("Exception in getProjectList", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return projectList;
@@ -116,10 +111,8 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.NEW_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in createNewProject", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -138,12 +131,8 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.DELETE_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in deleteProject", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -152,15 +141,8 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         ProgramManager pm          = ProgramManagerImpl.getInstance();
         List<Program>  programList = pm.getProgramList(projectID);
 
-        try {
-            for (Program i : programList) {
-                pm.deleteProgram(i.getID());
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in cleanupPrograms", ex);
-            throw new RemoteException(ex.toString());
+        for (Program i : programList) {
+            pm.deleteProgram(i.getID());
         }
     }
 
@@ -169,20 +151,11 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
                                                         throws RemoteException {
         ProjectDeploymentConfigurationManager pdcm =
                         ProjectDeploymentConfigurationManagerImpl.getInstance();
-
-        try {
-            List<ProjectDeploymentConfiguration> configList =
+        List<ProjectDeploymentConfiguration> configList =
                                     pdcm.getProjectDeploymentConfigs(projectID);
 
-            for (ProjectDeploymentConfiguration i : configList) {
-                pdcm.deleteProjectDeploymentConfig(i.getID());
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Exception in cleanupProjectDeploymentConfigurations",
-                      ex);
-            throw new RemoteException(ex.toString());
+        for (ProjectDeploymentConfiguration i : configList) {
+            pdcm.deleteProjectDeploymentConfig(i.getID());
         }
     }
 
@@ -197,10 +170,8 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             log.debug("Projects read:\n" + projects);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in ProjectManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 }

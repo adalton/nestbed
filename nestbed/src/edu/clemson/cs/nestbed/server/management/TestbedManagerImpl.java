@@ -77,16 +77,7 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
 
     public synchronized List<Testbed> getTestbedList() throws RemoteException {
         log.debug("getTestbedList() called");
-        List<Testbed> testbedList = null;
-
-        try {
-            testbedList = new ArrayList<Testbed>(testbeds.values());
-        } catch (Exception ex) {
-            log.error("Exception in getTestbedList", ex);
-            throw new RemoteException(ex.toString());
-        }
-
-        return testbedList;
+        return new ArrayList<Testbed>(testbeds.values());
     }
 
 
@@ -100,10 +91,9 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
 
             log.debug("Testbeds read:\n" + testbeds);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in TestbedManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
+        
     }
 }

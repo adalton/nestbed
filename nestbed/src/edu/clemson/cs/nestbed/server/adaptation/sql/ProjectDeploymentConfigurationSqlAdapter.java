@@ -42,15 +42,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
-import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.ProjectDeploymentConfigurationAdapter;
 
 
-public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
+public class ProjectDeploymentConfigurationSqlAdapter
                             implements ProjectDeploymentConfigurationAdapter {
 
-    private final static Log log = LogFactory.getLog(
+    private final static String CONN_STR;
+    private final static Log    log      = LogFactory.getLog(
                                ProjectDeploymentConfigurationSqlAdapter.class);
+    static {
+        CONN_STR = System.getProperty("testbed.database.connectionString");
+    }
+
+
     private enum Index {
         ID,
         PROJECTID,
@@ -65,8 +70,7 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
 
 
     public Map<Integer, ProjectDeploymentConfiguration>
-                                        readProjectDeploymentConfigurations()
-                                                    throws AdaptationException {
+                                        readProjectDeploymentConfigurations() {
 
         Map<Integer, ProjectDeploymentConfiguration>  projDepConfigs =
                         new HashMap<Integer, ProjectDeploymentConfiguration>();
@@ -87,14 +91,12 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
                                 getProjectDeploymentConfiguration(resultSet);
                 projDepConfigs.put(pdConfiguration.getID(), pdConfiguration);
             }
-        } catch (SQLException ex) {
-            String msg = "SQLException in readProjectDeploymentConfigurations";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            e.printStackTrace();
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return projDepConfigs;
@@ -103,8 +105,7 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
 
     public ProjectDeploymentConfiguration
                 createNewProjectDeploymentConfig(int    projectID, String name,
-                                                 String description)
-                                                    throws AdaptationException {
+                                                 String description) {
 
         ProjectDeploymentConfiguration config     = null;
         Connection                     connection = null;
@@ -128,26 +129,19 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
 
             resultSet = statement.executeQuery(query);
 
-            if (!resultSet.next()) {
-                connection.rollback();
-                String msg = "Attempt to create " +
-                              "ProjectDeploymentConfiguration failed.";
-                log.error(msg);
-                throw new AdaptationException(msg);
+            if (resultSet.next()) {
+                config = getProjectDeploymentConfiguration(resultSet);
+            } else {
+                log.error("Attempt to create ProjectDeploymentConfiguration " +
+                          "failed.");
             }
-
-            config = getProjectDeploymentConfiguration(resultSet);
-            connection.commit();
-        } catch (SQLException ex) {
-            try { connection.rollback(); } catch (Exception e) { }
-
-            String msg = "SQLException in createNewProjectDeploymentConfig";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            log.error("SQLException occured while attempting to " +
+                      "create project configuration.", e);
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return config;
@@ -155,8 +149,7 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
 
 
     public ProjectDeploymentConfiguration
-                                        deleteProjectDeploymentConfig(int id)
-                                                    throws AdaptationException {
+                                        deleteProjectDeploymentConfig(int id) {
         ProjectDeploymentConfiguration config     = null;
         Connection                     connection = null;
         Statement                      statement  = null;
@@ -170,29 +163,23 @@ public class ProjectDeploymentConfigurationSqlAdapter extends SqlAdapter
             statement  = connection.createStatement();
             resultSet  = statement.executeQuery(query);
 
-            if (!resultSet.next()) {
-                connection.rollback();
-                String msg = "Attempt to delete project deployment " +
-                             "configuration failed.";
-                log.error(msg);
-                throw new AdaptationException(msg);
+            if (resultSet.next()) {
+                config = getProjectDeploymentConfiguration(resultSet);
+                query   = "DELETE FROM ProjectDeploymentConfigurations " +
+                          "WHERE id = " + id;
+
+                statement.executeUpdate(query);
+            } else {
+                log.error("Attempt to delete project deployment " +
+                          "configuration failed.");
             }
-            config = getProjectDeploymentConfiguration(resultSet);
-            query   = "DELETE FROM ProjectDeploymentConfigurations " +
-                      "WHERE id = " + id;
-
-            statement.executeUpdate(query);
-            connection.commit();
-        } catch (SQLException ex) {
-            try { connection.rollback(); } catch (Exception e) { }
-
-            String msg = "SQLException in deleteProjectDeploymentConfig";
-            log.error(msg, ex);
-            throw new AdaptationException(msg, ex);
+        } catch (SQLException e) {
+            log.error("SQLException occured while attempting to " +
+                      "delete project deployment configuration.", e);
         } finally {
-            try { resultSet.close();  } catch (Exception ex) { }
-            try { statement.close();  } catch (Exception ex) { }
-            try { connection.close(); } catch (Exception ex) { }
+            try { resultSet.close();  } catch (Exception e) { /* empty */ }
+            try { statement.close();  } catch (Exception e) { /* empty */ }
+            try { connection.close(); } catch (Exception e) { /* empty */ }
         }
 
         return config;

@@ -76,23 +76,17 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
 
 
     public List<MoteTestbedAssignment>
-                            getMoteTestbedAssignmentList(int testbedID)
-                                                        throws RemoteException {
+                                    getMoteTestbedAssignmentList(int testbedID)
+                                            throws RemoteException {
         log.debug("getMoteTestbedAssignmentList() called");
         List<MoteTestbedAssignment> mtbaList =
                                         new ArrayList<MoteTestbedAssignment>();
-        try {
-            synchronized (this) {
-                for (MoteTestbedAssignment i :
-                                            moteTestbedAssignments.values()) {
-                    if (i.getTestbedID() == testbedID) {
-                        mtbaList.add(i);
-                    }
+        synchronized (this) {
+            for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
+                if (i.getTestbedID() == testbedID) {
+                    mtbaList.add(i);
                 }
             }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignmentList");
-            throw new RemoteException(ex.toString());
         }
 
         return mtbaList;
@@ -104,16 +98,11 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
                                                        throws RemoteException {
         MoteTestbedAssignment mtba = null;
 
-        try {
-            for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
-                if (i.getMoteID() == moteID) {
-                    mtba = i;
-                    break;
-                }
+        for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
+            if (i.getMoteID() == moteID) {
+                mtba = i;
+                break;
             }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignment");
-            throw new RemoteException(ex.toString());
         }
 
         return mtba;
@@ -133,10 +122,8 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
             log.debug("MoteTestbedAssignments read:\n" +
                       moteTestbedAssignments);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in MoteTestbedAssignmentManagerImpl");
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 }

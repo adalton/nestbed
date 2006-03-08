@@ -190,8 +190,6 @@ public class NetworkMonitorFrame extends JFrame {
                         } catch (Exception ex) {
                             log.error("Exception occured while installing " +
                                       "programs.", ex);
-                            ClientUtils.displayErrorMessage(
-                                                NetworkMonitorFrame.this, ex);
                         } finally {
                             install.setEnabled(true);
                         }
