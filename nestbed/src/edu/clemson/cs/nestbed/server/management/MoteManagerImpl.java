@@ -49,28 +49,26 @@ import edu.clemson.cs.nestbed.server.adaptation.MoteAdapter;
 public class MoteManagerImpl extends    UnicastRemoteObject
                              implements MoteManager {
 
-    private final static MoteManager instance;
-    private final static Log         log      = LogFactory.getLog(
-                                                        MoteManagerImpl.class);
+    private final static Log log =
+                LogFactory.getLog(MoteManagerImpl.class);
+
+
     private MoteAdapter        moteAdapter;
     private Map<Integer, Mote> motes;
 
-    static {
-        MoteManagerImpl impl = null;
+
+    public MoteManagerImpl() throws RemoteException {
+        super();
 
         try {
-            impl = new MoteManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+            moteAdapter = AdapterFactory.createMoteAdapter(AdapterType.SQL);
+            motes       = moteAdapter.readMotes();
+
+            log.debug("Motes read:\n" + motes);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
-    }
-
-
-    public static MoteManager getInstance() {
-        return instance;
     }
 
 
@@ -85,48 +83,17 @@ public class MoteManagerImpl extends    UnicastRemoteObject
                                                     throws RemoteException {
         Mote mote = null;
 
-        try {
-            for (Mote i : motes.values()) {
-                if (i.getMoteSerialID().equals(moteSerialID)) {
-                    mote = i;
-                    break;
-                }
+        for (Mote i : motes.values()) {
+            if (i.getMoteSerialID().equals(moteSerialID)) {
+                mote = i;
+                break;
             }
-        } catch (Exception ex) {
-            log.error("Exception in getMote", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return mote;
     }
 
-
     public synchronized List<Mote> getMoteList() throws RemoteException {
-        List<Mote> moteList = null;
-
-        try {
-            moteList = new ArrayList<Mote>(motes.values());
-        } catch (Exception ex) {
-            throw new RemoteException(ex.toString());
-        }
-
-        return moteList;
-    }
-
-
-    private MoteManagerImpl() throws RemoteException {
-        super();
-
-        try {
-            moteAdapter = AdapterFactory.createMoteAdapter(AdapterType.SQL);
-            motes       = moteAdapter.readMotes();
-
-            log.debug("Motes read:\n" + motes);
-        } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in MoteManagerImpl");
-            throw new RemoteException(ex.toString());
-        }
+        return new ArrayList<Mote>(motes.values());
     }
 }

@@ -51,29 +51,29 @@ public class MoteDeploymentConfigurationManagerImpl
                                 extends    RemoteObservableImpl
                                 implements MoteDeploymentConfigurationManager {
 
-    private final static MoteDeploymentConfigurationManager instance;
-    private final static Log log = LogFactory.getLog(
-                                MoteDeploymentConfigurationManagerImpl.class);
+    private final static Log log =
+                LogFactory.getLog(MoteDeploymentConfigurationManagerImpl.class);
+
 
     private MoteDeploymentConfigurationAdapter        moteDepConfigAdapter;
     private Map<Integer, MoteDeploymentConfiguration> moteDepConfigs;
 
-    static {
-        MoteDeploymentConfigurationManagerImpl impl = null;
+
+    public MoteDeploymentConfigurationManagerImpl() throws RemoteException {
+        super();
 
         try {
-            impl = new MoteDeploymentConfigurationManagerImpl();
-        } catch (Exception ex) {
-            log.fatal("Unable to create singleton instance", ex);
-            System.exit(1);
-        } finally {
-            instance = impl;
+            moteDepConfigAdapter =
+                AdapterFactory.createMoteDeploymentConfigurationAdapter(
+                                                            AdapterType.SQL);
+            moteDepConfigs       =
+                    moteDepConfigAdapter.readMoteDeploymentConfigurations();
+
+            log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException: ", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
-    }
-
-
-    public static MoteDeploymentConfigurationManager getInstance() {
-        return instance;
     }
 
 
@@ -87,24 +87,18 @@ public class MoteDeploymentConfigurationManagerImpl
         return findMoteDeploymentConfiguration(projDepConfID, moteID);
     }
 
-
     public synchronized MoteDeploymentConfiguration
                     getMoteDeploymentConfigurationByProgramID(int moteID,
                                                               int programID)
                                                         throws RemoteException {
         MoteDeploymentConfiguration mdc = null;
 
-        try {
-            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-                if (       i.getMoteID() == moteID
-                        && i.getProgramID() == programID) {
-                    mdc = i;
-                    break;
-                }
+        for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+            if (       i.getMoteID() == moteID
+                    && i.getProgramID() == programID) {
+                mdc = i;
+                break;
             }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteDeploymentConfigurationByProgramID", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return mdc;
@@ -117,17 +111,12 @@ public class MoteDeploymentConfigurationManagerImpl
         List<MoteDeploymentConfiguration> mdcs;
         mdcs = new ArrayList<MoteDeploymentConfiguration>();
 
-        try {
-            synchronized (this) {
-                for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-                    if (i.getProjectDeploymentConfigurationID() == projDepConfID) {
-                        mdcs.add(i);
-                    }
+        synchronized (this) {
+            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+                if (i.getProjectDeploymentConfigurationID() == projDepConfID) {
+                    mdcs.add(i);
                 }
             }
-        } catch (Exception ex) {
-            log.error("Exception in getMoteDeploymentConfigurations", ex);
-            throw new RemoteException(ex.toString());
         }
 
         return mdcs;
@@ -162,10 +151,8 @@ public class MoteDeploymentConfigurationManagerImpl
             }
             notifyObservers(Message.NEW_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in setMoteDeploymentConfiguration", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -197,10 +184,8 @@ public class MoteDeploymentConfigurationManagerImpl
                 notifyObservers(Message.NEW_CONFIG, i);
             }
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in cloneMoteDeploymentConfigurations", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:\n", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -219,10 +204,8 @@ public class MoteDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.DELETE_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in deleteMoteDeploymentConfiguration", ex);
-            throw new RemoteException(ex.toString());
+            log.error("AdaptationException:", ex);
+            throw new RemoteException("AdaptationException:", ex);
         }
     }
 
@@ -253,25 +236,5 @@ public class MoteDeploymentConfigurationManagerImpl
         }
 
         return moteDeploymentConfiguration;
-    }
-
-
-    private MoteDeploymentConfigurationManagerImpl() throws RemoteException {
-        super();
-
-        try {
-            moteDepConfigAdapter =
-                AdapterFactory.createMoteDeploymentConfigurationAdapter(
-                                                            AdapterType.SQL);
-            moteDepConfigs       =
-                    moteDepConfigAdapter.readMoteDeploymentConfigurations();
-
-            log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
-        } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
-        } catch (Exception ex) {
-            log.error("Exception in MoteDeploymentConfigurationManagerImpl", ex);
-            throw new RemoteException(ex.toString());
-        }
     }
 }

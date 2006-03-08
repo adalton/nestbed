@@ -1,4 +1,4 @@
-<!-- $Id$ -->
+<!-- $Id -->
 <object class="org.apache.commons.dbcp.PoolableConnectionFactory"
         xmlns="http://apache.org/xml/xmlns/jakarta/commons/jocl">
 
@@ -28,8 +28,8 @@
         <int value="5"/> <!-- max idle -->
     </object>
 
-    <string  value="SELECT COUNT(*) FROM Testbeds"/> <!-- validation query -->
-    <boolean value="false"/>                         <!-- default read only -->
-    <boolean value="false"/>                          <!-- default auto commit -->
+    <string  value="SELECT COUNT(*) FROM DUAL"/> <!-- validation query -->
+    <boolean value="false"/>                     <!-- default read only -->
+    <boolean value="true"/>                      <!-- default auto commit -->
 </object>
 <!-- vim:  set filetype=xml: -->

@@ -78,7 +78,6 @@ public class Server {
 
     private static String RMI_BASE_URL;
 
-    private ShutdownTrigger                       shutdownTrigger;
 
     private ProgramSymbolManager                  programSymbolManager;
     private ProgramProfilingSymbolManager         progProfSymbolManager;
@@ -94,28 +93,55 @@ public class Server {
     private ProgramProfilingMessageSymbolManager  progProfMsgSymbolMgnr;
     private MessageManager                        messageManager;
 
+    private ShutdownTrigger                       shutdownTrigger;
 
 
     public Server() throws MalformedURLException, RemoteException {
         log.info("******************************************************\n" +
                  "** NESTBed Server Starting\n" +
                  "******************************************************");
+
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
+
         shutdownTrigger       = new ShutdownTrigger();
-        programSymbolManager  = ProgramSymbolManagerImpl.getInstance();
-        progProfSymbolManager = ProgramProfilingSymbolManagerImpl.getInstance();
-        programManager        = ProgramManagerImpl.getInstance();
-        moteDepConfigManager  = MoteDeploymentConfigurationManagerImpl.getInstance();
-        projDepConfigManager  = ProjectDeploymentConfigurationManagerImpl.getInstance();
-        projectManager        = ProjectManagerImpl.getInstance();
-        moteTypeManager       = MoteTypeManagerImpl.getInstance();
-        moteManager           = MoteManagerImpl.getInstance();
-        moteTbAssignManager   = MoteTestbedAssignmentManagerImpl.getInstance();
-        testbedManger         = TestbedManagerImpl.getInstance();
-        progMsgSymbolManager  = ProgramMessageSymbolManagerImpl.getInstance();
-        progProfMsgSymbolMgnr = ProgramProfilingMessageSymbolManagerImpl.getInstance();
-        messageManager        = MessageManagerImpl.getInstance();
+
+        progMsgSymbolManager  = new ProgramMessageSymbolManagerImpl();
+        progProfMsgSymbolMgnr = new ProgramProfilingMessageSymbolManagerImpl(
+                                                        progMsgSymbolManager);
+
+        ((ProgramMessageSymbolManagerImpl)
+                progMsgSymbolManager).setProgramProfilingMsgSymManagerImpl(
+                                                        progProfMsgSymbolMgnr);
+
+        progProfSymbolManager = new ProgramProfilingSymbolManagerImpl();
+        programSymbolManager  = new ProgramSymbolManagerImpl(
+                                                        progProfSymbolManager);
+        ((ProgramProfilingSymbolManagerImpl)
+                progProfSymbolManager).setProgramSymbolManager(
+                                                programSymbolManager);
+
+        moteDepConfigManager  = new MoteDeploymentConfigurationManagerImpl();
+        moteManager           = new MoteManagerImpl();
+        programManager        = new ProgramManagerImpl(progMsgSymbolManager,
+                                                       programSymbolManager,
+                                                       moteDepConfigManager,
+                                                       moteManager);
+        moteTypeManager       = new MoteTypeManagerImpl();
+        moteTbAssignManager   = new MoteTestbedAssignmentManagerImpl();
+        projDepConfigManager  = new ProjectDeploymentConfigurationManagerImpl(
+                                                        moteTbAssignManager,
+                                                        moteDepConfigManager,
+                                                        progProfSymbolManager,
+                                                        progProfMsgSymbolMgnr,
+                                                        moteManager,
+                                                        moteTypeManager,
+                                                        programManager);
+        projectManager        = new ProjectManagerImpl(programManager,
+                                                       projDepConfigManager);
+        testbedManger         = new TestbedManagerImpl();
+        messageManager        = new MessageManagerImpl(moteManager,
+                                                       progMsgSymbolManager);
 
         bindRemoteObjects();
     }
