@@ -4,7 +4,7 @@
 
     <!-- The first argument is the ConnectionFactory -->
     <object class="org.apache.commons.dbcp.DriverManagerConnectionFactory">
-        <string value="jdbc:mysql://localhost:3306/tosbed?user=tosbed&amp;password=1tos.bed9"/>
+        <string value="jdbc:mysql://localhost:3306/nestbed?user=nestbed&amp;password=1nest.bed9"/>
         <object class="java.util.Properties" null="true"/>
     </object>
 
