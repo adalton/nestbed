@@ -74,9 +74,24 @@
              includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
 
         <delete file="${dist.home}/nestbed.jar"/>
-        <symlink        link="${dist.home}/nestbed.jar"
-                    resource="${app.name}-${app.version}.jar"
-                   overwrite="true"/>
+        
+        <copy todir="${dist.home}/lib">
+            <fileset dir="${lib.home}">
+                <exclude name="nesC/**"/>
+            </fileset>
+        </copy>
+
+        <signjar     alias="nestbed"
+                 storepass="123456">
+            <fileset dir="${dist.home}">
+            </fileset>
+        </signjar>
+
+        <symlink      link="${dist.home}/nestbed.jar"
+                  resource="${app.name}-${app.version}.jar"
+                 overwrite="true"/>
+
+        <copy file="${misc.home}/nestbed.jnlp" todir="${dist.home}"/>
     </target>
 
     <target name="parser" depends="prepare"
