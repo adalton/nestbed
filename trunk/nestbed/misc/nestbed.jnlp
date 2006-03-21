@@ -1,0 +1,34 @@
+<!-- $Id:$ -->
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp   spec="1.0+"
+    codebase="http://nestbed.cs.clemson.edu/nestbed/"
+        href="http://nestbed.cs.clemson.edu/nestbed/nestbed.jnlp">
+    <information>
+        <title>NESTBed Manager</title>
+        <vendor>DSRG, Clemson University</vendor>
+        <homepage href="http://dsrg.cs.clemson.edu/nestbed/"/>
+        <description>Network Embedded Sensor Testbed</description>
+    </information>
+    <security>
+        <all-permissions/>
+    </security>
+    <resources>
+        <j2se version="1.5+"/>
+        <jar href="nestbed.jar"/>
+        <jar href="lib/commons-collections.jar"/>
+        <jar href="lib/commons-dbcp.jar"/>
+        <jar href="lib/commons-logging.jar"/>
+        <jar href="lib/commons-pool.jar"/>
+        <jar href="lib/jdbc-mysql.jar"/>
+        <jar href="lib/jdom-tinyos.jar"/>
+        <jar href="lib/log4j.jar"/>
+        <jar href="lib/sax.jar"/>
+        <jar href="lib/nucleus.jar"/>
+        <jar href="lib/drip.jar"/>
+        <jar href="lib/drain.jar"/>
+        <jar href="lib/tinyos.jar"/>
+        <jar href="lib/useful.jar"/>
+    </resources>
+    <application-desc main-class="edu.clemson.cs.nestbed.client.Client"/>
+</jnlp>
+<!-- vim: :set ft=xml: -->

@@ -65,7 +65,8 @@ public class VisitableList extends JList {
         String  tip   = null;
         int     index = locationToIndex(e.getPoint());
 
-        if (getCellBounds(index, index).contains(e.getPoint())) {
+        if (        (index != -1)
+                &&  (getCellBounds(index, index).contains(e.getPoint())) ) {
             tip = listVisitor.visitToolTip(this);
         }
 
