@@ -91,6 +91,12 @@
                   resource="${app.name}-${app.version}.jar"
                  overwrite="true"/>
 
+        <copy todir="${dist.home}">
+            <fileset dir="${misc.home}">
+                <include name="nestbed.jnlp"/>
+                <include name="logView.php"/>
+            </fileset>
+        </copy>
         <copy file="${misc.home}/nestbed.jnlp" todir="${dist.home}"/>
     </target>
 
