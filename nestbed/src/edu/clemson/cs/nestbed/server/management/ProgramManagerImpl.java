@@ -287,10 +287,15 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                                                 throws FileNotFoundException,
                                                        Exception {
         WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
-        weaver.addComponentReference("RadioControlC",
-                                     "NestbedRadioControl");
+
+        weaver.addComponentReference("MgmtQueryC", "NucleusInterface");
+        weaver.addConnection("Main",             "StdControl",
+                             "NucleusInterface", "StdControl");
+
+        weaver.addComponentReference("RadioControlC", "NestbedRadioControl");
         weaver.addConnection("Main",                "StdControl",
                              "NestbedRadioControl", "StdControl");
+
         weaver.regenerateNescSource();
     }
 
@@ -587,6 +592,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private File getMessageFile(File directory, String messageType)
                                                            throws IOException {
+        log.info("getMessageFile():  directory = " + directory.getAbsolutePath() +
+                 ", messageType = " + messageType);
+
         ProcessBuilder processBuilder =
                                 new ProcessBuilder(GET_FILE,
                                                    directory.getAbsolutePath(),
@@ -601,12 +609,14 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         String line = in.readLine();
         in.close();
 
-        return new File(line);
+        return (line != null) ? new File(line) : null;
     }
 
 
     private List<String> getMessageList(File directory, String tosPlatform)
                                                         throws IOException {
+        log.info("getMessageList(): directory = " + directory.getAbsolutePath() +
+                 ", tosPlatform = " + tosPlatform);
         List<String>   messageList    = new ArrayList<String>();
         ProcessBuilder processBuilder = 
                                 new ProcessBuilder(GET_TYPES,

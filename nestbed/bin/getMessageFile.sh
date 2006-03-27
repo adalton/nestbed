@@ -6,7 +6,7 @@ PATH=/bin:/usr/bin
 BASEDIR=${1}
 MESSAGE=${2}
 
-FILES=$(egrep --with-filename "struct[ 	][ 	]*${MESSAGE}" ${BASEDIR}/*.h |
+FILES=$(egrep --with-filename "struct[ 	][ 	]*${MESSAGE}" ${BASEDIR}/*.h 2> /dev/null |
         awk -F: '{ print $1 }' 2> /dev/null)
 
 UNIQ_FILES=$(echo $FILES | awk '{

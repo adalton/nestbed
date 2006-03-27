@@ -29,17 +29,22 @@
 package edu.clemson.cs.nestbed.client;
 
 
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.rmi.RMISecurityManager;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 
 import edu.clemson.cs.nestbed.client.gui.TestbedManagerFrame;
-import edu.clemson.cs.nestbed.common.util.ParentClassLoader;;
+import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
+import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 
 
 public class Client {
@@ -58,6 +63,13 @@ public class Client {
     }
 
     public static void main(String[] args) throws Exception {
+        /*
+        System.setOut(new PrintStream(new BufferedOutputStream(
+                      new LogOutputStream(System.class, Level.WARN)),  true));
+        System.setErr(new PrintStream(new BufferedOutputStream(
+                      new LogOutputStream(System.class, Level.ERROR)), true));
+                      */
+
         loadProperties();
 
         if (System.getSecurityManager() == null) {

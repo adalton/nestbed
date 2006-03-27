@@ -29,8 +29,10 @@
 package edu.clemson.cs.nestbed.server;
 
 
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
@@ -40,6 +42,8 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 
 import edu.clemson.cs.nestbed.common.management.TestbedManager;
@@ -55,6 +59,7 @@ import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
 
 import edu.clemson.cs.nestbed.server.management.TestbedManagerImpl;
@@ -74,7 +79,7 @@ import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 
 public class Server {
-    private final static Log    log          = LogFactory.getLog(Server.class);
+    private final static Log log = LogFactory.getLog(Server.class);
 
     private static String RMI_BASE_URL;
 
@@ -97,6 +102,11 @@ public class Server {
 
 
     public Server() throws MalformedURLException, RemoteException {
+        System.setOut(new PrintStream(new BufferedOutputStream(
+                      new LogOutputStream(System.class, Level.WARN)),  true));
+        System.setErr(new PrintStream(new BufferedOutputStream(
+                      new LogOutputStream(System.class, Level.ERROR)), true));
+
         log.info("******************************************************\n" +
                  "** NESTBed Server Starting\n" +
                  "******************************************************");

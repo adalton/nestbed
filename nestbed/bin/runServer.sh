@@ -10,6 +10,4 @@ for i in ${TOSBED_LIB}/*; do
 done
 CLASSPATH=${CLASSPATH}:${JAVA_HOME}/lib/tools.jar
 
-echo $CLASSPATH
-
 exec java -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
