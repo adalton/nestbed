@@ -34,6 +34,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +55,9 @@ public class MoteManagerImpl extends    UnicastRemoteObject
     private final static MoteManager instance;
     private final static Log         log      = LogFactory.getLog(
                                                         MoteManagerImpl.class);
+    private ReadWriteLock      monitorLock;
+    private Lock               readLock;
+    private Lock               writeLock;
     private MoteAdapter        moteAdapter;
     private Map<Integer, Mote> motes;
 
@@ -74,17 +80,22 @@ public class MoteManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public synchronized Mote getMote(int moteID) throws RemoteException {
+    public Mote getMote(int moteID) throws RemoteException {
         log.debug("getMote() called");
 
-        return motes.get(moteID);
+        readLock.lock();
+        try {
+            return motes.get(moteID);
+        } finally {
+            readLock.unlock();
+        }
     }
 
 
-    public synchronized Mote getMote(String moteSerialID)
-                                                    throws RemoteException {
+    public Mote getMote(String moteSerialID) throws RemoteException {
         Mote mote = null;
 
+        readLock.lock();
         try {
             for (Mote i : motes.values()) {
                 if (i.getMoteSerialID().equals(moteSerialID)) {
@@ -94,20 +105,30 @@ public class MoteManagerImpl extends    UnicastRemoteObject
             }
         } catch (Exception ex) {
             log.error("Exception in getMote", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return mote;
     }
 
 
-    public synchronized List<Mote> getMoteList() throws RemoteException {
+    public List<Mote> getMoteList() throws RemoteException {
         List<Mote> moteList = null;
 
+        readLock.lock();
         try {
             moteList = new ArrayList<Mote>(motes.values());
         } catch (Exception ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return moteList;
@@ -118,15 +139,23 @@ public class MoteManagerImpl extends    UnicastRemoteObject
         super();
 
         try {
+            monitorLock = new ReentrantReadWriteLock(true);
+            readLock    = monitorLock.readLock();
+            writeLock   = monitorLock.writeLock();
             moteAdapter = AdapterFactory.createMoteAdapter(AdapterType.SQL);
             motes       = moteAdapter.readMotes();
 
             log.debug("Motes read:\n" + motes);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in MoteManagerImpl");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

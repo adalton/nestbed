@@ -34,6 +34,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,8 +58,12 @@ public class MoteDeploymentConfigurationManagerImpl
     private final static Log log = LogFactory.getLog(
                                 MoteDeploymentConfigurationManagerImpl.class);
 
+    private ReadWriteLock                             managerLock;
+    private Lock                                      readLock;
+    private Lock                                      writeLock;
     private MoteDeploymentConfigurationAdapter        moteDepConfigAdapter;
     private Map<Integer, MoteDeploymentConfiguration> moteDepConfigs;
+
 
     static {
         MoteDeploymentConfigurationManagerImpl impl = null;
@@ -88,12 +95,13 @@ public class MoteDeploymentConfigurationManagerImpl
     }
 
 
-    public synchronized MoteDeploymentConfiguration
+    public MoteDeploymentConfiguration
                     getMoteDeploymentConfigurationByProgramID(int moteID,
                                                               int programID)
                                                         throws RemoteException {
         MoteDeploymentConfiguration mdc = null;
 
+        readLock.lock();
         try {
             for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
                 if (       i.getMoteID() == moteID
@@ -104,7 +112,12 @@ public class MoteDeploymentConfigurationManagerImpl
             }
         } catch (Exception ex) {
             log.error("Exception in getMoteDeploymentConfigurationByProgramID", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return mdc;
@@ -117,17 +130,21 @@ public class MoteDeploymentConfigurationManagerImpl
         List<MoteDeploymentConfiguration> mdcs;
         mdcs = new ArrayList<MoteDeploymentConfiguration>();
 
+        readLock.lock();
         try {
-            synchronized (this) {
-                for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-                    if (i.getProjectDeploymentConfigurationID() == projDepConfID) {
-                        mdcs.add(i);
-                    }
+            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+                if (i.getProjectDeploymentConfigurationID() == projDepConfID) {
+                    mdcs.add(i);
                 }
             }
         } catch (Exception ex) {
             log.error("Exception in getMoteDeploymentConfigurations", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return mdcs;
@@ -139,33 +156,38 @@ public class MoteDeploymentConfigurationManagerImpl
                                                int programID,
                                                int radioPowerLevel)
                                                         throws RemoteException {
+        writeLock.lock();
         try {
             MoteDeploymentConfiguration mdc;
+            mdc = findMoteDeploymentConfiguration(projectDepConfID, moteID);
 
-            synchronized (this) {
-                mdc = findMoteDeploymentConfiguration(projectDepConfID, moteID);
-
-                if (mdc != null) {
-                    log.info("Updating existing mote deployment configuration");
-                    mdc =
-                        moteDepConfigAdapter.updateMoteDeploymentConfiguration(
-                                                        mdc.getID(), programID,
-                                                        radioPowerLevel);
-                } else {
-                    log.info("Adding new mote deployment configuration");
-                    mdc = moteDepConfigAdapter.addMoteDeploymentConfiguration(
-                                                    projectDepConfID, moteID,
-                                                    programID, radioPowerLevel);
-                }
-
-                moteDepConfigs.put(mdc.getID(), mdc);
+            if (mdc != null) {
+                log.info("Updating existing mote deployment configuration");
+                mdc =
+                    moteDepConfigAdapter.updateMoteDeploymentConfiguration(
+                                                    mdc.getID(), programID,
+                                                    radioPowerLevel);
+            } else {
+                log.info("Adding new mote deployment configuration");
+                mdc = moteDepConfigAdapter.addMoteDeploymentConfiguration(
+                                                projectDepConfID, moteID,
+                                                programID, radioPowerLevel);
             }
+
+            moteDepConfigs.put(mdc.getID(), mdc);
             notifyObservers(Message.NEW_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in setMoteDeploymentConfiguration", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -177,30 +199,46 @@ public class MoteDeploymentConfigurationManagerImpl
             List<MoteDeploymentConfiguration> newList;
             newList = new ArrayList<MoteDeploymentConfiguration>();
 
-            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-                if (        i.getProjectDeploymentConfigurationID()
-                         == origProjDepConfigID) {
-                    MoteDeploymentConfiguration mdc =
-                        moteDepConfigAdapter.addMoteDeploymentConfiguration(
+            readLock.lock();
+            try {
+                for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+                    if (        i.getProjectDeploymentConfigurationID()
+                             == origProjDepConfigID) {
+                        MoteDeploymentConfiguration mdc =
+                            moteDepConfigAdapter.addMoteDeploymentConfiguration(
                                                        newProjDepConfigID,
                                                        i.getMoteID(),
                                                        i.getProgramID(),
                                                        i.getRadioPowerLevel());
-                    newList.add(mdc);
+                        newList.add(mdc);
+                    }
                 }
+            } finally {
+                readLock.unlock();
+            }
+
+            writeLock.lock();
+            try {
+                for (MoteDeploymentConfiguration i : newList) {
+                    moteDepConfigs.put(i.getID(), i);
+                }
+            } finally {
+                writeLock.unlock();
             }
 
             for (MoteDeploymentConfiguration i : newList) {
-                synchronized (this) {
-                    moteDepConfigs.put(i.getID(), i);
-                }
                 notifyObservers(Message.NEW_CONFIG, i);
             }
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in cloneMoteDeploymentConfigurations", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -208,29 +246,42 @@ public class MoteDeploymentConfigurationManagerImpl
     public void deleteMoteDeploymentConfiguration(int id)
                                                         throws RemoteException {
         try {
-            log.info("Deleting mote deployment configuration with id: " +
-                     id);
-            MoteDeploymentConfiguration mdc;
+            log.info("Deleting mote deployment configuration with id: " + id);
+            MoteDeploymentConfiguration mdc = null;
 
-            mdc = moteDepConfigAdapter.deleteMoteDeploymentConfiguration(id);
-            synchronized (this) {
+            writeLock.lock();
+            try {
+                mdc = moteDepConfigAdapter.deleteMoteDeploymentConfiguration(id);
                 moteDepConfigs.remove(mdc.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.DELETE_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in deleteMoteDeploymentConfiguration", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
-    public synchronized void deleteConfigsForProgram(int programID)
-                                                        throws RemoteException {
-        MoteDeploymentConfiguration[] mdc = moteDepConfigs.values().toArray(
+    public void deleteConfigsForProgram(int programID) throws RemoteException {
+        MoteDeploymentConfiguration[] mdc = null;
+        
+        readLock.lock();
+        try {
+            mdc = moteDepConfigs.values().toArray(
                        new MoteDeploymentConfiguration[moteDepConfigs.size()]);
+        } finally {
+            readLock.unlock();
+        }
 
         for (int i = 0; i < mdc.length; ++i) {
             if (mdc[i].getProgramID() == programID) {
@@ -240,16 +291,22 @@ public class MoteDeploymentConfigurationManagerImpl
     }
 
 
-    private synchronized MoteDeploymentConfiguration
-                    findMoteDeploymentConfiguration(int projDepConfID,
-                                                    int moteID) {
+    private MoteDeploymentConfiguration findMoteDeploymentConfiguration(
+                                                            int projDepConfID,
+                                                            int moteID) {
         MoteDeploymentConfiguration moteDeploymentConfiguration = null;
 
-        for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-            if (   (i.getProjectDeploymentConfigurationID() == projDepConfID)
-                && (i.getMoteID()                           == moteID) ) {
-                moteDeploymentConfiguration = i;
+        readLock.lock();
+        try {
+            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+                if (  (i.getProjectDeploymentConfigurationID() == projDepConfID)
+                   && (i.getMoteID()                           == moteID) ) {
+                    moteDeploymentConfiguration = i;
+                    break;
+                }
             }
+        } finally {
+            readLock.unlock();
         }
 
         return moteDeploymentConfiguration;
@@ -260,6 +317,9 @@ public class MoteDeploymentConfigurationManagerImpl
         super();
 
         try {
+            managerLock          = new ReentrantReadWriteLock(true);
+            readLock             = managerLock.readLock();
+            writeLock            = managerLock.writeLock();
             moteDepConfigAdapter =
                 AdapterFactory.createMoteDeploymentConfigurationAdapter(
                                                             AdapterType.SQL);
@@ -268,10 +328,15 @@ public class MoteDeploymentConfigurationManagerImpl
 
             log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in MoteDeploymentConfigurationManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

@@ -32,6 +32,9 @@ package edu.clemson.cs.nestbed.server.management;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,6 +54,9 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
     private final static Log             log      = LogFactory.getLog(
                                                      MoteTypeManagerImpl.class);
 
+    private ReadWriteLock          managerLock;
+    private Lock                   readLock;
+    private Lock                   writeLock;
     private MoteTypeAdapter        moteTypeAdapter;
     private Map<Integer, MoteType> moteTypes;
 
@@ -73,10 +79,15 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public synchronized MoteType getMoteType(int id) throws RemoteException {
+    public MoteType getMoteType(int id) throws RemoteException {
         log.debug("getMoteType() called.");
 
-        return moteTypes.get(id);
+        readLock.lock();
+        try {
+            return moteTypes.get(id);
+        } finally {
+            readLock.unlock();
+        }
     }
 
 
@@ -84,16 +95,24 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
         super();
 
         try {
+            managerLock     = new ReentrantReadWriteLock(true);
+            readLock        = managerLock.readLock();
+            writeLock       = managerLock.writeLock();
             moteTypeAdapter = AdapterFactory.createMoteTypeAdapter(
                                                             AdapterType.SQL);
             moteTypes       = moteTypeAdapter.readMoteTypes();
 
             log.debug("MoteTypes read:\n" + moteTypes);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in MoteTypeManagerImpl");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

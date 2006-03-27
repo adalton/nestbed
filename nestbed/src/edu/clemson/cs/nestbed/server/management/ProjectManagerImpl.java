@@ -33,6 +33,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,6 +60,9 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
     private final static Log            log      = LogFactory.getLog(
                                                     ProjectManagerImpl.class);
 
+    private ReadWriteLock         managerLock;
+    private Lock                  readLock;
+    private Lock                  writeLock;
     private ProjectAdapter        projectAdapter;
     private Map<Integer, Project> projects;
 
@@ -79,11 +85,11 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
     }
 
 
-    public synchronized List<Project> getProjectList(int testbedID)
-                                                    throws RemoteException {
+    public List<Project> getProjectList(int testbedID) throws RemoteException {
         log.debug("getProjectList() called");
         List<Project> projectList = new ArrayList<Project>();
 
+        readLock.lock();
         try {
             for (Project i : projects.values()) {
                 if (i.getTestbedID() == testbedID) {
@@ -92,7 +98,12 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
             }
         } catch (Exception ex) {
             log.error("Exception in getProjectList", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return projectList;
@@ -110,16 +121,24 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
             Project project = projectAdapter.createProject(testbedID, name,
                                                            description);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 projects.put(project.getID(), project);
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.NEW_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in createNewProject", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -132,18 +151,26 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
             cleanupProjectDeploymentConfigurations(projectID);
 
             Project project = projectAdapter.deleteProject(projectID);
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 projects.remove(project.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.DELETE_PROJECT, project);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in deleteProject", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -160,7 +187,10 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in cleanupPrograms", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -182,7 +212,10 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         } catch (Exception ex) {
             log.error("Exception in cleanupProjectDeploymentConfigurations",
                       ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -191,16 +224,24 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         super();
 
         try {
-            projectAdapter = AdapterFactory.createProjectAdapter(
+            this.managerLock = new ReentrantReadWriteLock(true);
+            this.readLock    = managerLock.readLock();
+            this.writeLock   = managerLock.writeLock();
+            projectAdapter   = AdapterFactory.createProjectAdapter(
                                                               AdapterType.SQL);
-            projects       = projectAdapter.readProjects();
+            projects         = projectAdapter.readProjects();
 
             log.debug("Projects read:\n" + projects);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in ProjectManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

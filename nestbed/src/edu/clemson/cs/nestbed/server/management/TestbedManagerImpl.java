@@ -34,6 +34,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +56,9 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
     private final static Log            log      = LogFactory.getLog(
                                                      TestbedManagerImpl.class);
 
+    private ReadWriteLock         managerLock;
+    private Lock                  readLock;
+    private Lock                  writeLock;
     private TestbedAdapter        testbedAdapter;
     private Map<Integer, Testbed> testbeds;
 
@@ -75,15 +81,21 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public synchronized List<Testbed> getTestbedList() throws RemoteException {
+    public List<Testbed> getTestbedList() throws RemoteException {
         log.debug("getTestbedList() called");
         List<Testbed> testbedList = null;
 
+        readLock.lock();
         try {
             testbedList = new ArrayList<Testbed>(testbeds.values());
         } catch (Exception ex) {
             log.error("Exception in getTestbedList", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return testbedList;
@@ -94,16 +106,24 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
         super();
 
         try {
-            testbedAdapter = AdapterFactory.createTestbedAdapter(
+            this.managerLock = new ReentrantReadWriteLock(true);
+            this.readLock    = managerLock.readLock();
+            this.writeLock   = managerLock.writeLock();
+            testbedAdapter   = AdapterFactory.createTestbedAdapter(
                                                             AdapterType.SQL);
-            testbeds       = testbedAdapter.readTestbeds();
+            testbeds         = testbedAdapter.readTestbeds();
 
             log.debug("Testbeds read:\n" + testbeds);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in TestbedManagerImpl", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

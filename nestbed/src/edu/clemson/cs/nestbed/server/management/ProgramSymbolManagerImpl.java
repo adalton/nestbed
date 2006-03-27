@@ -33,6 +33,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +57,9 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
     private final static Log log = LogFactory.getLog(
                                                 ProgramSymbolManagerImpl.class);
 
+    private ReadWriteLock                 managerLock;
+    private Lock                          readLock;
+    private Lock                          writeLock;
     private ProgramSymbolAdapter          programSymbolAdapter;
     private Map<Integer, ProgramSymbol>   programSymbols;
 
@@ -76,20 +82,24 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
     }
 
 
-    public synchronized ProgramSymbol getProgramSymbol(int id)
-                                                        throws RemoteException {
-        return programSymbols.get(id);
+    public ProgramSymbol getProgramSymbol(int id) throws RemoteException {
+        readLock.lock();
+        try {
+            return programSymbols.get(id);
+        } finally {
+            readLock.unlock();
+        }
     }
 
 
-    public synchronized List<ProgramSymbol> getProgramSymbols(int programID)
-                                                        throws RemoteException {
+    public List<ProgramSymbol> getProgramSymbols(int programID)
+                                                    throws RemoteException {
         log.debug("getProgramSymbols() called.");
 
         List<ProgramSymbol> programSymbolList;
         programSymbolList = new ArrayList<ProgramSymbol>();
 
-
+        readLock.lock();
         try {
             for (ProgramSymbol i : programSymbols.values()) {
                 if (i.getProgramID() == programID) {
@@ -97,7 +107,11 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
                 }
             }
         } catch (Exception ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return programSymbolList;
@@ -113,28 +127,35 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
             ProgramSymbol programSymbol =
                                 programSymbolAdapter.deleteProgramSymbol(id);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 programSymbols.remove(programSymbol.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.DELETE_SYMBOL, programSymbol);
 
             return programSymbol;
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in deleteProgramSymbol");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
-    public synchronized void createProgramSymbol(int          programID,
-                                                 String       module,
-                                                 String       symbol)
+    public void createProgramSymbol(int programID, String module, String symbol)
                                                         throws RemoteException {
+        writeLock.lock();
         try {
             log.debug(module + "." + symbol);
             ProgramSymbol programSymbol =
@@ -144,18 +165,31 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
 
             programSymbols.put(programSymbol.getID(), programSymbol);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in createProgramSymbol");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            writeLock.unlock();
         }
     }
 
 
     private void cleanupProgramProfilingSymbol(int programSymbolID) 
                                                         throws RemoteException {
-        ProgramProfilingSymbolManagerImpl.getInstance().
-                                deleteProfilingSymbolWithID(programSymbolID);
+        writeLock.lock();
+        try {
+            ProgramProfilingSymbolManagerImpl.getInstance().
+                                   deleteProfilingSymbolWithID(programSymbolID);
+            programSymbols.remove(programSymbolID);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
 
@@ -163,16 +197,24 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
         super();
 
         try {
+            this.managerLock     = new ReentrantReadWriteLock(true);
+            this.readLock        = managerLock.readLock();
+            this.writeLock       = managerLock.writeLock();
             programSymbolAdapter = AdapterFactory.createProgramSymbolAdapter(
                                                                AdapterType.SQL);
             programSymbols       = programSymbolAdapter.readProgramSymbols();
 
             log.debug("ProgramSymbols read:\n" + programSymbols);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in ProgramSymbolManagerImpl");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }
