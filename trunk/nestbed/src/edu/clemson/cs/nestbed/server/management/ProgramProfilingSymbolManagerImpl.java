@@ -298,6 +298,7 @@ public class ProgramProfilingSymbolManagerImpl
             nucleusInterface.loadSchema(sourcePath + "/build/" +
                                         moteType + "/nucleusSchema.xml");
 
+            log.info("Query for symbol: " + symbolName);
             List result = nucleusInterface.get(NucleusInterface.DEST_LINK,
                                                0x7E, queryDelay,
                                                new String[] { symbolName },
@@ -321,7 +322,7 @@ public class ProgramProfilingSymbolManagerImpl
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in querySymbol");
+            log.error("Exception in querySymbol", ex);
             throw new RemoteException(ex.toString());
         }
 

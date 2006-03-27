@@ -26,19 +26,18 @@
             description="Clean classes and dist directories, then compile"/>
 
 
-    <target name="clean"
+    <target name="clean" depends="distclean"
             description="Delete old build and dist directories">
         <delete dir="${classes.home}"/>
-        <delete dir="${dist.home}"/>
         <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Parser.java"/>
         <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Token.java"/>
         <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Lexer.java"/>
     </target>
 
 
-    <target name="compile" depends="prepare,parser"
+    <target name="compile" depends="parser"
             description="Compile Java sources">
-
+        <mkdir dir="${classes.home}"/>
         <javac      srcdir="${src.home}"
                    destdir="${classes.home}"
                      debug="${compile.debug}"
@@ -53,7 +52,11 @@
     </target>
 
 
-    <target name="dist" depends="compile,javadoc"
+    <target name="distclean" description="Clean distribution directory">
+        <delete dir="${dist.home}"/>
+    </target>
+
+    <target name="dist" depends="compile,javadoc,distclean"
             description="Create binary distribution">
 
         <!-- Copy documentation subdirectories -->
@@ -64,6 +67,8 @@
         </copy>
 
 -->
+        <mkdir dir="${dist.home}"/>
+
         <!-- Create application JAR files -->
         <jar  jarfile="${dist.home}/${app.name}-${app.version}.jar"
               basedir="${classes.home}"/>
@@ -73,8 +78,6 @@
                update="true"
              includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
 
-        <delete file="${dist.home}/nestbed.jar"/>
-        
         <copy todir="${dist.home}/lib">
             <fileset dir="${lib.home}">
                 <exclude name="nesC/**"/>
@@ -100,7 +103,7 @@
         <copy file="${misc.home}/nestbed.jnlp" todir="${dist.home}"/>
     </target>
 
-    <target name="parser" depends="prepare"
+    <target name="parser"
             description="Parse the java_cup nesC grammar">
         <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
             <arg line="parser.sh"/>
@@ -127,22 +130,5 @@
             <classpath refid="compile.classpath"/>
         </javadoc>
 -->
-    </target>
-
-
-    <target name="prepare">
-
-        <!-- Create build directories as needed -->
-        <mkdir dir="${classes.home}"/>
-        <mkdir dir="${dist.home}"/>
-
-        <!-- Copy external dependencies as required -->
-        <!-- *** CUSTOMIZE HERE AS REQUIRED BY YOUR APPLICATION *** -->
-<!--
-        <copy todir="${build.home}/WEB-INF/lib" file="${foo.jar}"/>
--->
-
-        <!-- Copy static files from external dependencies as needed -->
-        <!-- *** CUSTOMIZE HERE AS REQUIRED BY YOUR APPLICATION *** -->
     </target>
 </project>
