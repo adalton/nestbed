@@ -34,6 +34,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +55,9 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
     private final static Log log = LogFactory.getLog(
                                         MoteTestbedAssignmentManagerImpl.class);
 
-
+    private ReadWriteLock                       managerLock;
+    private Lock                                readLock;
+    private Lock                                writeLock;
     private MoteTestbedAssignmentAdapter        moteTestbedAssignmentAdapter;
     private Map<Integer, MoteTestbedAssignment> moteTestbedAssignments;
 
@@ -81,29 +86,32 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
         log.debug("getMoteTestbedAssignmentList() called");
         List<MoteTestbedAssignment> mtbaList =
                                         new ArrayList<MoteTestbedAssignment>();
+        readLock.lock();
         try {
-            synchronized (this) {
-                for (MoteTestbedAssignment i :
-                                            moteTestbedAssignments.values()) {
-                    if (i.getTestbedID() == testbedID) {
-                        mtbaList.add(i);
-                    }
+            for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
+                if (i.getTestbedID() == testbedID) {
+                    mtbaList.add(i);
                 }
             }
         } catch (Exception ex) {
             log.error("Exception in getMoteTestbedAssignmentList");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return mtbaList;
     }
 
 
-    public synchronized MoteTestbedAssignment
-                                getMoteTestbedAssignment(int moteID)
+    public MoteTestbedAssignment getMoteTestbedAssignment(int moteID)
                                                        throws RemoteException {
         MoteTestbedAssignment mtba = null;
 
+        readLock.lock();
         try {
             for (MoteTestbedAssignment i : moteTestbedAssignments.values()) {
                 if (i.getMoteID() == moteID) {
@@ -113,7 +121,12 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
             }
         } catch (Exception ex) {
             log.error("Exception in getMoteTestbedAssignment");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return mtba;
@@ -124,6 +137,9 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
         super();
 
         try {
+            managerLock                  = new ReentrantReadWriteLock(true);
+            readLock                     = managerLock.readLock();
+            writeLock                    = managerLock.writeLock();
             moteTestbedAssignmentAdapter =
                     AdapterFactory.createMoteTestbedAssignmentAdapter(
                                                             AdapterType.SQL);
@@ -133,10 +149,15 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
             log.debug("MoteTestbedAssignments read:\n" +
                       moteTestbedAssignments);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in MoteTestbedAssignmentManagerImpl");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

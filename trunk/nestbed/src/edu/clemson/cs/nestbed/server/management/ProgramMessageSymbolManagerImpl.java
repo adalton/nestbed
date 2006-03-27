@@ -34,6 +34,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +57,9 @@ public class ProgramMessageSymbolManagerImpl
     private final static Log log = LogFactory.getLog(
                                         ProgramMessageSymbolManagerImpl.class);
 
+    private ReadWriteLock                        managerLock;
+    private Lock                                 readLock;
+    private Lock                                 writeLock;
     private ProgramMessageSymbolAdapter          programMessageSymbolAdapter;
     private Map<Integer, ProgramMessageSymbol>   programMessageSymbols;
 
@@ -76,31 +82,35 @@ public class ProgramMessageSymbolManagerImpl
     }
 
 
-    public synchronized List<ProgramMessageSymbol>
-                                getProgramMessageSymbolList()
+    public List<ProgramMessageSymbol> getProgramMessageSymbolList()
                                                        throws RemoteException {
         log.debug("getProgramMessageSymbolList() called");
         List<ProgramMessageSymbol> pmsList = null;
 
+        readLock.lock();
         try {
             pmsList = new ArrayList<ProgramMessageSymbol>(
                                             programMessageSymbols.values());
         } catch (Exception ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return pmsList;
     }
 
 
-    public synchronized List<ProgramMessageSymbol>
-                                getProgramMessageSymbols(int programID)
+    public List<ProgramMessageSymbol> getProgramMessageSymbols(int programID)
                                                        throws RemoteException {
         log.debug("getProgramMessageSymbols() called");
 
         List<ProgramMessageSymbol> programMessageSymbolList;
         programMessageSymbolList = new ArrayList<ProgramMessageSymbol>();
 
+        readLock.lock();
         try {
             for (ProgramMessageSymbol i : programMessageSymbols.values()) {
                 if (i.getProgramID() == programID) {
@@ -109,17 +119,22 @@ public class ProgramMessageSymbolManagerImpl
             }
         } catch (Exception ex) {
             log.error("Exception in getProgramMessageSymbols", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return programMessageSymbolList;
     }
 
 
-    public synchronized void addProgramMessageSymbol(int    programID,
-                                                     String name,
-                                                     byte[] bytecode)
+    public void addProgramMessageSymbol(int    programID, String name,
+                                        byte[] bytecode)
                                                       throws RemoteException {
+        writeLock.lock();
         try {
             log.debug("getProgramMessageSymbolList() called");
 
@@ -130,17 +145,29 @@ public class ProgramMessageSymbolManagerImpl
 
             programMessageSymbols.put(pmt.getID(), pmt);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in addProgramMessageSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            writeLock.unlock();
         }
     }
 
 
     public ProgramMessageSymbol getProgramMessageSymbol(int id)
                                                        throws RemoteException {
-        return programMessageSymbols.get(id);
+        readLock.lock();
+        try {
+            return programMessageSymbols.get(id);
+        } finally {
+            readLock.unlock();
+        }
     }
 
 
@@ -149,24 +176,40 @@ public class ProgramMessageSymbolManagerImpl
             ProgramMessageSymbol pmt;
             log.info("Deleting program message tyupe with id: " + id);
 
-            pmt = programMessageSymbolAdapter.deleteProgramMessageSymbol(id);
-            synchronized (this) {
+            writeLock.lock();
+            try {
+                pmt = programMessageSymbolAdapter.deleteProgramMessageSymbol(id);
                 programMessageSymbols.remove(pmt.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             // notifyObservers(..., pmt);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in addProgramMessageSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
     public void deleteSymbolsForProgram(int programID) throws RemoteException {
-        ProgramMessageSymbol[] pmt = programMessageSymbols.values().toArray(
+        ProgramMessageSymbol[] pmt = null;
+        
+        readLock.lock();
+        try {
+            pmt = programMessageSymbols.values().toArray(
                        new ProgramMessageSymbol[programMessageSymbols.size()]);
+        } finally {
+            readLock.unlock();
+        }
+
         try {
             for (int i = 0; i < pmt.length; ++i) {
                 if (pmt[i].getProgramID() == programID) {
@@ -177,7 +220,10 @@ public class ProgramMessageSymbolManagerImpl
             }
         } catch (Exception ex) {
             log.error("Exception in deleteSymbolsForProgram", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -186,6 +232,9 @@ public class ProgramMessageSymbolManagerImpl
         super();
 
         try {
+            this.managerLock            = new ReentrantReadWriteLock(true);
+            this.readLock               = managerLock.readLock();
+            this.writeLock              = managerLock.writeLock();
             programMessageSymbolAdapter =
                             AdapterFactory.createProgramMessageSymbolAdapter(
                                                               AdapterType.SQL);
@@ -195,10 +244,15 @@ public class ProgramMessageSymbolManagerImpl
 
             log.debug("ProgramMessageSymbols read:\n" + programMessageSymbols);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in addProgramMessageSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

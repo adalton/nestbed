@@ -37,6 +37,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,42 +53,56 @@ public class RemoteObservableImpl extends    UnicastRemoteObject
     private final static Log log =
                             LogFactory.getLog(RemoteObservableImpl.class);
 
+    private ReadWriteLock        managerLock;
+    private Lock                 readLock;
+    private Lock                 writeLock;
     private List<RemoteObserver> observers;
 
 
     public RemoteObservableImpl() throws RemoteException {
-        observers = new ArrayList<RemoteObserver>();
+        managerLock = new ReentrantReadWriteLock(true);
+        readLock    = managerLock.readLock();
+        writeLock   = managerLock.writeLock();
+        observers   = new ArrayList<RemoteObserver>();
     }
 
 
-    public synchronized void addRemoteObserver(RemoteObserver o)
-                                                    throws RemoteException {
+    public void addRemoteObserver(RemoteObserver o) throws RemoteException {
         log.debug("Remote observer registered.");
-        observers.add(o);
+        writeLock.lock();
+        try {
+            observers.add(o);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
 
-    public synchronized void deleteRemoteObserver(RemoteObserver o)
+    public void deleteRemoteObserver(RemoteObserver o)
                                                     throws RemoteException {
         log.debug("Remote observer deregistered.");
-        observers.remove(o);
+        writeLock.lock();
+        try {
+            observers.remove(o);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
 
-    public synchronized void notifyObservers(Serializable msg,
-                                             Serializable arg) {
+    public void notifyObservers(Serializable msg, Serializable arg) {
         List<RemoteObserver> deadObservers = new ArrayList<RemoteObserver>();
 
         String msgType = (msg != null) ? msg.getClass().getName() : "";
         String argType = (arg != null) ? arg.getClass().getName() : "";
 
-        log.debug("Notifying observers\n"  +
-                  "  message\n"  +
-                  "    type:   " + msgType + "\n" +
-                  "    value:  " + msg     + "\n" +
-                  "  argument\n" +
-                  "    type:   " + argType + "\n" +
-                  "    value:  " + arg);
+//        log.debug("Notifying observers\n"  +
+//                  "  message\n"  +
+//                  "    type:   " + msgType + "\n" +
+//                  "    value:  " + msg     + "\n" +
+//                  "  argument\n" +
+//                  "    type:   " + argType + "\n" +
+//                  "    value:  " + arg);
 
         for (RemoteObserver i : observers) {
             try {
