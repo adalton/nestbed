@@ -33,6 +33,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.tinyos.nucleus.NucleusInterface;
 import net.tinyos.nucleus.NucleusResult;
@@ -59,6 +62,9 @@ public class ProgramProfilingSymbolManagerImpl
     private final static Log log = LogFactory.getLog(
                                        ProgramProfilingSymbolManagerImpl.class);
 
+    private ReadWriteLock                        managerLock;
+    private Lock                                 readLock;
+    private Lock                                 writeLock;
     private ProgramProfilingSymbolAdapter        progProfSymbolAdapter;
     private Map<Integer, ProgramProfilingSymbol> progProfSymbols;
 
@@ -81,14 +87,14 @@ public class ProgramProfilingSymbolManagerImpl
     }
 
 
-    //public synchronized List<ProgramProfilingSymbol>
     public List<ProgramProfilingSymbol>
-                                getProgramProfilingSymbols(int configID)
+                            getProgramProfilingSymbols(int configID)
                                                        throws RemoteException {
         log.debug("getProgramProfilingSymbols() called.");
         List<ProgramProfilingSymbol> symbolList;
         symbolList = new ArrayList<ProgramProfilingSymbol>();
 
+        readLock.lock();
         try {
             for (ProgramProfilingSymbol i : progProfSymbols.values()) {
                 if (i.getProjectDeploymentConfigurationID() == configID ) {
@@ -97,16 +103,21 @@ public class ProgramProfilingSymbolManagerImpl
             }
         } catch (Exception ex) {
             log.error("Exception in getProgramProfilingSymbols", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return symbolList;
     }
 
 
-    public synchronized List<ProgramProfilingSymbol>
-                                getProgramProfilingSymbols(int configID,
-                                                           int programID)
+    public List<ProgramProfilingSymbol>
+                        getProgramProfilingSymbols(int configID,
+                                                   int programID)
                                                        throws RemoteException {
         List<ProgramProfilingSymbol> symbolList     =
                                     getProgramProfilingSymbols(configID);
@@ -130,7 +141,10 @@ public class ProgramProfilingSymbolManagerImpl
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in getProgramProfilingSymbols", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
 
         return symbolsForProg;
@@ -149,16 +163,24 @@ public class ProgramProfilingSymbolManagerImpl
                 progProfSymbolAdapter.createNewProfilingSymbol(configID,
                                                                programSymbolID);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 progProfSymbols.put(profilingSymbol.getID(), profilingSymbol);
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.NEW_SYMBOL, profilingSymbol);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in createNewProfilingSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -182,18 +204,28 @@ public class ProgramProfilingSymbolManagerImpl
                 }
             }
 
-            for (ProgramProfilingSymbol i : newList) {
-                synchronized (this) {
+            writeLock.lock();
+            try {
+                for (ProgramProfilingSymbol i : newList) {
                     progProfSymbols.put(i.getID(), i);
                 }
+            } finally {
+                writeLock.unlock();
+            }
 
+            for (ProgramProfilingSymbol i : newList) {
                 notifyObservers(Message.NEW_SYMBOL, i);
             }
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in cloneProfilingSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -206,21 +238,29 @@ public class ProgramProfilingSymbolManagerImpl
             ProgramProfilingSymbol profilingSymbol =
                         progProfSymbolAdapter.deleteProfilingSymbol(symbolID);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 progProfSymbols.remove(profilingSymbol.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.DELETE_SYMBOL, profilingSymbol);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in deleteProfilingSymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
-    public synchronized void deleteProfilingSymbolWithID(int programSymbolID)
+    public void deleteProfilingSymbolWithID(int programSymbolID)
                                                         throws RemoteException {
         log.info("Request to delete ProgramProfilingSymbol with " +
                  "programSymbolID: " + programSymbolID);
@@ -237,7 +277,10 @@ public class ProgramProfilingSymbolManagerImpl
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in deleteProfilingSymbolWithID");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -254,8 +297,11 @@ public class ProgramProfilingSymbolManagerImpl
                 pps = progProfSymbolAdapter.updateProgramProfilingSymbol(
                                                     id,              configID,
                                                     programSymbolID);
-                synchronized (this) {
+                writeLock.lock();
+                try {
                     progProfSymbols.put(pps.getID(), pps);
+                } finally {
+                    writeLock.unlock();
                 }
 
                 notifyObservers(Message.NEW_SYMBOL, pps);
@@ -263,17 +309,22 @@ public class ProgramProfilingSymbolManagerImpl
                 log.error("Unable to update symbol with id: " + id);
             }
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in updateProgramProfilingSymbol");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
-    public synchronized int querySymbol(int    id,       String sourcePath,
-                                        String moteType, String moteSerialID)
-                                                        throws RemoteException {
+    public int querySymbol(int    id,       String sourcePath,
+                           String moteType, String moteSerialID)
+                                                    throws RemoteException {
         int value = -1;
 
         try {
@@ -323,7 +374,10 @@ public class ProgramProfilingSymbolManagerImpl
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in querySymbol", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
 
         return value;
@@ -334,6 +388,9 @@ public class ProgramProfilingSymbolManagerImpl
         super();
 
         try {
+            this.managerLock      = new ReentrantReadWriteLock(true);
+            this.readLock         = managerLock.readLock();
+            this.writeLock        = managerLock.writeLock();
             progProfSymbolAdapter =
                         AdapterFactory.createProgramProfilingSymbolAdapter(
                                                             AdapterType.SQL);
@@ -342,10 +399,15 @@ public class ProgramProfilingSymbolManagerImpl
 
             log.debug("ProgramProfilingSymbols read:\n" + progProfSymbols);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in ProgramProfilingSymbolManagerImpl");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

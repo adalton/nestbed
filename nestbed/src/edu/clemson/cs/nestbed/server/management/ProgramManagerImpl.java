@@ -141,24 +141,22 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     public List<Program> getProgramList(int projectID) throws RemoteException {
         log.debug("getProgramList() called");
         List<Program>       programList = new ArrayList<Program>();
-        Collection<Program> allPrograms;
 
+        readLock.lock();
         try {
-            try {
-                readLock.lock();
-                allPrograms = programs.values();
-            } finally {
-                readLock.unlock();
-            }
-
-            for (Program i : allPrograms) {
+            for (Program i : programs.values()) {
                 if (i.getProjectID() == projectID) {
                     programList.add(i);
                 }
             }
         } catch (Exception ex) {
             log.error("Exception in getProgramList");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return programList;
@@ -374,12 +372,17 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             cleanupParentDirectories(sourcePath);
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in deleteProgram", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -774,7 +777,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             this.programs       = programAdapter.readPrograms();
             log.debug("Programs read:\n" + programs);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }

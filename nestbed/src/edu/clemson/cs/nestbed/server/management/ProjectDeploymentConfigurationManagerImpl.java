@@ -33,6 +33,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,6 +70,9 @@ public class ProjectDeploymentConfigurationManagerImpl
     private final static Log log = LogFactory.getLog(
                                ProjectDeploymentConfigurationManagerImpl.class);
 
+    private ReadWriteLock                                managerLock;
+    private Lock                                         readLock;
+    private Lock                                         writeLock;
     private ProjectDeploymentConfigurationAdapter        projDepConfigAdapter;
     private Map<Integer, ProjectDeploymentConfiguration> projDepConfigs;
 
@@ -89,14 +95,15 @@ public class ProjectDeploymentConfigurationManagerImpl
     }
 
 
-    public synchronized List<ProjectDeploymentConfiguration>
-            getProjectDeploymentConfigs(int projectID) throws RemoteException {
-
+    public List<ProjectDeploymentConfiguration>
+                        getProjectDeploymentConfigs(int projectID)
+                                                        throws RemoteException {
         log.debug("getProjectDeploymentConfigs() called");
 
         List<ProjectDeploymentConfiguration> configList;
         configList = new ArrayList<ProjectDeploymentConfiguration>();
 
+        readLock.lock();
         try {
             for (ProjectDeploymentConfiguration i : projDepConfigs.values()) {
                 if (i.getProjectID() == projectID) {
@@ -105,7 +112,11 @@ public class ProjectDeploymentConfigurationManagerImpl
             }
         } catch (Exception ex) {
             log.error("Exception in getProjectDeploymentConfigs", ex);
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
 
         return configList;
@@ -127,16 +138,24 @@ public class ProjectDeploymentConfigurationManagerImpl
                                                 projectID, name, description);
 
             log.info(config);
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 projDepConfigs.put(config.getID(), config);
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.NEW_CONFIG, config);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in createNewProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -159,9 +178,13 @@ public class ProjectDeploymentConfigurationManagerImpl
                                                     oldConfig.getProjectID(),
                                                     name, description);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 projDepConfigs.put(config.getID(), config);
+            } finally {
+                writeLock.unlock();
             }
+
             notifyObservers(Message.NEW_CONFIG, config);
 
 
@@ -178,12 +201,17 @@ public class ProjectDeploymentConfigurationManagerImpl
                         cloneProfilingMessageSymbol(sourceID, config.getID());
 
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in cloneProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
@@ -197,24 +225,32 @@ public class ProjectDeploymentConfigurationManagerImpl
             ProjectDeploymentConfiguration config =
                     projDepConfigAdapter.deleteProjectDeploymentConfig(id);
 
-            synchronized (this) {
+            writeLock.lock();
+            try {
                 projDepConfigs.remove(config.getID());
+            } finally {
+                writeLock.unlock();
             }
 
             notifyObservers(Message.DELETE_CONFIG, config);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in deleteProjectDeploymentConfig");
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 
 
-    public synchronized void deployConfiguration(int id)
-                                                        throws RemoteException {
+    public void deployConfiguration(int id) throws RemoteException {
         List<MoteDeploymentConfiguration> moteDeploymentConfigs;
 
+        readLock.lock();
         try {
             moteDeploymentConfigs = MoteDeploymentConfigurationManagerImpl.
                              getInstance().getMoteDeploymentConfigurations(id);
@@ -250,7 +286,12 @@ public class ProjectDeploymentConfigurationManagerImpl
             throw ex;
         } catch (Exception ex) {
             log.error("Exception in deployConfiguration", ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -259,6 +300,9 @@ public class ProjectDeploymentConfigurationManagerImpl
         super();
 
         try {
+            this.managerLock      = new ReentrantReadWriteLock(true);
+            this.readLock         = managerLock.readLock();
+            this.writeLock        = managerLock.writeLock();
             projDepConfigAdapter  = AdapterFactory.
                    createProjectDeploymentConfigurationAdapter(AdapterType.SQL);
             projDepConfigs        = projDepConfigAdapter.
@@ -267,11 +311,16 @@ public class ProjectDeploymentConfigurationManagerImpl
             log.debug("ProjectDeploymentConfigurations read:\n" +
                       projDepConfigs);
         } catch (AdaptationException ex) {
-            throw new RemoteException(ex.toString());
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         } catch (Exception ex) {
             log.error("Exception in ProjectDeploymentConfigurationManagerImpl",
                       ex);
-            throw new RemoteException(ex.toString());
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
         }
     }
 }
