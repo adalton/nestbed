@@ -150,11 +150,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getProgramList");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProgramList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -343,6 +341,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
 
         if (component == null) {
+            // FIXME:  Shouldn't be throwing generic Exceptions
             throw new Exception("No main component found in Makefile.");
         }
 
@@ -372,17 +371,13 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             cleanupParentDirectories(sourcePath);
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in deleteProgram", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteProgram";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -777,9 +772,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             this.programs       = programAdapter.readPrograms();
             log.debug("Programs read:\n" + programs);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         }
     }
 }

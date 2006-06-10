@@ -94,11 +94,9 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignmentList");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMoteTestbedAssignmentList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -120,11 +118,9 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getMoteTestbedAssignment");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMoteTestbedAssignment";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -149,15 +145,11 @@ public class MoteTestbedAssignmentManagerImpl extends UnicastRemoteObject
             log.debug("MoteTestbedAssignments read:\n" +
                       moteTestbedAssignments);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in MoteTestbedAssignmentManagerImpl");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in MoteTestbedAssignmentManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

@@ -43,76 +43,90 @@ import edu.clemson.cs.nestbed.common.model.Mote;
 
 
 public class BuildTestbed {
-    private final static String CONN_STR = "jdbc:apache:commons:dbcp:/nestbed";
+    private final static Log log = LogFactory.getLog(BuildTestbed.class);
+    //private final static String CONN_STR = "jdbc:apache:commons:dbcp:/nestbed";
+    //private final static String CONN_STR = ;
 
-    public static void main(String[] args) throws Exception {
-        BasicConfigurator.configure();
+    public static void main(String[] args)  {
+        try {
+            BasicConfigurator.configure();
+            loadProperties();
 
-        if(args.length < 2) {
-            System.out.println("Usage: BuildTestbed <testbedID> <inputfile>");
-            System.exit(0);
-        }
+            if(args.length < 2) {
+                System.out.println("Usage: BuildTestbed <testbedID> <inputfile>");
+                System.exit(0);
+            }
 
-        int                testbedID   = Integer.parseInt(args[0]);
-        String             filename    = args[1];
-        Connection         conn        = null;
-        Statement          statement   = null;
-        MoteSqlAdapter     adapter     = new MoteSqlAdapter();
-        Map<Integer, Mote> motes       = adapter.readMotes();
+            int                testbedID   = Integer.parseInt(args[0]);
+            String             filename    = args[1];
+            Connection         conn        = null;
+            Statement          statement   = null;
+            MoteSqlAdapter     adapter     = new MoteSqlAdapter();
+            Map<Integer, Mote> motes       = adapter.readMotes();
 
-        conn      = DriverManager.getConnection(CONN_STR);
-        statement = conn.createStatement();
+            log.info(motes);
 
-        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(
-                                    new FileInputStream(filename)));
+            String connStr = System.getProperty("testbed.database.connectionString");
+            log.info("connStr: " + connStr);
 
-        String line;
-        while ( (line = in.readLine()) != null) {
-            StringTokenizer tokenizer = new StringTokenizer(line);
-            int    address = Integer.parseInt(tokenizer.nextToken());
-            String serial  = tokenizer.nextToken();
-            int    xLoc    = Integer.parseInt(tokenizer.nextToken());
-            int    yLoc    = Integer.parseInt(tokenizer.nextToken());
+            conn      = DriverManager.getConnection(connStr);
+            statement = conn.createStatement();
 
+            BufferedReader in = new BufferedReader(
+                                    new InputStreamReader(
+                                        new FileInputStream(filename)));
 
-            for (Mote i : motes.values()) {
-                if (i.getMoteSerialID().equals(serial)) {
-                    String query =
-                        "INSERT INTO MoteTestbedAssignments" +
-                            "(testbedID, moteID, moteAddress," +
-                            " moteLocationX, moteLocationY) VALUES (" +
-                            testbedID + ", " +
-                            i.getID() + ", " +
-                            address   + ", " +
-                            xLoc      + ", " +
-                            yLoc + ")";
-                    statement.executeUpdate(query);
+            String line;
+            while ( (line = in.readLine()) != null) {
+                StringTokenizer tokenizer = new StringTokenizer(line);
+                int    address = Integer.parseInt(tokenizer.nextToken());
+                String serial  = tokenizer.nextToken();
+                int    xLoc    = Integer.parseInt(tokenizer.nextToken());
+                int    yLoc    = Integer.parseInt(tokenizer.nextToken());
+
+                log.info("Input Mote:\n" +
+                         "-----------\n" +
+                         "address:  " + address + "\n" +
+                         "serial:   " + serial  + "\n" +
+                         "xLoc:     " + xLoc    + "\n" +
+                         "yLoc:     " + yLoc);
+
+                for (Mote i : motes.values()) {
+                    if (i.getMoteSerialID().equals(serial)) {
+                        String query =
+                            "INSERT INTO MoteTestbedAssignments" +
+                                "(testbedID, moteID, moteAddress," +
+                                " moteLocationX, moteLocationY) VALUES (" +
+                                testbedID + ", " +
+                                i.getID() + ", " +
+                                address   + ", " +
+                                xLoc      + ", " +
+                                yLoc + ")";
+                        log.info(query);
+                        statement.executeUpdate(query);
+                    }
                 }
             }
+            conn.commit();
+        } catch (Exception ex) {
+            log.error("Exception in main", ex);
         }
-
-
-        /*
-        try {
-            ps   = conn.prepareStatement(
-                "UPDATE MoteTypes SET image = ? WHERE id = " + moteTypeID);
-
-
-            // Insert the image into the second Blob
-            File            image = new File(filename);
-            FileInputStream fis   = new FileInputStream(image);
-            ps.setBinaryStream(1, fis, (int) image.length());
-
-            // Execute the INSERT
-            int count = ps.executeUpdate();
-            System.out.println("Rows inserted: " + count);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try { ps.close();   } catch (Exception e) { }
-            try { conn.close(); } catch (Exception e) { }
-        }
-        */
     }
+
+    private static void loadProperties() throws IOException {
+        Properties  systemProperties;
+        InputStream propertyStream;
+
+        systemProperties = System.getProperties();
+        propertyStream   = BuildTestbed.class.getClassLoader().
+                                     getResourceAsStream("server.properties");
+        systemProperties.load(propertyStream);
+        propertyStream.close();
+
+        propertyStream   = BuildTestbed.class.getClassLoader().
+                                     getResourceAsStream("common.properties");
+        systemProperties.load(propertyStream);
+        propertyStream.close();
+    }
+
 }
