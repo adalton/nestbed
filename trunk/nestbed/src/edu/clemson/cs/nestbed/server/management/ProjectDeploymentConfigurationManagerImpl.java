@@ -111,10 +111,9 @@ public class ProjectDeploymentConfigurationManagerImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getProjectDeploymentConfigs", ex);
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProjectDeploymentConfigs";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -147,15 +146,11 @@ public class ProjectDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.NEW_CONFIG, config);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in createNewProjectDeploymentConfig");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in createNewProjectDeploymentConfig";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -201,17 +196,13 @@ public class ProjectDeploymentConfigurationManagerImpl
                         cloneProfilingMessageSymbol(sourceID, config.getID());
 
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in cloneProjectDeploymentConfig");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in cloneProjectDeploymentConfig";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -234,15 +225,11 @@ public class ProjectDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.DELETE_CONFIG, config);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in deleteProjectDeploymentConfig");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteProjectDeploymentConfig";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -285,11 +272,9 @@ public class ProjectDeploymentConfigurationManagerImpl
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in deployConfiguration", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deployConfiguration";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -311,16 +296,12 @@ public class ProjectDeploymentConfigurationManagerImpl
             log.debug("ProjectDeploymentConfigurations read:\n" +
                       projDepConfigs);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in ProjectDeploymentConfigurationManagerImpl",
-                      ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in " +
+                         "ProjectDeploymentConfigurationManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

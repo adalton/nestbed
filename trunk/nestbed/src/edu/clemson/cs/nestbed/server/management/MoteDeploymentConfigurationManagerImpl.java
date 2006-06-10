@@ -111,11 +111,9 @@ public class MoteDeploymentConfigurationManagerImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getMoteDeploymentConfigurationByProgramID", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMoteDeploymentConfigurationByProgramID";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -138,11 +136,9 @@ public class MoteDeploymentConfigurationManagerImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getMoteDeploymentConfigurations", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMoteDeploymentConfigurations";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -177,15 +173,11 @@ public class MoteDeploymentConfigurationManagerImpl
             moteDepConfigs.put(mdc.getID(), mdc);
             notifyObservers(Message.NEW_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in setMoteDeploymentConfiguration", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in setMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             writeLock.unlock();
         }
@@ -230,15 +222,11 @@ public class MoteDeploymentConfigurationManagerImpl
                 notifyObservers(Message.NEW_CONFIG, i);
             }
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in cloneMoteDeploymentConfigurations", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in cloneMoteDeploymentConfigurations";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -259,15 +247,11 @@ public class MoteDeploymentConfigurationManagerImpl
 
             notifyObservers(Message.DELETE_CONFIG, mdc);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in deleteMoteDeploymentConfiguration", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -328,15 +312,11 @@ public class MoteDeploymentConfigurationManagerImpl
 
             log.debug("MoteDeploymentConfigurations read:\n" + moteDepConfigs);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in MoteDeploymentConfigurationManagerImpl", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in MoteDeploymentConfigurationManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

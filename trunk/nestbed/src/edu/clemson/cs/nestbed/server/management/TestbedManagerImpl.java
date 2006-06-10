@@ -89,11 +89,9 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
         try {
             testbedList = new ArrayList<Testbed>(testbeds.values());
         } catch (Exception ex) {
-            log.error("Exception in getTestbedList", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getTestbedList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -115,15 +113,11 @@ public class TestbedManagerImpl extends    UnicastRemoteObject
 
             log.debug("Testbeds read:\n" + testbeds);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in TestbedManagerImpl", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in TestbedManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

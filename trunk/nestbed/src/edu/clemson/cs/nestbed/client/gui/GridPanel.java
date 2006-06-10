@@ -39,7 +39,15 @@ public class GridPanel extends JPanel {
     private Component[][] panel;
 
 
-    public GridPanel(int rows, int cols) {
+    public GridPanel(int rows, int cols) throws IllegalArgumentException {
+        if (rows < 1) {
+            throw new IllegalArgumentException("rows cannot be < 1");
+        }
+
+        if (cols < 1) {
+            throw new IllegalArgumentException("cols cannot be < 1");
+        }
+
         panel = new Component[rows][cols];
     }
 

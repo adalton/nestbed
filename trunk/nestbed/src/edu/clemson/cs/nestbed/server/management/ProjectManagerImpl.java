@@ -97,11 +97,9 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getProjectList", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProjectList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -130,15 +128,11 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.NEW_PROJECT, project);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in createNewProject", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in createNewProject";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -160,17 +154,13 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             notifyObservers(Message.DELETE_PROJECT, project);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in deleteProject", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteProject";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -186,11 +176,9 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in cleanupPrograms", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in cleanupPrograms";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -210,12 +198,9 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in cleanupProjectDeploymentConfigurations",
-                      ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in cleanupProjectDeploymentConfigurations";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -233,15 +218,11 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
             log.debug("Projects read:\n" + projects);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in ProjectManagerImpl", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in ProjectManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

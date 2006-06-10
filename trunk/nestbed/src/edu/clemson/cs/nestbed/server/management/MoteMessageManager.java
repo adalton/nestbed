@@ -114,10 +114,7 @@ public class MoteMessageManager implements MessageListener {
 
             String msg = "Cannot create message type object: ";
             log.error(msg, ex);
-
-            RemoteException rex = new RemoteException(msg + ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -142,11 +139,9 @@ public class MoteMessageManager implements MessageListener {
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in removeMessageObserver");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in removeMessageObserver";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -205,11 +200,9 @@ public class MoteMessageManager implements MessageListener {
             }
             sfEnabled = !sfEnabled;
         } catch (Exception ex) {
-            log.error("Exception while enabling serial forwarder\n", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception while enabling serial forwarder";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -255,7 +248,7 @@ public class MoteMessageManager implements MessageListener {
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception while receiving message:\n", ex);
+            log.error("Exception while receiving message", ex);
         }
     }
 }

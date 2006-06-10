@@ -104,11 +104,9 @@ public class MoteManagerImpl extends    UnicastRemoteObject
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getMote", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMote";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -124,9 +122,9 @@ public class MoteManagerImpl extends    UnicastRemoteObject
         try {
             moteList = new ArrayList<Mote>(motes.values());
         } catch (Exception ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getMoteList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -147,15 +145,11 @@ public class MoteManagerImpl extends    UnicastRemoteObject
 
             log.debug("Motes read:\n" + motes);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in MoteManagerImpl");
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in MoteManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }

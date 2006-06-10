@@ -94,11 +94,9 @@ public class ProgramProfilingMessageSymbolManagerImpl
             ppmsList = new ArrayList<ProgramProfilingMessageSymbol>(
                                                     ppmSymbols.values());
         } catch (Exception ex) {
-            log.error("Exception in getProgramProfilingMessageSymbolList", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProgramProfilingMessageSymbolList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -132,11 +130,9 @@ public class ProgramProfilingMessageSymbolManagerImpl
         }  catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in getProgramProfilingMessageSymbols", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProgramProfilingMessageSymbols";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
 
         return symbolsForProg;
@@ -159,11 +155,9 @@ public class ProgramProfilingMessageSymbolManagerImpl
                 }
             }
         } catch (Exception ex) {
-            log.error("Exception in getProgramProfilingMessageSymbols", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in getProgramProfilingMessageSymbols";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
@@ -194,15 +188,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
 
             notifyObservers(Message.NEW_SYMBOL, ppms);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in createNewProfilingMessageSymbol", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in createNewProfilingMessageSymbol";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -239,15 +229,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
                 notifyObservers(Message.NEW_SYMBOL, i);
             }
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in cloneProfilingMessageSymbol", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in cloneProfilingMessageSymbol";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -269,15 +255,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
 
             notifyObservers(Message.DELETE_SYMBOL, ppms);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in deleteProgramProfilingMessageSymbol", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteProgramProfilingMessageSymbol";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -293,11 +275,9 @@ public class ProgramProfilingMessageSymbolManagerImpl
         } catch (RemoteException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Exception in deleteProgProfMsgSymsFor", ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in deleteProgProfMsgSymsFor";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 
@@ -318,16 +298,12 @@ public class ProgramProfilingMessageSymbolManagerImpl
             log.debug("ProgramProfilingMessageSymbols read:\n" +
                       ppmSymbols);
         } catch (AdaptationException ex) {
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            log.error("Exception in ProgramProfilingMessageSymbolManagerImpl",
-                      ex);
-
-            RemoteException rex = new RemoteException(ex.toString());
-            rex.initCause(ex);
-            throw rex;
+            String msg = "Exception in " +
+                         "ProgramProfilingMessageSymbolManagerImpl";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
     }
 }
