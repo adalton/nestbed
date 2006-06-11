@@ -288,6 +288,10 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         weaver.addConnection("Main",             "StdControl",
                              "NucleusInterface", "StdControl");
 
+        weaver.addComponentReference("RemoteSetC", "NucleusSet");
+        weaver.addConnection("Main",             "StdControl",
+                             "NucleusSet",       "StdControl");
+
         weaver.addComponentReference("RadioControlC", "NestbedRadioControl");
         weaver.addConnection("Main",                "StdControl",
                              "NestbedRadioControl", "StdControl");

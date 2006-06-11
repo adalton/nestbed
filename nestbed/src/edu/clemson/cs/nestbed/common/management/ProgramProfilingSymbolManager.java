@@ -70,12 +70,16 @@ public interface ProgramProfilingSymbolManager extends RemoteObservable {
                                                         throws RemoteException;
 
 
-    public void updateProgramProfilingSymbol(int id,              int configID,
+    public void updateProgramProfilingSymbol(int id,             int configID,
                                              int programSymbolID)
                                                         throws RemoteException;
 
 
-    public int  querySymbol(int    id,       String sourcePath,
-                            String moteType, String moteSerialID)
+    public int querySymbol(int    id,       String sourcePath,
+                           String moteType, String moteSerialID)
                                                         throws RemoteException;
+
+    public boolean setSymbol(int    value,       int    id,
+                             String sourcePath,  String moteType,
+                             String moteSerialID)       throws RemoteException;
 }

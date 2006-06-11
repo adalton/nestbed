@@ -313,7 +313,10 @@ public class MoteDetailFrame extends JFrame {
 
 
     protected class ProfilingTableModel extends AbstractTableModel {
-        private int NUM_COLS = 3;
+        private final static int MODULE_CELL = 0;
+        private final static int SYMBOL_CELL = MODULE_CELL + 1;
+        private final static int VALUE_CELL  = SYMBOL_CELL + 1;
+        private final static int NUM_COLS    = VALUE_CELL  + 1;
 
         private ProgramProfilingSymbol[] symbols;
         private Integer[]                values;
@@ -339,35 +342,93 @@ public class MoteDetailFrame extends JFrame {
         public String getColumnName(int col) {
             String name = null;
 
-            if      (col == 0) { name = "Module"; }
-            else if (col == 1) { name = "Symbol"; }
-            else if (col == 2) { name = "Last Read Value";  }
+            switch (col) {
+            case MODULE_CELL:
+                name = "Module";
+                break;
+            case SYMBOL_CELL:
+                name = "Symbol";
+                break;
+            case VALUE_CELL:
+                name = "Last Known Value";
+                break;
+            }
 
             return name;
         }
 
 
         public Object getValueAt(int row, int col) {
-            Object value;
+            Object value = null;
 
-            if (col == 0) {
+            switch (col) {
+            case MODULE_CELL:
                 value = programSymbols.get(
                         symbols[row].getProgramSymbolID()).getModule();
-            } else if (col == 1) {
+                break;
+            case SYMBOL_CELL:
                 value = programSymbols.get(
                         symbols[row].getProgramSymbolID()).getSymbol();
-            } else {
+                break;
+            case VALUE_CELL:
                 value = (values[row] == null) ? "" : values[row];
+                break;
             }
 
             return value;
         }
 
 
-        public void setValueAt(Object aValue, int row, int col) {
-            if (col == 1) {
-                values[row] = (Integer) aValue;
+        public Class getColumnClass(int col) {
+            Class columnClass = Object.class;
+
+            switch (col) {
+            case MODULE_CELL:
+                columnClass = String.class;
+                break;
+            case SYMBOL_CELL:
+                columnClass = String.class;
+                break;
+            case VALUE_CELL:
+                columnClass = Integer.class;
+                break;
             }
+            return columnClass;
+        }
+
+
+        public boolean isCellEditable(int row, int col) {
+            return (col == VALUE_CELL);
+        }
+
+
+        public void setValueAt(Object aValue, int row, int col) {
+            log.debug("User-invoked setValueAt, row: " +
+                      row + ", value: " + aValue);
+            try {
+                ProgramProfilingSymbol profilingSymbol = symbols[row];
+
+                if (profilingSymbol != null) {
+                    int value = ((Integer) aValue).intValue();
+                    if (profSymManager.setSymbol(value,
+                                                 profilingSymbol.getID(),
+                                                 program.getSourcePath(),
+                                                 moteType.getTosPlatform(),
+                                                 mote.getMoteSerialID())) {
+                        values[row] = (Integer) aValue;
+                    }
+                    symbolTable.repaint();
+                }
+            } catch (Exception ex) {
+                log.error("Exception", ex);
+                ClientUtils.displayErrorMessage(MoteDetailFrame.this, ex);
+            }
+        }
+
+        public void setValue(Integer value, int row) {
+            log.debug("Setting value at row " + row + " to " + value);
+            values[row] = value;
+            symbolTable.repaint();
         }
 
 
@@ -518,7 +579,8 @@ public class MoteDetailFrame extends JFrame {
                                                     moteType.getTosPlatform(),
                                                     mote.getMoteSerialID());
 
-                    model.setValueAt(value, symbolTable.getSelectedRow(), 1);
+                    //model.setValueAt(value, symbolTable.getSelectedRow(), 1);
+                    model.setValue(value, symbolTable.getSelectedRow());
                     symbolTable.repaint();
                 }
             } catch (Exception ex) {
