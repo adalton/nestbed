@@ -69,9 +69,9 @@ import javax.swing.event.PopupMenuListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.ProjectManager;
-import edu.clemson.cs.nestbed.common.management.ProjectDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.TestbedManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.TestbedManager;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;

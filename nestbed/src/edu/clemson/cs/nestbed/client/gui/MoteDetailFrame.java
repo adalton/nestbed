@@ -63,10 +63,10 @@ import javax.swing.table.AbstractTableModel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.MoteType;

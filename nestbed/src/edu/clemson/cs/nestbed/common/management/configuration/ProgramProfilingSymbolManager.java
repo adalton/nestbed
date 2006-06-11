@@ -26,7 +26,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.management;
+package edu.clemson.cs.nestbed.common.management.configuration;
 
 
 import java.rmi.RemoteException;

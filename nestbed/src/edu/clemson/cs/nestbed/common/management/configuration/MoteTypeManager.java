@@ -1,6 +1,6 @@
 /* $Id$ */
 /*
- * ProgramSymbolManager.java
+ * MoteTypeManager.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,35 +26,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.management;
+package edu.clemson.cs.nestbed.common.management.configuration;
 
 
+import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.List;
 
-import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
-import edu.clemson.cs.nestbed.common.util.RemoteObservable;
+import edu.clemson.cs.nestbed.common.model.MoteType;
 
 
-public interface ProgramSymbolManager extends RemoteObservable {
-
-    public enum Message {
-        NEW_SYMBOLS,
-        DELETE_SYMBOL
-    }
-
-
-    public ProgramSymbol getProgramSymbol(int id)       throws RemoteException;
-
-
-    public List<ProgramSymbol> getProgramSymbols(int programID)
-                                                        throws RemoteException;
-
-
-    public ProgramSymbol deleteProgramSymbol(int programID)
-                                                        throws RemoteException;
-
-
-    public void createProgramSymbol(int    programID, String module,
-                                    String symbol)      throws RemoteException;
+public interface MoteTypeManager extends Remote {
+    public MoteType getMoteType(int id) throws RemoteException;
 }

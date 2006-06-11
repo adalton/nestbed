@@ -1,6 +1,6 @@
 /* $Id$ */
 /*
- * MoteTypeManagerImpl.java
+ * TestbedManagerImpl.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,11 +26,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.management;
+package edu.clemson.cs.nestbed.server.management.configuration;
 
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -39,32 +41,32 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.model.MoteType;
+import edu.clemson.cs.nestbed.common.management.configuration.TestbedManager;
+import edu.clemson.cs.nestbed.common.model.Testbed;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
-import edu.clemson.cs.nestbed.server.adaptation.MoteTypeAdapter;
+import edu.clemson.cs.nestbed.server.adaptation.TestbedAdapter;
 
 
-public class MoteTypeManagerImpl extends    UnicastRemoteObject
-                                 implements MoteTypeManager {
+public class TestbedManagerImpl extends    UnicastRemoteObject
+                                implements TestbedManager {
 
-    private final static MoteTypeManager instance;
-    private final static Log             log      = LogFactory.getLog(
-                                                     MoteTypeManagerImpl.class);
+    private final static TestbedManager instance;
+    private final static Log            log      = LogFactory.getLog(
+                                                     TestbedManagerImpl.class);
 
-    private ReadWriteLock          managerLock;
-    private Lock                   readLock;
-    private Lock                   writeLock;
-    private MoteTypeAdapter        moteTypeAdapter;
-    private Map<Integer, MoteType> moteTypes;
+    private ReadWriteLock         managerLock;
+    private Lock                  readLock;
+    private Lock                  writeLock;
+    private TestbedAdapter        testbedAdapter;
+    private Map<Integer, Testbed> testbeds;
 
     static {
-        MoteTypeManagerImpl impl = null;
+        TestbedManagerImpl impl = null;
 
         try {
-            impl = new MoteTypeManagerImpl();
+            impl = new TestbedManagerImpl();
         } catch (Exception ex) {
             log.fatal("Unable to create singleton instance", ex);
             System.exit(1);
@@ -74,39 +76,46 @@ public class MoteTypeManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public static MoteTypeManager getInstance() {
+    public static TestbedManager getInstance() {
         return instance;
     }
 
 
-    public MoteType getMoteType(int id) throws RemoteException {
-        log.debug("getMoteType() called.");
+    public List<Testbed> getTestbedList() throws RemoteException {
+        log.debug("getTestbedList() called");
+        List<Testbed> testbedList = null;
 
         readLock.lock();
         try {
-            return moteTypes.get(id);
+            testbedList = new ArrayList<Testbed>(testbeds.values());
+        } catch (Exception ex) {
+            String msg = "Exception in getTestbedList";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } finally {
             readLock.unlock();
         }
+
+        return testbedList;
     }
 
 
-    private MoteTypeManagerImpl() throws RemoteException {
+    private TestbedManagerImpl() throws RemoteException {
         super();
 
         try {
-            managerLock     = new ReentrantReadWriteLock(true);
-            readLock        = managerLock.readLock();
-            writeLock       = managerLock.writeLock();
-            moteTypeAdapter = AdapterFactory.createMoteTypeAdapter(
+            this.managerLock = new ReentrantReadWriteLock(true);
+            this.readLock    = managerLock.readLock();
+            this.writeLock   = managerLock.writeLock();
+            testbedAdapter   = AdapterFactory.createTestbedAdapter(
                                                             AdapterType.SQL);
-            moteTypes       = moteTypeAdapter.readMoteTypes();
+            testbeds         = testbedAdapter.readTestbeds();
 
-            log.debug("MoteTypes read:\n" + moteTypes);
+            log.debug("Testbeds read:\n" + testbeds);
         } catch (AdaptationException ex) {
             throw new RemoteException("AdaptationException", ex);
         } catch (Exception ex) {
-            String msg = "Exception in MoteTypeManagerImpl";
+            String msg = "Exception in TestbedManagerImpl";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
