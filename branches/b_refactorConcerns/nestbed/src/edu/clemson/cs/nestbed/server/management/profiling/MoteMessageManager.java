@@ -26,7 +26,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.management.configuration;
+package edu.clemson.cs.nestbed.server.management.profiling;
 
 
 import java.io.ByteArrayOutputStream;
@@ -46,6 +46,7 @@ import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
 import edu.clemson.cs.nestbed.common.util.ByteClassLoader;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
