@@ -58,7 +58,7 @@ import javax.swing.event.ChangeListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MessageManager;
+import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;

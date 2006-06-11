@@ -52,18 +52,17 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.configuration.MessageManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
 
 import edu.clemson.cs.nestbed.server.management.configuration.TestbedManagerImpl;
-import edu.clemson.cs.nestbed.server.management.configuration.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteTestbedAssignmentManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteTypeManagerImpl;
@@ -75,6 +74,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymb
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingMessageSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 
