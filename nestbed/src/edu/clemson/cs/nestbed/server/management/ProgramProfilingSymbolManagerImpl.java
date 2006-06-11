@@ -361,6 +361,59 @@ public class ProgramProfilingSymbolManagerImpl
     }
 
 
+    public boolean setSymbol(int    value,       int    id,
+                             String sourcePath,  String moteType,
+                             String moteSerialID)      throws RemoteException {
+        boolean okay = false;
+
+        try {
+            String                 device;
+            NucleusInterface       nucleusInterface;
+            ProgramProfilingSymbol pps;
+            ProgramSymbol          programSymbol;
+            String                 moduleName;
+            String                 symbolName;
+
+            device           = "/dev/motes/" + moteSerialID; 
+            log.info("Set symbol on device: " + device + " to " + value);
+            nucleusInterface = new NucleusInterface(device, "telos");
+
+            pps              = progProfSymbols.get(id);
+            programSymbol    = ProgramSymbolManagerImpl.getInstance().
+                                                    getProgramSymbol(
+                                                      pps.getProgramSymbolID());
+            moduleName       = programSymbol.getModule();
+            symbolName       = programSymbol.getSymbol();
+
+            if (!moduleName.equals("<global>")) {
+                symbolName = moduleName + "." + symbolName;
+            }
+
+            nucleusInterface.loadSchema(sourcePath + "/build/" +
+                                        moteType + "/nucleusSchema.xml");
+
+            log.info("Set symbol: " + symbolName + " to " + value);
+            okay = nucleusInterface.set(NucleusInterface.DEST_LINK,
+                                        symbolName, 0,
+                                        new short[]  { (short) value });
+            if (okay) {
+                log.info("Symbol set successfully");
+            } else {
+                log.warn("Symbol not set successfully");
+            }
+            nucleusInterface.close();
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            String msg = "Exception in setSymbol";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
+        }
+
+        return okay;
+    }
+
+
     private ProgramProfilingSymbolManagerImpl() throws RemoteException {
         super();
 
