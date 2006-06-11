@@ -26,7 +26,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.management;
+package edu.clemson.cs.nestbed.server.management.configuration;
 
 
 import java.rmi.RemoteException;
@@ -40,9 +40,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.ProjectDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.ProjectManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectManager;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;

@@ -1,8 +1,8 @@
 /* $Id$ */
 /*
- * MoteTypeManager.java
+ * MoteManager.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded System Testbed (NESTBed)
  *
  * Copyright (C) 2006
  * Dependable Systems Research Group
@@ -26,15 +26,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.management;
+package edu.clemson.cs.nestbed.common.management.configuration;
 
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
-import edu.clemson.cs.nestbed.common.model.MoteType;
+import edu.clemson.cs.nestbed.common.model.Mote;
 
 
-public interface MoteTypeManager extends Remote {
-    public MoteType getMoteType(int id) throws RemoteException;
+public interface MoteManager extends Remote {
+    public Mote       getMote(int moteID)          throws RemoteException;
+    public Mote       getMote(String moteSerialID) throws RemoteException;
+    public List<Mote> getMoteList()                throws RemoteException;
 }

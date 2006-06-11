@@ -97,15 +97,15 @@ import org.apache.commons.logging.LogFactory;
 
 import org.dotuseful.ui.tree.SortedTreeNode;
 
-import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.MoteManager;
-import edu.clemson.cs.nestbed.common.management.MoteTestbedAssignmentManager;
-import edu.clemson.cs.nestbed.common.management.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.management.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;

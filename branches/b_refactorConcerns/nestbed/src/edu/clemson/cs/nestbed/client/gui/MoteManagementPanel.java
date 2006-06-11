@@ -58,11 +58,11 @@ import javax.swing.event.ChangeListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.MessageManager;
-import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.MoteManager;
-import edu.clemson.cs.nestbed.common.management.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.management.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MessageManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;

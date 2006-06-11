@@ -1,8 +1,8 @@
 /* $Id$ */
 /*
- * MessageManager.java
+ * ProgramSymbolManager.java
  *
- * Network Embedded System Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTBed)
  *
  * Copyright (C) 2006
  * Dependable Systems Research Group
@@ -26,34 +26,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.management;
+package edu.clemson.cs.nestbed.common.management.configuration;
 
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
-import edu.clemson.cs.nestbed.common.util.RemoteObserver;
+import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
+import edu.clemson.cs.nestbed.common.util.RemoteObservable;
 
 
-public interface MessageManager extends Remote {
-    public void addMessageObserver(int            moteID,
-                                   int            programMessageID,
-                                   RemoteObserver observer)
+public interface ProgramSymbolManager extends RemoteObservable {
+
+    public enum Message {
+        NEW_SYMBOLS,
+        DELETE_SYMBOL
+    }
+
+
+    public ProgramSymbol getProgramSymbol(int id)       throws RemoteException;
+
+
+    public List<ProgramSymbol> getProgramSymbols(int programID)
                                                         throws RemoteException;
 
 
-    public void removeMessageObserver(int            moteID,
-                                      int            programMessageID,
-                                      RemoteObserver observer)
+    public ProgramSymbol deleteProgramSymbol(int programID)
                                                         throws RemoteException;
 
-    public void enable(int moteID)  throws RemoteException;
 
-    public void disable(int moteID) throws RemoteException;
-
-    public void enableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException;
-
-    public void disableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException;
+    public void createProgramSymbol(int    programID, String module,
+                                    String symbol)      throws RemoteException;
 }

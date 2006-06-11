@@ -49,12 +49,12 @@ import javax.swing.border.TitledBorder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.MoteManager;
-import edu.clemson.cs.nestbed.common.management.MoteTestbedAssignmentManager;
-import edu.clemson.cs.nestbed.common.management.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.management.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
