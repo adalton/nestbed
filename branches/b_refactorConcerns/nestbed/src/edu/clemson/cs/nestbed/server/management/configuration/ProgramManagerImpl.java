@@ -32,10 +32,7 @@ package edu.clemson.cs.nestbed.server.management.configuration;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -44,22 +41,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,8 +59,6 @@ import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
-import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
-import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
@@ -83,14 +68,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     private final static ProgramManager instance;
     private final static Log            log      = LogFactory.getLog(
                                                       ProgramManagerImpl.class);
-    private final static int    MAX_THREADS = 40;
     private final static File   TOS_ROOT    = new File("/tmp/nestbed");
-    private final static String MAKE        = "/usr/bin/make";
-    private final static String MAKEOPTS    = "-C";
-    private final static String GET_TYPES   =
-                    "/home/adalton/src/java/nestbed/bin/getMessageTypes.sh";
-    private final static String GET_FILE   =
-                    "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
 
     static {
         ProgramManagerImpl impl = null;
@@ -108,7 +86,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private ProgramAdapter        programAdapter;
     private Map<Integer, Program> programs;
-    private ExecutorService       threadPool;
     private ReadWriteLock         managerLock;
     private Lock                  readLock;
     private Lock                  writeLock;
@@ -153,117 +130,13 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         return programList;
     }
 
-    /*
-    public void createNewProgram(final int    testbedID,
-                                 final int    projectID,
-                                 final String name,
-                                 final String description,
-                                 final byte[] buffer,
-                                 final String tosPlatform)
-                                                   throws RemoteException {
-        log.info("Request to create new program:\n"        +
-                 "  testbedID:    " + testbedID     + "\n" +
-                 "  projectID:    " + projectID     + "\n" +
-                 "  name:         " + name          + "\n" +
-                 "  description:  " + description   + "\n" +
-                 "  file size:    " + buffer.length);
-
-        threadPool.execute(new Runnable() {
-            public void run() {
-                try {
-                    Program program;
-                    program = programAdapter.createNewProgram(projectID, name,
-                                                              description);
-
-                    File file = saveTempFile(buffer);
-                    File dir  = makeProgramDir(testbedID, projectID,
-                                               program.getID());
-
-                    dir = extractZipFile(file, dir);
-
-                    program = programAdapter.updateProgramPath(program.getID(),
-                                                         dir.getAbsolutePath());
-
-                    weaveInComponents(dir);
-
-                    notifyObservers(Message.COMPILE_STARTED, null);
-
-                    StringBuffer output      = new StringBuffer();
-                    boolean      exitSuccess = false;
-
-
-                    output.append("-------------------------------------");
-                    output.append("-----------------------------------\n");
-                    output.append("Building for platform ").append(tosPlatform);
-                    output.append("\n");
-                    output.append("-------------------------------------");
-                    output.append("-----------------------------------\n");
-
-                    notifyObservers(Message.COMPILE_PROGRESS,
-                                    output.toString());
-
-                    ProcessBuilder processBuilder;
-                    processBuilder = new ProcessBuilder(MAKE, MAKEOPTS,
-                                                        program.getSourcePath(),
-                                                        tosPlatform, "nucleus");
-                    processBuilder.redirectErrorStream(true);
-                    Process process = processBuilder.start();
-                    output.append(getProcessOutput(process,
-                                                   Message.COMPILE_PROGRESS));
-                    process.waitFor();
-                    exitSuccess = (process.exitValue() == 0);
-
-                    notifyObservers(Message.COMPILE_COMPLETED, exitSuccess);
-
-                    if (exitSuccess) {
-                        log.info("Program compiled successfully.");
-
-                        try {
-                            loadProgramSymbols(program, tosPlatform);
-                            loadProgramMessageTypes(program, tosPlatform);
-
-                            writeLock.lock();
-                            try {
-                                programs.put(program.getID(), program);
-                            } finally {
-                                writeLock.unlock();
-                            }
-
-                            notifyObservers(Message.NEW_PROGRAM, program);
-                        } catch (JDOMException ex) {
-                            log.error("JDOMException:", ex);
-                            programAdapter.deleteProgram(program.getID());
-                        } catch (IOException ex) {
-                            log.error("IOException:", ex);
-                            programAdapter.deleteProgram(program.getID());
-                        }
-                    } else {
-                        log.warn("Program failed to compile.");
-                        deleteProgram(program.getID());
-                    }
-                } catch (IOException ex) {
-                    String msg = "I/O Exception while creating new program";
-                    log.error(msg, ex);
-                } catch (InterruptedException ex) {
-                    String msg = "Compilation interrupted";
-                    log.error(msg, ex);
-                } catch (AdaptationException ex) {
-                    log.error("AdaptationException:", ex);
-                } catch (Exception ex) {
-                    log.error("Exception:", ex);
-                }
-            }
-        });
-    }
-    */
-
 
     public int createNewProgram(final int    testbedID,
-                                 final int    projectID,
-                                 final String name,
-                                 final String description,
-                                 final byte[] buffer,
-                                 final String tosPlatform)
+                                final int    projectID,
+                                final String name,
+                                final String description,
+                                final byte[] buffer,
+                                final String tosPlatform)
                                                    throws RemoteException {
         log.info("Request to create new program:\n"        +
                  "  testbedID:    " + testbedID     + "\n" +
@@ -313,95 +186,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     }
 
 
-    private void weaveInComponents(File directory)
-                                    throws FileNotFoundException, Exception {
-        log.debug("Weaving in components in directory " + directory);
-
-        File   makefile      = new File(directory + "/Makefile");
-        String component     = findComponentFromMakefile(makefile);
-        File   componentNesc = new File(directory + "/" +
-                                        component + ".nc");
-
-        updateWiringDiagram(componentNesc);
-        updateMakefile(makefile);
-
-    }
-
-
-    private void updateWiringDiagram(File componentNesc)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
-
-        weaver.addComponentReference("MgmtQueryC", "NucleusInterface");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusInterface", "StdControl");
-
-        weaver.addComponentReference("RemoteSetC", "NucleusSet");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusSet",       "StdControl");
-
-        weaver.addComponentReference("RadioControlC", "NestbedRadioControl");
-        weaver.addConnection("Main",                "StdControl",
-                             "NestbedRadioControl", "StdControl");
-
-        weaver.regenerateNescSource();
-    }
-
-
-    // TODO:  This should really not be hard-coded like this.  It should
-    //        be externally configurable.
-    private void updateMakefile(File makefile) throws FileNotFoundException,
-                                                      Exception {
-        MakefileWeaver mfWeaver = new MakefileWeaver(makefile);
-        mfWeaver.addLine("TOSMAKE_PATH += " +
-                         "$(TOSDIR)/../contrib/nucleus/scripts");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drip");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drain");
-        mfWeaver.addLine("CFLAGS += " +
-                         "-I$(TOSDIR)/../contrib/nucleus/tos/lib/Nucleus");
-        mfWeaver.addLine("CFLAGS += -I/opt/nestbed/lib/RadioPower");
-
-        mfWeaver.addLine("# The following line *MUST* be last");
-        mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");
-
-        mfWeaver.regenerateMakefile();
-    }
-
-
-    private String findComponentFromMakefile(File makefile)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        Scanner scanner   = new Scanner(makefile);
-        String  component = null;
-
-        log.debug("Makefile:  " + makefile);
-
-        try {
-            while (scanner.hasNext() && component == null) {
-                String  line    = scanner.nextLine();
-                String  regExp  = "^COMPONENT=(\\S+)";
-                Pattern pattern = Pattern.compile(regExp);
-                Matcher matcher = pattern.matcher(line);
-
-                if (matcher.find()) {
-                    component = matcher.group(1);
-                }
-            }
-        } finally {
-            try { scanner.close(); } catch (Exception ex) { /* empty */ }
-        }
-
-
-        if (component == null) {
-            // FIXME:  Shouldn't be throwing generic Exceptions
-            throw new Exception("No main component found in Makefile.");
-        }
-
-        return component;
-    }
-
-
     public void deleteProgram(int programID) throws RemoteException {
         try {
             log.info("Deleting program with id  " + programID);
@@ -434,169 +218,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         }
     }
 
-
-    private String getProcessOutput(Process process, Message message)
-                                                           throws IOException {
-        StringBuffer   buffer = new StringBuffer();
-        BufferedReader in     = new BufferedReader(
-                                    new InputStreamReader(
-                                        process.getInputStream()));
-        String input;
-
-        while ( (input = in.readLine()) != null) {
-            if (message != null) {
-                notifyObservers(message, input);
-            }
-            buffer.append(input).append("\n");
-        }
-        in.close();
-
-        return buffer.toString();
-    }
-
-
-    private void loadProgramSymbols(Program program, String tosPlatform) 
-                                                        throws JDOMException,
-                                                               IOException {
-        SAXBuilder builder    = new SAXBuilder();
-        Document   schema     = builder.build(program.getSourcePath() +
-                                                   "/build/" + tosPlatform +
-                                                   "/nucleusSchema.xml");
-        List       attributes = schema.getRootElement().getChild(
-                                                   "symbols").getChildren();
-
-        for (Object i : attributes) {
-            Element  attribute = (Element) i;
-            String   name      = attribute.getAttributeValue("name");
-            String[] values    = name.split("\\.");
-            String   module;
-            String   symbol;
-
-            if (values.length == 2) {
-                module = values[0];
-                symbol = values[1];
-            } else {
-                module = "<global>";
-                symbol = values[0];
-            }
-
-            ProgramSymbolManagerImpl.getInstance().createProgramSymbol(
-                                              program.getID(), module, symbol);
-        }
-    }
-
-
-    private void loadProgramMessageTypes(Program program, String tosPlatform)
-                                                           throws IOException {
-        File         directory = new File(program.getSourcePath());
-        List<String> msgList   = getMessageList(directory, tosPlatform);;
-
-        for (String i : msgList) {
-            File headerFile = getMessageFile(directory, i);
-
-            generateMigClass(headerFile, i, directory);
-            byte[] bytecode = compileFile(directory, i, ".java");
-
-            ProgramMessageSymbolManagerImpl.getInstance().
-                                        addProgramMessageSymbol(program.getID(),
-                                                                i, bytecode);
-        }
-    }
-
-
-    private void generateMigClass(File headerFile, String messageType,
-                                  File directory)     throws IOException {
-
-        log.info("Generating MIG classes for messageType: " + messageType +
-                 " to directory " + directory.getAbsolutePath());
-
-        ProcessBuilder processBuilder =
-            new ProcessBuilder("/usr/local/bin/mig", "java",
-                               "-java-classname=" + messageType,
-                               headerFile.getAbsolutePath(),
-                               messageType, "-o",
-                               directory.getAbsolutePath() + "/" +
-                               messageType + ".java");
-
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
-
-        try { process.waitFor(); } catch (InterruptedException ex) { }
-    }
-
-
-    private byte[] compileFile(File directory, String file, String extension)
-                                                        throws IOException {
-        String dir = directory.getAbsolutePath();
-
-        if (com.sun.tools.javac.Main.compile(new String[] {
-                                             dir + "/" + file + extension,
-                                             "-d", dir }) != 0) {
-            log.error("Unable to compile: " + file + extension);
-            return null;
-        }
-
-        File        classFile = new File(dir + "/" + file + ".class");
-        InputStream in        = new FileInputStream(classFile);
-        byte[]      bytecode  = new byte[(int) classFile.length()];
-
-        in.read(bytecode);
-
-        try { in.close(); } catch (Exception e) { }
-        classFile.delete();
-
-        return bytecode;
-    }
-
-
-    private File getMessageFile(File directory, String messageType)
-                                                           throws IOException {
-        log.info("getMessageFile():  directory = " + directory.getAbsolutePath() +
-                 ", messageType = " + messageType);
-
-        ProcessBuilder processBuilder =
-                                new ProcessBuilder(GET_FILE,
-                                                   directory.getAbsolutePath(),
-                                                   messageType);
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
-
-        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(
-                                    process.getInputStream()));
-
-        String line = in.readLine();
-        in.close();
-
-        return (line != null) ? new File(line) : null;
-    }
-
-
-    private List<String> getMessageList(File directory, String tosPlatform)
-                                                        throws IOException {
-        log.info("getMessageList(): directory = " + directory.getAbsolutePath() +
-                 ", tosPlatform = " + tosPlatform);
-        List<String>   messageList    = new ArrayList<String>();
-        ProcessBuilder processBuilder = 
-                                new ProcessBuilder(GET_TYPES,
-                                                   directory.getAbsolutePath(),
-                                                   tosPlatform);
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
-
-
-        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(
-                                    process.getInputStream()));
-
-        String line;
-        while ( (line = in.readLine()) != null) {
-            messageList.add(line);
-        }
-        in.close();
-
-        return messageList;
-    }
 
     private File saveTempFile(byte[] buffer) throws IOException {
         File             file = File.createTempFile("nestbed", ".zip");
@@ -724,7 +345,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         super();
 
         try {
-            this.threadPool     = Executors.newFixedThreadPool(MAX_THREADS);
             this.managerLock    = new ReentrantReadWriteLock(true);
             this.readLock       = managerLock.readLock();
             this.writeLock      = managerLock.writeLock();

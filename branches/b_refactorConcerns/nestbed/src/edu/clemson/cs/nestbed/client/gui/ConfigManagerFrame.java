@@ -334,7 +334,6 @@ public class ConfigManagerFrame extends JFrame {
         }
 
         programTree.setModel(new DefaultTreeModel(root));
-        programTree.repaint();
     }
 
 
