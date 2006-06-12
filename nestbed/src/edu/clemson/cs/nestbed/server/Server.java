@@ -46,35 +46,43 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 
-import edu.clemson.cs.nestbed.common.management.TestbedManager;
-import edu.clemson.cs.nestbed.common.management.MoteTestbedAssignmentManager;
-import edu.clemson.cs.nestbed.common.management.MoteManager;
-import edu.clemson.cs.nestbed.common.management.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.management.ProjectManager;
-import edu.clemson.cs.nestbed.common.management.ProjectDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.MessageManager;
-import edu.clemson.cs.nestbed.common.management.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramProfilingSymbolManager;
-import edu.clemson.cs.nestbed.common.management.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.TestbedManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
+import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
+import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
+import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
 
-import edu.clemson.cs.nestbed.server.management.TestbedManagerImpl;
-import edu.clemson.cs.nestbed.server.management.MessageManagerImpl;
-import edu.clemson.cs.nestbed.server.management.MoteTestbedAssignmentManagerImpl;
-import edu.clemson.cs.nestbed.server.management.MoteManagerImpl;
-import edu.clemson.cs.nestbed.server.management.MoteTypeManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProjectManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProjectDeploymentConfigurationManagerImpl;
-import edu.clemson.cs.nestbed.server.management.MoteDeploymentConfigurationManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProgramManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProgramMessageSymbolManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProgramProfilingMessageSymbolManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProgramProfilingSymbolManagerImpl;
-import edu.clemson.cs.nestbed.server.management.ProgramSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.TestbedManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.MoteTestbedAssignmentManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.MoteTypeManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProjectManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProjectDeploymentConfigurationManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.MoteDeploymentConfigurationManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingMessageSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
+import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
+import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
+import edu.clemson.cs.nestbed.server.management.profiling.NucleusManagerImpl;
+import edu.clemson.cs.nestbed.server.management.sfcontrol.SerialForwarderManagerImpl;
 import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 
@@ -83,21 +91,24 @@ public class Server {
 
     private static String RMI_BASE_URL;
 
-    private ShutdownTrigger                       shutdownTrigger;
-
-    private ProgramSymbolManager                  programSymbolManager;
-    private ProgramProfilingSymbolManager         progProfSymbolManager;
-    private ProgramManager                        programManager;
+    private MessageManager                        messageManager;
     private MoteDeploymentConfigurationManager    moteDepConfigManager;
-    private ProjectDeploymentConfigurationManager projDepConfigManager;
-    private ProjectManager                        projectManager;
-    private MoteTypeManager                       moteTypeManager;
     private MoteManager                           moteManager;
     private MoteTestbedAssignmentManager          moteTbAssignManager;
-    private TestbedManager                        testbedManger;
+    private MoteTypeManager                       moteTypeManager;
+    private NucleusManager                        nucleusManager;
+    private ProgramCompileManager                 programCompileManager;
+    private ProgramDeploymentManager              programDeploymentManager;
+    private ProgramManager                        programManager;
     private ProgramMessageSymbolManager           progMsgSymbolManager;
+    private ProgramProfilingSymbolManager         progProfSymbolManager;
     private ProgramProfilingMessageSymbolManager  progProfMsgSymbolMgnr;
-    private MessageManager                        messageManager;
+    private ProgramSymbolManager                  programSymbolManager;
+    private ProjectDeploymentConfigurationManager projDepConfigManager;
+    private ProjectManager                        projectManager;
+    private SerialForwarderManager                sfManager;
+    private ShutdownTrigger                       shutdownTrigger;
+    private TestbedManager                        testbedManger;
 
 
 
@@ -112,20 +123,24 @@ public class Server {
                  "******************************************************");
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
-        shutdownTrigger       = new ShutdownTrigger();
-        programSymbolManager  = ProgramSymbolManagerImpl.getInstance();
-        progProfSymbolManager = ProgramProfilingSymbolManagerImpl.getInstance();
-        programManager        = ProgramManagerImpl.getInstance();
-        moteDepConfigManager  = MoteDeploymentConfigurationManagerImpl.getInstance();
-        projDepConfigManager  = ProjectDeploymentConfigurationManagerImpl.getInstance();
-        projectManager        = ProjectManagerImpl.getInstance();
-        moteTypeManager       = MoteTypeManagerImpl.getInstance();
-        moteManager           = MoteManagerImpl.getInstance();
-        moteTbAssignManager   = MoteTestbedAssignmentManagerImpl.getInstance();
-        testbedManger         = TestbedManagerImpl.getInstance();
-        progMsgSymbolManager  = ProgramMessageSymbolManagerImpl.getInstance();
-        progProfMsgSymbolMgnr = ProgramProfilingMessageSymbolManagerImpl.getInstance();
-        messageManager        = MessageManagerImpl.getInstance();
+        shutdownTrigger          = new ShutdownTrigger();
+        programSymbolManager     = ProgramSymbolManagerImpl.getInstance();
+        progProfSymbolManager    = ProgramProfilingSymbolManagerImpl.getInstance();
+        programManager           = ProgramManagerImpl.getInstance();
+        moteDepConfigManager     = MoteDeploymentConfigurationManagerImpl.getInstance();
+        projDepConfigManager     = ProjectDeploymentConfigurationManagerImpl.getInstance();
+        projectManager           = ProjectManagerImpl.getInstance();
+        moteTypeManager          = MoteTypeManagerImpl.getInstance();
+        moteManager              = MoteManagerImpl.getInstance();
+        moteTbAssignManager      = MoteTestbedAssignmentManagerImpl.getInstance();
+        testbedManger            = TestbedManagerImpl.getInstance();
+        progMsgSymbolManager     = ProgramMessageSymbolManagerImpl.getInstance();
+        progProfMsgSymbolMgnr    = ProgramProfilingMessageSymbolManagerImpl.getInstance();
+        messageManager           = MessageManagerImpl.getInstance();
+        programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
+        programCompileManager    = ProgramCompileManagerImpl.getInstance();
+        nucleusManager           = NucleusManagerImpl.getInstance();
+        sfManager                = SerialForwarderManagerImpl.getInstance();
 
         bindRemoteObjects();
     }
@@ -179,6 +194,20 @@ public class Server {
 
         Naming.rebind(RMI_BASE_URL + "MessageManager", messageManager);
         log.debug("MessageManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramDeploymentManager",
+                      programDeploymentManager);
+        log.debug("ProgramDeploymentManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramCompileManager",
+                      programCompileManager);
+        log.debug("ProgramCompileManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "NucleusManager", nucleusManager);
+        log.debug("NucleusManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "SerialForwarderManager", sfManager);
+        log.debug("SerialForwarderManager successfully bound.");
     }
 
 

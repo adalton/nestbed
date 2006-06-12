@@ -68,8 +68,8 @@ import javax.swing.border.TitledBorder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.MessageManager;
-import edu.clemson.cs.nestbed.common.management.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.ProgramProfilingMessageSymbol;
