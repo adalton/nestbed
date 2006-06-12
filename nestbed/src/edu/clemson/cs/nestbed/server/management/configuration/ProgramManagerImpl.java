@@ -153,7 +153,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         return programList;
     }
 
-
+    /*
     public void createNewProgram(final int    testbedID,
                                  final int    projectID,
                                  final String name,
@@ -254,6 +254,48 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                 }
             }
         });
+    }
+    */
+
+
+    public void createNewProgram(final int    testbedID,
+                                 final int    projectID,
+                                 final String name,
+                                 final String description,
+                                 final byte[] buffer,
+                                 final String tosPlatform)
+                                                   throws RemoteException {
+        log.info("Request to create new program:\n"        +
+                 "  testbedID:    " + testbedID     + "\n" +
+                 "  projectID:    " + projectID     + "\n" +
+                 "  name:         " + name          + "\n" +
+                 "  description:  " + description   + "\n" +
+                 "  file size:    " + buffer.length);
+
+        try {
+            Program program;
+            program = programAdapter.createNewProgram(projectID, name,
+                                                      description);
+
+            File file = saveTempFile(buffer);
+            File dir  = makeProgramDir(testbedID, projectID,
+                                       program.getID());
+
+            dir = extractZipFile(file, dir);
+
+            program = programAdapter.updateProgramPath(program.getID(),
+                                                       dir.getAbsolutePath());
+        } catch (IOException ex) {
+            String msg = "I/O Exception while creating new program";
+            log.error(msg, ex);
+        } catch (InterruptedException ex) {
+            String msg = "Compilation interrupted";
+            log.error(msg, ex);
+        } catch (AdaptationException ex) {
+            log.error("AdaptationException:", ex);
+        } catch (Exception ex) {
+            log.error("Exception:", ex);
+        }
     }
 
 
