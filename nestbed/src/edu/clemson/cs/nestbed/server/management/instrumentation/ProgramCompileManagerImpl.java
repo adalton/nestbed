@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramCompileManagerImpl.java
  *
@@ -418,19 +418,17 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                 process.waitFor();
                 exitSuccess = (process.exitValue() == 0);
 
-                notifyObservers(Message.COMPILE_COMPLETED, exitSuccess);
-
                 if (exitSuccess) {
                     log.info("Program compiled successfully.");
 
                     loadProgramSymbols(prog, tosPlatform);
                     loadProgramMessageTypes(prog, tosPlatform);
-
-                    //notifyObservers(Message.NEW_PROGRAM, prog);
                 } else {
                     log.warn("Program failed to compile.");
                     failed = true;
                 }
+
+                notifyObservers(Message.COMPILE_COMPLETED, exitSuccess);
             } catch (JDOMException ex) {
                 log.error("JDOMException:", ex);
                 failed = true;

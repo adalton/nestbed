@@ -41,9 +41,6 @@ public interface ProgramManager extends RemoteObservable {
     public enum Message {
         NEW_PROGRAM,
         DELETE_PROGRAM,
-        //COMPILE_STARTED,
-        //COMPILE_PROGRESS,
-        //COMPILE_COMPLETED,
     }
 
 
