@@ -59,6 +59,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMe
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
@@ -76,6 +77,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingMe
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
+import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
@@ -90,6 +92,7 @@ public class Server {
     private MoteManager                           moteManager;
     private MoteTestbedAssignmentManager          moteTbAssignManager;
     private MoteTypeManager                       moteTypeManager;
+    private ProgramCompileManager                 programCompileManager;
     private ProgramDeploymentManager              programDeploymentManager;
     private ProgramManager                        programManager;
     private ProgramMessageSymbolManager           progMsgSymbolManager;
@@ -129,6 +132,7 @@ public class Server {
         progProfMsgSymbolMgnr    = ProgramProfilingMessageSymbolManagerImpl.getInstance();
         messageManager           = MessageManagerImpl.getInstance();
         programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
+        programCompileManager    = ProgramCompileManagerImpl.getInstance();
 
         bindRemoteObjects();
     }
@@ -186,6 +190,10 @@ public class Server {
         Naming.rebind(RMI_BASE_URL + "ProgramDeploymentManager",
                       programDeploymentManager);
         log.debug("ProgramDeploymentManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramCompileManager",
+                      programCompileManager);
+        log.debug("ProgramCompileManager successfully bound.");
     }
 
 
