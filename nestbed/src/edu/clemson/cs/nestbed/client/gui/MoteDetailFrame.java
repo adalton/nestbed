@@ -67,6 +67,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymb
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
+import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.MoteType;
@@ -99,6 +100,7 @@ public class MoteDetailFrame extends JFrame {
     private ProgramProfilingMessageSymbolManager progProfMsgSymManager;
     private ProgramProfilingSymbolManager        profSymManager;
     private ProgramMessageSymbolManager          progMsgSymManager;
+    private NucleusManager                       nucleusManager;
 
     private List<ProgramProfilingSymbol>         profilingSymbols;
     private List<ProgramProfilingMessageSymbol>  progProfMsgSymbols;
@@ -193,8 +195,11 @@ public class MoteDetailFrame extends JFrame {
                                 RMI_BASE_URL + "ProgramMessageSymbolManager");
 
         progProfMsgSymManager = (ProgramProfilingMessageSymbolManager)
-                                 Naming.lookup( RMI_BASE_URL +
+                                 Naming.lookup(RMI_BASE_URL +
                                     "ProgramProfilingMessageSymbolManager");
+
+        nucleusManager        = (NucleusManager) Naming.lookup(RMI_BASE_URL +
+                                    "NucleusManager");
     }
 
 
@@ -410,7 +415,7 @@ public class MoteDetailFrame extends JFrame {
 
                 if (profilingSymbol != null) {
                     int value = ((Integer) aValue).intValue();
-                    if (profSymManager.setSymbol(value,
+                    if (nucleusManager.setSymbol(value,
                                                  profilingSymbol.getID(),
                                                  program.getSourcePath(),
                                                  moteType.getTosPlatform(),
@@ -573,7 +578,7 @@ public class MoteDetailFrame extends JFrame {
                 profilingSymbol = model.getProfilingSymbol(
                                                     symbolTable.getSelectedRow());
                 if (profilingSymbol != null) {
-                    int value = profSymManager.querySymbol(
+                    int value = nucleusManager.querySymbol(
                                                     profilingSymbol.getID(),
                                                     program.getSourcePath(),
                                                     moteType.getTosPlatform(),
