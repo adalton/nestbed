@@ -58,6 +58,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymb
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
@@ -74,6 +75,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymb
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingMessageSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
+import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
@@ -83,21 +85,21 @@ public class Server {
 
     private static String RMI_BASE_URL;
 
-    private ShutdownTrigger                       shutdownTrigger;
-
-    private ProgramSymbolManager                  programSymbolManager;
-    private ProgramProfilingSymbolManager         progProfSymbolManager;
-    private ProgramManager                        programManager;
+    private MessageManager                        messageManager;
     private MoteDeploymentConfigurationManager    moteDepConfigManager;
-    private ProjectDeploymentConfigurationManager projDepConfigManager;
-    private ProjectManager                        projectManager;
-    private MoteTypeManager                       moteTypeManager;
     private MoteManager                           moteManager;
     private MoteTestbedAssignmentManager          moteTbAssignManager;
-    private TestbedManager                        testbedManger;
+    private MoteTypeManager                       moteTypeManager;
+    private ProgramDeploymentManager              programDeploymentManager;
+    private ProgramManager                        programManager;
     private ProgramMessageSymbolManager           progMsgSymbolManager;
+    private ProgramProfilingSymbolManager         progProfSymbolManager;
     private ProgramProfilingMessageSymbolManager  progProfMsgSymbolMgnr;
-    private MessageManager                        messageManager;
+    private ProgramSymbolManager                  programSymbolManager;
+    private ProjectDeploymentConfigurationManager projDepConfigManager;
+    private ProjectManager                        projectManager;
+    private ShutdownTrigger                       shutdownTrigger;
+    private TestbedManager                        testbedManger;
 
 
 
@@ -112,20 +114,21 @@ public class Server {
                  "******************************************************");
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
-        shutdownTrigger       = new ShutdownTrigger();
-        programSymbolManager  = ProgramSymbolManagerImpl.getInstance();
-        progProfSymbolManager = ProgramProfilingSymbolManagerImpl.getInstance();
-        programManager        = ProgramManagerImpl.getInstance();
-        moteDepConfigManager  = MoteDeploymentConfigurationManagerImpl.getInstance();
-        projDepConfigManager  = ProjectDeploymentConfigurationManagerImpl.getInstance();
-        projectManager        = ProjectManagerImpl.getInstance();
-        moteTypeManager       = MoteTypeManagerImpl.getInstance();
-        moteManager           = MoteManagerImpl.getInstance();
-        moteTbAssignManager   = MoteTestbedAssignmentManagerImpl.getInstance();
-        testbedManger         = TestbedManagerImpl.getInstance();
-        progMsgSymbolManager  = ProgramMessageSymbolManagerImpl.getInstance();
-        progProfMsgSymbolMgnr = ProgramProfilingMessageSymbolManagerImpl.getInstance();
-        messageManager        = MessageManagerImpl.getInstance();
+        shutdownTrigger          = new ShutdownTrigger();
+        programSymbolManager     = ProgramSymbolManagerImpl.getInstance();
+        progProfSymbolManager    = ProgramProfilingSymbolManagerImpl.getInstance();
+        programManager           = ProgramManagerImpl.getInstance();
+        moteDepConfigManager     = MoteDeploymentConfigurationManagerImpl.getInstance();
+        projDepConfigManager     = ProjectDeploymentConfigurationManagerImpl.getInstance();
+        projectManager           = ProjectManagerImpl.getInstance();
+        moteTypeManager          = MoteTypeManagerImpl.getInstance();
+        moteManager              = MoteManagerImpl.getInstance();
+        moteTbAssignManager      = MoteTestbedAssignmentManagerImpl.getInstance();
+        testbedManger            = TestbedManagerImpl.getInstance();
+        progMsgSymbolManager     = ProgramMessageSymbolManagerImpl.getInstance();
+        progProfMsgSymbolMgnr    = ProgramProfilingMessageSymbolManagerImpl.getInstance();
+        messageManager           = MessageManagerImpl.getInstance();
+        programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
 
         bindRemoteObjects();
     }
@@ -179,6 +182,10 @@ public class Server {
 
         Naming.rebind(RMI_BASE_URL + "MessageManager", messageManager);
         log.debug("MessageManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramDeploymentManager",
+                      programDeploymentManager);
+        log.debug("ProgramDeploymentManager successfully bound.");
     }
 
 
