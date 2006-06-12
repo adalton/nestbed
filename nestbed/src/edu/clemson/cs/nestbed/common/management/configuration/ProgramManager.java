@@ -41,9 +41,9 @@ public interface ProgramManager extends RemoteObservable {
     public enum Message {
         NEW_PROGRAM,
         DELETE_PROGRAM,
-        COMPILE_STARTED,
-        COMPILE_PROGRESS,
-        COMPILE_COMPLETED,
+        //COMPILE_STARTED,
+        //COMPILE_PROGRESS,
+        //COMPILE_COMPLETED,
     }
 
 
@@ -51,9 +51,9 @@ public interface ProgramManager extends RemoteObservable {
 
     public List<Program> getProgramList(int projectID) throws RemoteException;
 
-    public void createNewProgram(int    testbedID, int    projectID,
-                                 String name,      String description,
-                                 byte[] buffer,    String tosPlatform)
+    public int createNewProgram(int    testbedID, int    projectID,
+                                String name,      String description,
+                                byte[] buffer,    String tosPlatform)
                                                         throws RemoteException;
 
     public void deleteProgram(int programID) throws RemoteException;

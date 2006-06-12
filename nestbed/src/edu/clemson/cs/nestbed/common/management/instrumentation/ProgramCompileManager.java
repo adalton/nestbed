@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramCompileManager.java
  *
@@ -36,8 +36,12 @@ import edu.clemson.cs.nestbed.common.util.RemoteObservable;
 
 public interface ProgramCompileManager extends RemoteObservable {
     public enum Message {
+        //NEW_PROGRAM,
         COMPILE_STARTED,
         COMPILE_PROGRESS,
         COMPILE_COMPLETED,
     }
+
+    public void compileProgram(int programID, String tosPlatform)
+                                                       throws RemoteException;
 }

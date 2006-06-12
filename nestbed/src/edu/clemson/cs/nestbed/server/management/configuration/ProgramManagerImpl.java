@@ -258,7 +258,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     */
 
 
-    public void createNewProgram(final int    testbedID,
+    public int createNewProgram(final int    testbedID,
                                  final int    projectID,
                                  final String name,
                                  final String description,
@@ -272,30 +272,44 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                  "  description:  " + description   + "\n" +
                  "  file size:    " + buffer.length);
 
+        int programID = -1;
+
         try {
             Program program;
             program = programAdapter.createNewProgram(projectID, name,
                                                       description);
+            programID = program.getID();
 
             File file = saveTempFile(buffer);
-            File dir  = makeProgramDir(testbedID, projectID,
-                                       program.getID());
+            File dir  = makeProgramDir(testbedID, projectID, projectID);
 
             dir = extractZipFile(file, dir);
 
-            program = programAdapter.updateProgramPath(program.getID(),
-                                                       dir.getAbsolutePath());
+            program   = programAdapter.updateProgramPath(programID,
+                                                         dir.getAbsolutePath());
+
+            writeLock.lock();
+            try {
+                programs.put(programID, program);
+            } finally {
+                writeLock.unlock();
+            }
+            notifyObservers(Message.NEW_PROGRAM, program);
         } catch (IOException ex) {
             String msg = "I/O Exception while creating new program";
             log.error(msg, ex);
-        } catch (InterruptedException ex) {
-            String msg = "Compilation interrupted";
-            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } catch (AdaptationException ex) {
-            log.error("AdaptationException:", ex);
+            String msg = "AdaptationException";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         } catch (Exception ex) {
-            log.error("Exception:", ex);
+            String msg = "Exception";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
         }
+
+        return programID;
     }
 
 

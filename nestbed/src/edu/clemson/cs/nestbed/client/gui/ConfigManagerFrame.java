@@ -106,6 +106,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymb
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
@@ -144,6 +145,7 @@ public class ConfigManagerFrame extends JFrame {
     private ProgramSymbolManager                 programSymbolManager;
     private ProgramProfilingMessageSymbolManager progProfMsgSymManager;
     private ProgramMessageSymbolManager          progMsgSymManager;
+    private ProgramCompileManager                programCompileManager;
 
     private List<MoteTestbedAssignment>          mtbAssignmentData;
 
@@ -169,10 +171,9 @@ public class ConfigManagerFrame extends JFrame {
 
         lookupRemoteManagers();
         // TODO:  We need to deregister listeners
-        programManager.addRemoteObserver(
-                                new ProgramObserver());
-        progProfManager.addRemoteObserver(
-                                new ProgramProfilingSymbolObserver());
+        programCompileManager.addRemoteObserver(new ProgramCompileObserver());
+        programManager.addRemoteObserver(new ProgramObserver());
+        progProfManager.addRemoteObserver(new ProgramProfilingSymbolObserver());
         progProfMsgSymManager.addRemoteObserver(
                                 new ProgramProfilingMessageSymbolObserver());
 
@@ -254,8 +255,12 @@ public class ConfigManagerFrame extends JFrame {
                                     "ProgramProfilingMessageSymbolManager");
 
         moteDepConfMgr        = (MoteDeploymentConfigurationManager)
-                                 Naming.lookup(RMI_BASE_URL +
+                                     Naming.lookup(RMI_BASE_URL +
                                            "MoteDeploymentConfigurationManager");
+
+        programCompileManager = (ProgramCompileManager)
+                                     Naming.lookup(RMI_BASE_URL +
+                                                       "ProgramCompileManager");
     }
 
 
@@ -329,6 +334,7 @@ public class ConfigManagerFrame extends JFrame {
         }
 
         programTree.setModel(new DefaultTreeModel(root));
+        programTree.repaint();
     }
 
 
@@ -507,109 +513,25 @@ public class ConfigManagerFrame extends JFrame {
     }
 
 
-    protected class ProgramObserver extends    UnicastRemoteObject
-                                    implements RemoteObserver {
-        public ProgramObserver() throws RemoteException {
+    protected class ProgramCompileObserver extends    UnicastRemoteObject
+                                           implements RemoteObserver {
+        public ProgramCompileObserver() throws RemoteException {
             super();
         }
 
 
         public void update(Serializable msg, Serializable arg)
                                                     throws RemoteException {
-            ProgramManager.Message message = (ProgramManager.Message) msg;
+            ProgramCompileManager.Message message;
+            message = (ProgramCompileManager.Message) msg;
 
-            DefaultTreeModel       model;
-            SortedTreeNode root;
+            DefaultTreeModel model;
+            SortedTreeNode   root;
 
             model = (DefaultTreeModel) programTree.getModel();
             root  = (SortedTreeNode)   programTree.getModel().getRoot();
 
             switch (message) {
-            case NEW_PROGRAM: {
-                log.info("New Program:  " + arg.toString());
-                buildProgramTreeNodes();
-                /*
-
-                Program             program           = (Program) arg;
-                List<ProgramSymbol> programSymbolList =
-                        programSymbolManager.getProgramSymbols(program.getID());
-
-                SortedTreeNode programNode;
-                SortedTreeNode symbolsNode;
-
-                programNode = new SortedTreeNode(program,
-                                                    new TreeComparator());
-                symbolsNode = new SortedTreeNode("Symbols",
-                                                    new TreeComparator());
-
-                Map<String, SortedTreeNode> moduleMap;
-                moduleMap = new HashMap<String, SortedTreeNode>();
-
-                for (ProgramSymbol i : programSymbolList) {
-                    SortedTreeNode moduleSymbolNode  =
-                                                moduleMap.get(i.getModule());
-                    SortedTreeNode programSymbolNode =
-                                                new SortedTreeNode(i);
-
-                    if (moduleSymbolNode == null) {
-                        String moduleName = i.getModule();
-                        moduleSymbolNode  = new SortedTreeNode(moduleName,
-                                                        new TreeComparator());
-                        moduleMap.put(moduleName, moduleSymbolNode);
-                    }
-                    moduleSymbolNode.add(programSymbolNode);
-                }
-
-                for (SortedTreeNode i : moduleMap.values()) {
-                    symbolsNode.add(i);
-                }
-                programNode.add(symbolsNode);
-
-                model.insertNodeInto(symbolsNode, root, root.getChildCount());
-
-                TreeNode[] rootNodePath = root.getPath();
-                TreePath   rootTreePath = new TreePath(rootNodePath);
-
-                programTree.expandPath(rootTreePath);
-                */
-                break;
-            }
-
-            case DELETE_PROGRAM: {
-                log.info("Delete Program:  " + arg.toString());
-                buildProgramTreeNodes();
-
-                /*
-                Program program = (Program) arg;
-                boolean found   = false;
-
-                for (Enumeration e = root.breadthFirstEnumeration();
-                                            !found && e.hasMoreElements(); ) {
-                    SortedTreeNode node;
-                    node = (SortedTreeNode) e.nextElement();
-
-                    Object obj = node.getUserObject();
-
-                    if (obj instanceof Program) {
-                        Program prog = (Program) obj;
-
-                        if (prog.getID() == program.getID()) {
-                            SortedTreeNode parent;
-                            parent = (SortedTreeNode) node.getParent();
-
-                            model.nodesWereRemoved(parent,
-                                         new int[] { parent.getIndex(node) },
-                                         new Object[] { node });
-
-                            node.removeFromParent();
-                            found = true;
-                        }
-                    }
-                }
-                */
-                break;
-            }
-
             case COMPILE_STARTED: {
                 if (compiling) {
                     if (outputWindow != null) {
@@ -631,11 +553,53 @@ public class ConfigManagerFrame extends JFrame {
             }
 
             case COMPILE_COMPLETED: {
+                Boolean success = (Boolean) arg;
+
                 if (compiling) {
                     compiling = false;
                 }
+
+                if (success.booleanValue()) {
+                    log.debug("Compile completed successfully.");
+                } else {
+                    log.debug("Compile unsuccessful.");
+                }
+                buildProgramTreeNodes();
                 break;
             }
+            }
+        }
+    }
+
+
+    protected class ProgramObserver extends    UnicastRemoteObject
+                                    implements RemoteObserver {
+        public ProgramObserver() throws RemoteException {
+            super();
+        }
+
+
+        public void update(Serializable msg, Serializable arg)
+                                                    throws RemoteException {
+            ProgramManager.Message message = (ProgramManager.Message) msg;
+
+            DefaultTreeModel model;
+            SortedTreeNode   root;
+
+            model = (DefaultTreeModel) programTree.getModel();
+            root  = (SortedTreeNode)   programTree.getModel().getRoot();
+
+            switch (message) {
+            case NEW_PROGRAM:
+                log.info("New Program:  " + arg.toString());
+                buildProgramTreeNodes();
+                break;
+
+            case DELETE_PROGRAM:
+                log.info("Delete Program:  " + arg.toString());
+                buildProgramTreeNodes();
+
+                break;
             }
         }
     }
@@ -897,9 +861,9 @@ public class ConfigManagerFrame extends JFrame {
             FileUploadDialog fud = new FileUploadDialog(ConfigManagerFrame.this,
                                                         "Project Upload");
             fud.setVisible(true);
-            String name        = fud.getName();
-            String description = fud.getDescription();
-            String filename    = fud.getFilename();
+            String                name        = fud.getName();
+            String                description = fud.getDescription();
+            String                filename    = fud.getFilename();
 
             try {
                 if (name != null) {
@@ -910,11 +874,14 @@ public class ConfigManagerFrame extends JFrame {
                     fin.read(fileBuffer);
 
                     compiling = true;
-                    programManager.createNewProgram(testbed.getID(),
-                                                    project.getID(),
-                                                    name, description,
-                                                    fileBuffer,
-                                                    tosPlatform);
+                    int programID = programManager.createNewProgram(
+                                                            testbed.getID(),
+                                                            project.getID(),
+                                                            name, description,
+                                                            fileBuffer,
+                                                            tosPlatform);
+                    programCompileManager.compileProgram(programID,
+                                                         tosPlatform);
                 }
             } catch (RemoteException ex) {
                 log.error("Remote Exception", ex);
