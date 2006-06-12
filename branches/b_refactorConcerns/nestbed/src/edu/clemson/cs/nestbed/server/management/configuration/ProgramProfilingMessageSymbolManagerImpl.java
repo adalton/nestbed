@@ -40,7 +40,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.ProgramProfilingMessageSymbol;
@@ -52,8 +51,9 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
 public class ProgramProfilingMessageSymbolManagerImpl
-                            extends    RemoteObservableImpl
-                            implements ProgramProfilingMessageSymbolManager {
+                               extends    RemoteObservableImpl
+                               implements ProgramProfilingMessageSymbolManager {
+
     private final static ProgramProfilingMessageSymbolManager instance;
     private final static Log log = LogFactory.getLog(
                             ProgramProfilingMessageSymbolManagerImpl.class);

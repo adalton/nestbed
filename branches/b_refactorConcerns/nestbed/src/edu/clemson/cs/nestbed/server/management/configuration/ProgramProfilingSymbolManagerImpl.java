@@ -147,6 +147,21 @@ public class ProgramProfilingSymbolManagerImpl
     }
 
 
+    public ProgramProfilingSymbol getProgramProfilingSymbol(int id)
+                                                    throws RemoteException {
+        ProgramProfilingSymbol symbol = null;
+
+        readLock.lock();
+        try {
+            symbol = progProfSymbols.get(id);
+        } finally {
+            readLock.unlock();
+        }
+
+        return symbol;
+    }
+
+
     public void createNewProfilingSymbol(int configID, int programSymbolID)
                                                        throws RemoteException {
         try {
@@ -301,6 +316,7 @@ public class ProgramProfilingSymbolManagerImpl
     }
 
 
+    /*
     public int querySymbol(int    id,       String sourcePath,
                            String moteType, String moteSerialID)
                                                     throws RemoteException {
@@ -412,6 +428,7 @@ public class ProgramProfilingSymbolManagerImpl
 
         return okay;
     }
+    */
 
 
     private ProgramProfilingSymbolManagerImpl() throws RemoteException {
