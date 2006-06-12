@@ -44,28 +44,17 @@ public interface ProgramManager extends RemoteObservable {
         COMPILE_STARTED,
         COMPILE_PROGRESS,
         COMPILE_COMPLETED,
-        PROGRAM_INSTALL_BEGIN,
-        PROGRAM_INSTALL_SUCCESS,
-        PROGRAM_INSTALL_FAILURE
     }
 
 
-    public Program       getProgram(int id)            throws RemoteException;
-
+    public Program getProgram(int id) throws RemoteException;
 
     public List<Program> getProgramList(int projectID) throws RemoteException;
-
 
     public void createNewProgram(int    testbedID, int    projectID,
                                  String name,      String description,
                                  byte[] buffer,    String tosPlatform)
-                                                       throws RemoteException;
+                                                        throws RemoteException;
 
-
-    public void deleteProgram(int programID)           throws RemoteException;
-
-
-    public void installProgram(int          moteAddress, String moteSerialID,
-                               String       tosPlatform, int    programID,
-                               StringBuffer output)      throws RemoteException;
+    public void deleteProgram(int programID) throws RemoteException;
 }

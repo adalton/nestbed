@@ -40,9 +40,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -66,20 +64,14 @@ import org.jdom.input.SAXBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
-import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
-import edu.clemson.cs.nestbed.server.nesc.comm.MoteComm;
-import edu.clemson.cs.nestbed.server.nesc.comm.mig.PowerMessage;
 import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
 import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
@@ -99,6 +91,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                     "/home/adalton/src/java/nestbed/bin/getMessageTypes.sh";
     private final static String GET_FILE   =
                     "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
+
     static {
         ProgramManagerImpl impl = null;
 
@@ -383,98 +376,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
-    }
-
-
-    public void installProgram(final int          moteAddress,
-                               final String       moteSerialID,
-                               final String       tosPlatform,
-                               final int          programID,
-                               final StringBuffer output) 
-                                                       throws RemoteException {
-
-        threadPool.execute(new Runnable() {
-            public void run() {
-                try {
-                   // make -C <sourcePath> \
-                   //     <tosPlatform> reinstall.<moteAddress> \
-                   //     bsl,/dev/motes/<moteSerialID>
-                    Program         program;
-
-                    readLock.lock();
-                    try {
-                        program = programs.get(programID);
-                    } finally {
-                        readLock.unlock();
-                    }
-
-                    String          commPort       = "/dev/motes/" +
-                                                     moteSerialID;
-                    ProcessBuilder  processBuilder = new ProcessBuilder(MAKE,
-                                                  MAKEOPTS, 
-                                                  program.getSourcePath(), 
-                                                  tosPlatform, "nucleus",
-                                                  "reinstall." + moteAddress,
-                                                  "bsl," + commPort);
-                    processBuilder.redirectErrorStream(true);
-                    notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
-                                    moteSerialID);
-
-                    Process process = processBuilder.start();
-                    output.append(getProcessOutput(process, null));
-                    process.waitFor();
-                    int exitValue = process.exitValue();
-
-                    if (exitValue == 0) {
-                        try { Thread.sleep(3000); } catch (Exception ex) { }
-                        setRadioPowerLevel(moteAddress, commPort, tosPlatform,
-                                           moteSerialID, programID);
-
-                        notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
-                                        moteSerialID);
-                    } else {
-                        notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
-                                        moteSerialID);
-                    }
-                } catch (InterruptedException ex) {
-                    String msg = "process interrupted while waiting for " +
-                                 "install";
-                    log.error(msg, ex);
-                } catch (IOException ex) {
-                    String msg = "I/O Exception while installing program";
-
-                    log.error(msg, ex);
-                }
-            }
-        });
-    }
-
-
-    private void setRadioPowerLevel(int    address,     String commPort,
-                                    String tosPlatform, String moteSerialID,
-                                    int    programID) throws RemoteException,
-                                                             IOException {
-        log.debug("Setting radio power on mote with\n" +
-                  "    address:       " + address     + "\n" +
-                  "    commPort:      " + commPort    + "\n" +
-                  "    tosPlatform:   " + tosPlatform + "\n" +
-                  "    moteSerialID:  " + moteSerialID);
-
-        PowerMessage powerMessage = new PowerMessage();
-        Mote         mote         = MoteManagerImpl.getInstance().getMote(
-                                                                moteSerialID);
-        int          moteID       = mote.getID();
-        int          powerLevel   = MoteDeploymentConfigurationManagerImpl.
-                                        getInstance().
-                                      getMoteDeploymentConfigurationByProgramID(
-                                        moteID, programID).getRadioPowerLevel();
-        MoteComm     moteComm     = new MoteComm(address, commPort);
-
-        powerMessage.set_powerLevel((short) powerLevel);
-
-        moteComm.start();
-        moteComm.send(powerMessage);
-        moteComm.stop();
     }
 
 
