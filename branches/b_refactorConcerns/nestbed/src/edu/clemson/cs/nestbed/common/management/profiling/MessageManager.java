@@ -50,10 +50,4 @@ public interface MessageManager extends Remote {
     public void enable(int moteID)  throws RemoteException;
 
     public void disable(int moteID) throws RemoteException;
-
-    public void enableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException;
-
-    public void disableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException;
 }

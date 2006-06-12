@@ -62,6 +62,7 @@ import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentMana
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
+import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
 
@@ -81,6 +82,7 @@ import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentMana
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.NucleusManagerImpl;
+import edu.clemson.cs.nestbed.server.management.sfcontrol.SerialForwarderManagerImpl;
 import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 
@@ -104,6 +106,7 @@ public class Server {
     private ProgramSymbolManager                  programSymbolManager;
     private ProjectDeploymentConfigurationManager projDepConfigManager;
     private ProjectManager                        projectManager;
+    private SerialForwarderManager                sfManager;
     private ShutdownTrigger                       shutdownTrigger;
     private TestbedManager                        testbedManger;
 
@@ -137,6 +140,7 @@ public class Server {
         programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
         programCompileManager    = ProgramCompileManagerImpl.getInstance();
         nucleusManager           = NucleusManagerImpl.getInstance();
+        sfManager                = SerialForwarderManagerImpl.getInstance();
 
         bindRemoteObjects();
     }
@@ -201,6 +205,9 @@ public class Server {
 
         Naming.rebind(RMI_BASE_URL + "NucleusManager", nucleusManager);
         log.debug("NucleusManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "SerialForwarderManager", sfManager);
+        log.debug("SerialForwarderManager successfully bound.");
     }
 
 

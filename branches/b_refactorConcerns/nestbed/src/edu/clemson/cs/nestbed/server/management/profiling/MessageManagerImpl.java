@@ -29,21 +29,19 @@
 package edu.clemson.cs.nestbed.server.management.profiling;
 
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 
 public class MessageManagerImpl extends    UnicastRemoteObject
@@ -110,23 +108,6 @@ public class MessageManagerImpl extends    UnicastRemoteObject
         moteMessageManager = moteMessageManagerMap.get(moteID);
 
         moteMessageManager.disable();
-    }
-
-
-    public void enableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException {
-        MoteMessageManager moteMessageManager;
-        moteMessageManager = moteMessageManagerMap.get(moteID);
-
-        moteMessageManager.enableSerialForwarder(moteAddress);
-    }
-
-    public void disableSerialForwarder(int moteID, int moteAddress)
-                                                        throws RemoteException {
-        MoteMessageManager moteMessageManager;
-        moteMessageManager = moteMessageManagerMap.get(moteID);
-
-        moteMessageManager.disableSerialForwarder(moteAddress);
     }
 
 

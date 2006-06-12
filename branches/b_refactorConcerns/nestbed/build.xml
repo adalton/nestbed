@@ -4,7 +4,7 @@
     <property file="${user.home}/build.properties"/>
 
     <property name="app.name"            value="nestbed"/>
-    <property name="app.version"         value="0.4"/>
+    <property name="app.version"         value="0.5"/>
 
     <property name="src.home"            value="src"/>
     <property name="classes.home"        value="classes"/>

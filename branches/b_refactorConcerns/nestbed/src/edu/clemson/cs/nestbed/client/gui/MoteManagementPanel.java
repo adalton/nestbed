@@ -64,6 +64,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
+import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
@@ -101,6 +102,8 @@ public class MoteManagementPanel extends MotePanel {
     private MoteDeploymentConfigurationManager mdcManager;
     private ProgramDeploymentManager           progDeployMgr;
     private MoteTestbedAssignment              mtbAssignment;
+    private SerialForwarderManager             sfManager;
+
     private Program                            program;
     private int                                projDepConfID;
     private Mote                               mote;
@@ -110,7 +113,6 @@ public class MoteManagementPanel extends MotePanel {
     private InstallAnimationThread             installAnimationThread;
     private boolean                            drawBorder;
     private boolean                            installedSuccessfully;
-    private boolean                            serialForwarderRunning;
 
 
     public MoteManagementPanel(MoteTestbedAssignment            mtbAssignment,
@@ -152,9 +154,9 @@ public class MoteManagementPanel extends MotePanel {
         addressLabel.setLocation(2, 0);
 
         progDeployMgr.addRemoteObserver(new ProgramInstallationObserver());
-        //programManager.addRemoteObserver(new ProgramInstallationObserver());
         mdcManager.addRemoteObserver(new MoteDeploymentConfigObserver());
     }
+
 
     private final void lookupRemoteManagers() throws NotBoundException,
                                                      MalformedURLException,
@@ -164,7 +166,11 @@ public class MoteManagementPanel extends MotePanel {
 
         progDeployMgr  = (ProgramDeploymentManager) Naming.lookup(
                           RMI_BASE_URL + "ProgramDeploymentManager");
+
+        sfManager      = (SerialForwarderManager) Naming.lookup(
+                          RMI_BASE_URL + "SerialForwarderManager");
     }
+
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -407,18 +413,15 @@ public class MoteManagementPanel extends MotePanel {
             runSerialForwarder.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        if (serialForwarderRunning) {
-                            messageManager.disableSerialForwarder(
-                                                  mote.getID(),
-                                                  mtbAssignment.getMoteAddress());
+                        if (sfManager.isSerialForwarderEnabled(mote.getID())) {
+                            sfManager.disableSerialForwarder(mote.getID());
                             runSerialForwarder.setText("Run Serial Forwarder");
                         } else {
-                            messageManager.enableSerialForwarder(
+                            sfManager.enableSerialForwarder(
                                                   mote.getID(),
                                                   mtbAssignment.getMoteAddress());
                             runSerialForwarder.setText("Stop Serial Forwarder");
                         }
-                        serialForwarderRunning = !serialForwarderRunning;
                     } catch (Exception ex) {
                         log.error("Exception\n", ex);
                         ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);

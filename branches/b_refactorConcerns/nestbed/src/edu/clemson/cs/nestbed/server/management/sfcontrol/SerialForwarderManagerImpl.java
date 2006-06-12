@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * SerialForwarderManagerImpl.java
  *
@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 
 import net.tinyos.sf.SerialForwarder;
 
+import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
 
