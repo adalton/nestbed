@@ -40,21 +40,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
-import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
-import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
-import edu.clemson.cs.nestbed.common.model.Mote;
-import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
-import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
-import edu.clemson.cs.nestbed.common.model.MoteType;
-import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
-import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
@@ -230,53 +217,6 @@ public class ProjectDeploymentConfigurationManagerImpl
             String msg = "Exception in deleteProjectDeploymentConfig";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
-        }
-    }
-
-
-    public void deployConfiguration(int id) throws RemoteException {
-        List<MoteDeploymentConfiguration> moteDeploymentConfigs;
-
-        readLock.lock();
-        try {
-            moteDeploymentConfigs = MoteDeploymentConfigurationManagerImpl.
-                             getInstance().getMoteDeploymentConfigurations(id);
-
-            for (MoteDeploymentConfiguration i : moteDeploymentConfigs) {
-                StringBuffer          output;
-                Mote                  mote;
-                MoteType              type;
-                MoteTestbedAssignment mtba;
-
-                output = new StringBuffer();
-                mote   = MoteManagerImpl.getInstance().getMote(i.getMoteID());
-                type   = MoteTypeManagerImpl.getInstance().
-                                         getMoteType(mote.getMoteTypeID());
-                mtba   = MoteTestbedAssignmentManagerImpl.getInstance().
-                                         getMoteTestbedAssignment(mote.getID());
-
-                log.info("Installing\n" +
-                         " program:  " + i.getProgramID() + "\n" +
-                         " on mote:  " + mote.getID()     + "\n" +
-                         " type:     " + type.getName()   + "\n" +
-                         " address:  " + mtba.getMoteAddress());
-
-
-                 ProgramManagerImpl.getInstance().installProgram(
-                                                        mtba.getMoteAddress(),
-                                                        mote.getMoteSerialID(),
-                                                        type.getTosPlatform(),
-                                                        i.getProgramID(),
-                                                        output);
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            String msg = "Exception in deployConfiguration";
-            log.error(msg, ex);
-            throw new RemoteException(msg, ex);
-        } finally {
-            readLock.unlock();
         }
     }
 

@@ -62,7 +62,4 @@ public interface ProjectDeploymentConfigurationManager
 
 
     public void deleteProjectDeploymentConfig(int id)   throws RemoteException;
-
-
-    public void deployConfiguration(int id)             throws RemoteException;
 }

@@ -55,6 +55,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignm
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
@@ -85,6 +86,7 @@ public class NetworkMonitorFrame extends JFrame {
     private MoteTestbedAssignmentManager          mtbaManager;
     private MoteDeploymentConfigurationManager    moteDepConfMgr;
     private ProjectDeploymentConfigurationManager configManager;
+    private ProgramDeploymentManager              progDeployMgr;
 
 
     public NetworkMonitorFrame(Testbed testbed, Project project,
@@ -133,6 +135,9 @@ public class NetworkMonitorFrame extends JFrame {
         configManager   = (ProjectDeploymentConfigurationManager) Naming.lookup(
                            RMI_BASE_URL +
                                     "ProjectDeploymentConfigurationManager");
+
+        progDeployMgr  = (ProgramDeploymentManager) Naming.lookup(
+                           RMI_BASE_URL + "ProgramDeploymentManager");
     }
 
 
@@ -186,7 +191,8 @@ public class NetworkMonitorFrame extends JFrame {
                     public void run() {
                         try {
                             install.setEnabled(false);
-                            configManager.deployConfiguration(config.getID());
+                            progDeployMgr.deployConfiguration(config.getID());
+                            //configManager.deployConfiguration(config.getID());
                         } catch (Exception ex) {
                             log.error("Exception occured while installing " +
                                       "programs.", ex);
