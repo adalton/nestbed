@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * SerialForwarderManager.java
  *
@@ -26,7 +26,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.management.sfcontrol;
+package edu.clemson.cs.nestbed.common.management.sfcontrol;
 
 
 import java.rmi.Remote;

@@ -32,21 +32,12 @@ package edu.clemson.cs.nestbed.server.management.profiling;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
-import edu.clemson.cs.nestbed.common.model.Mote;
-import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
-import edu.clemson.cs.nestbed.common.util.ByteClassLoader;
-import edu.clemson.cs.nestbed.common.util.RemoteObserver;
-import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +49,12 @@ import net.tinyos.packet.BuildSource;
 import net.tinyos.packet.PacketSource;
 import net.tinyos.packet.PhoenixError;
 import net.tinyos.packet.PhoenixSource;
-import net.tinyos.sf.SerialForwarder;
+
+import edu.clemson.cs.nestbed.common.model.Mote;
+import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
+import edu.clemson.cs.nestbed.common.util.ByteClassLoader;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
+import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
 
 
 public class MoteMessageManager implements MessageListener {
@@ -72,7 +68,6 @@ public class MoteMessageManager implements MessageListener {
     private MoteIF                    moteIF;
     private boolean                   enabled;
     private Thread                    mainThread;
-    private SerialForwarder           serialForwarder;
     private boolean                   sfEnabled;
 
 
@@ -185,37 +180,6 @@ public class MoteMessageManager implements MessageListener {
         }
     }
 
-    public void enableSerialForwarder(int moteAddress) throws RemoteException {
-        try {
-            if (!sfEnabled) {
-                log.info("Enabling serial forwarder for mote: " + mote.getID());
-                disable();
-
-
-                serialForwarder = new SerialForwarder(new String[] {
-                    "-port", Integer.toString(9000 + moteAddress),
-                    "-comm", "serial@/dev/motes/" + mote.getMoteSerialID() +
-                                    ":telos",
-                    "-no-gui",
-                    "-quiet"});
-            }
-            sfEnabled = !sfEnabled;
-        } catch (Exception ex) {
-            String msg = "Exception while enabling serial forwarder";
-            log.error(msg, ex);
-            throw new RemoteException(msg, ex);
-        }
-    }
-
-    public void disableSerialForwarder(int moteAddress) {
-        if (sfEnabled) {
-            log.info("Disabling serial forwarder for mote: " + mote.getID());
-
-            serialForwarder.stopListenServer();
-            serialForwarder.listenServerStopped();
-        }
-        sfEnabled = !sfEnabled;
-    }
 
     // We're fighting RMI design here a bit.  RMI expects all classes to
     // either be defined ahead of time or to be dynamically loadable

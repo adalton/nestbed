@@ -37,15 +37,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.tinyos.nucleus.NucleusInterface;
-import net.tinyos.nucleus.NucleusResult;
-import net.tinyos.nucleus.NucleusValue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.model.ProgramProfilingSymbol;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
@@ -58,6 +53,7 @@ import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 public class ProgramProfilingSymbolManagerImpl
                                     extends    RemoteObservableImpl
                                     implements ProgramProfilingSymbolManager {
+
     private final static ProgramProfilingSymbolManager instance;
     private final static Log log = LogFactory.getLog(
                                        ProgramProfilingSymbolManagerImpl.class);
@@ -314,121 +310,6 @@ public class ProgramProfilingSymbolManagerImpl
             throw new RemoteException(msg, ex);
         }
     }
-
-
-    /*
-    public int querySymbol(int    id,       String sourcePath,
-                           String moteType, String moteSerialID)
-                                                    throws RemoteException {
-        int value = -1;
-
-        try {
-            int    queryDelay = 10;
-            String device     = "/dev/motes/" + moteSerialID; 
-
-            log.info("Query symbol on device: " + device);
-            NucleusInterface nucleusInterface = new NucleusInterface(device,
-                                                                     "telos");
-
-            ProgramProfilingSymbol pps     = progProfSymbols.get(id);
-            ProgramSymbol    programSymbol = ProgramSymbolManagerImpl.
-                                                getInstance().
-                                                    getProgramSymbol(
-                                                      pps.getProgramSymbolID());
-            String           moduleName    = programSymbol.getModule();
-            String           symbolName    = programSymbol.getSymbol();
-
-            if (!moduleName.equals("<global>")) {
-                symbolName = moduleName + "." + symbolName;
-            }
-            nucleusInterface.loadSchema(sourcePath + "/build/" +
-                                        moteType + "/nucleusSchema.xml");
-
-            log.info("Query for symbol: " + symbolName);
-            List result = nucleusInterface.get(NucleusInterface.DEST_LINK,
-                                               0x7E, queryDelay,
-                                               new String[] { symbolName },
-                                               new int[]    { 0 });
-            nucleusInterface.close();
-
-            if (result.size() > 0) {
-                NucleusResult nucleusResult = (NucleusResult) result.get(0);
-
-                NucleusValue[] values = (NucleusValue[])
-                        nucleusResult.attrs.values().toArray(new NucleusValue[0]);
-
-                if (values.length > 0) {
-                    value = ((Integer) values[0].value).intValue();
-                } else {
-                    throw new RemoteException("Error reading symbol");
-                }
-            } else {
-                throw new RemoteException("Error reading symbol");
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            String msg = "Exception in querySymbol";
-            log.error(msg, ex);
-            throw new RemoteException(msg, ex);
-        }
-
-        return value;
-    }
-
-
-    public boolean setSymbol(int    value,       int    id,
-                             String sourcePath,  String moteType,
-                             String moteSerialID)      throws RemoteException {
-        boolean okay = false;
-
-        try {
-            String                 device;
-            NucleusInterface       nucleusInterface;
-            ProgramProfilingSymbol pps;
-            ProgramSymbol          programSymbol;
-            String                 moduleName;
-            String                 symbolName;
-
-            device           = "/dev/motes/" + moteSerialID; 
-            log.info("Set symbol on device: " + device + " to " + value);
-            nucleusInterface = new NucleusInterface(device, "telos");
-
-            pps              = progProfSymbols.get(id);
-            programSymbol    = ProgramSymbolManagerImpl.getInstance().
-                                                    getProgramSymbol(
-                                                      pps.getProgramSymbolID());
-            moduleName       = programSymbol.getModule();
-            symbolName       = programSymbol.getSymbol();
-
-            if (!moduleName.equals("<global>")) {
-                symbolName = moduleName + "." + symbolName;
-            }
-
-            nucleusInterface.loadSchema(sourcePath + "/build/" +
-                                        moteType + "/nucleusSchema.xml");
-
-            log.info("Set symbol: " + symbolName + " to " + value);
-            okay = nucleusInterface.set(NucleusInterface.DEST_LINK,
-                                        symbolName, 0,
-                                        new short[]  { (short) value });
-            if (okay) {
-                log.info("Symbol set successfully");
-            } else {
-                log.warn("Symbol not set successfully");
-            }
-            nucleusInterface.close();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            String msg = "Exception in setSymbol";
-            log.error(msg, ex);
-            throw new RemoteException(msg, ex);
-        }
-
-        return okay;
-    }
-    */
 
 
     private ProgramProfilingSymbolManagerImpl() throws RemoteException {
