@@ -40,6 +40,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
@@ -200,8 +203,12 @@ public class ProjectDeploymentConfigurationManagerImpl
             log.info("Request to delete ProjectDeploymentConfiguration with " +
                      " id:  " + id);
 
-            ProjectDeploymentConfiguration config =
-                    projDepConfigAdapter.deleteProjectDeploymentConfig(id);
+            cleanupProgramProfilingSymbols(id);
+            cleanupProgramProfilingMessageSymbols(id);
+            cleanupMoteDeploymentConfigurations(id);
+
+            ProjectDeploymentConfiguration config;
+            config = projDepConfigAdapter.deleteProjectDeploymentConfig(id);
 
             writeLock.lock();
             try {
@@ -218,6 +225,32 @@ public class ProjectDeploymentConfigurationManagerImpl
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
+    }
+
+
+    private void cleanupProgramProfilingSymbols(int id) throws RemoteException {
+        ProgramProfilingSymbolManager ppsm;
+        ppsm = ProgramProfilingSymbolManagerImpl.getInstance();
+
+        ppsm.deleteProfilingSymbolWithProjectDepConfID(id);
+    }
+
+
+    private void cleanupProgramProfilingMessageSymbols(int id)
+                                                        throws RemoteException {
+        ProgramProfilingMessageSymbolManager ppmsm;
+        ppmsm = ProgramProfilingMessageSymbolManagerImpl.getInstance();
+
+        ppmsm.deleteProfilingMessageSymbolWithProjectDepConfID(id);
+    }
+
+
+    private void cleanupMoteDeploymentConfigurations(int id)
+                                                        throws RemoteException {
+        MoteDeploymentConfigurationManager  mdcm;
+        mdcm = MoteDeploymentConfigurationManagerImpl.getInstance();
+
+        mdcm.deleteMoteDeploymentConfigWithProjectDepConfID(id);
     }
 
 

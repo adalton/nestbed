@@ -168,7 +168,9 @@ public class ProgramMessageSymbolManagerImpl
     public void deleteProgramMessageSymbol(int id) throws RemoteException {
         try {
             ProgramMessageSymbol pmt;
-            log.info("Deleting program message tyupe with id: " + id);
+            log.info("Deleting program message symbol with id: " + id);
+
+            cleanupProgramProfilingMessageSymbols(id);
 
             writeLock.lock();
             try {
@@ -213,6 +215,15 @@ public class ProgramMessageSymbolManagerImpl
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
+    }
+
+
+    private void cleanupProgramProfilingMessageSymbols(int id)
+                                                        throws RemoteException {
+        ProgramProfilingMessageSymbolManager ppmsm;
+        ppmsm = ProgramProfilingMessageSymbolManagerImpl.getInstance();
+
+        ppmsm.deleteProgramProfilingMessageSymbolWithProgMsgSymID(id);
     }
 
 

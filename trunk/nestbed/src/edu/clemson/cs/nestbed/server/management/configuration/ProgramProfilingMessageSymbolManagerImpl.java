@@ -266,6 +266,9 @@ public class ProgramProfilingMessageSymbolManagerImpl
 
     public void deleteProgProfMsgSymsFor(int programMessageSymbolID)
                                                         throws RemoteException {
+        log.info("Request to delete ProgramProfilingMessageSymbol for " +
+                 "programMessageSymbolID: " + programMessageSymbolID);
+
         try {
             for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
                 if (i.getProgramMessageSymbolID() == programMessageSymbolID) {
@@ -276,6 +279,50 @@ public class ProgramProfilingMessageSymbolManagerImpl
             throw ex;
         } catch (Exception ex) {
             String msg = "Exception in deleteProgProfMsgSymsFor";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
+        }
+    }
+
+
+    public void deleteProfilingMessageSymbolWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException {
+        log.info("Request to delete ProgramProfilingMessageSymbol for " +
+                 "ProjectDeploymentConfigurationID: " + pdcID);
+
+        try {
+            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+                if (i.getProjectDeploymentConfigurationID() == pdcID) {
+                    deleteProgramProfilingMessageSymbol(i.getID());
+                }
+            }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            String msg = "Exception in " +
+                         "deleteProfilingMessageSymbolWithProjectDepConfID";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
+        }
+    }
+
+
+    public void deleteProgramProfilingMessageSymbolWithProgMsgSymID(int pmsID)
+                                                        throws RemoteException {
+        log.info("Request to delete ProgramProfilingMessageSymbol for " +
+                 "ProgramMessageSymbol: " + pmsID);
+
+        try {
+            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+                if (i.getProgramMessageSymbolID() == pmsID) {
+                    deleteProgramProfilingMessageSymbol(i.getID());
+                }
+            }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            String msg = "Exception in " +
+                         "deleteProgramProfilingMessageSymbolWithProgMsgSymID";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }

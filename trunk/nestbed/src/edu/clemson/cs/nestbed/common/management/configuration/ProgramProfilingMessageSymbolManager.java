@@ -71,4 +71,11 @@ public interface ProgramProfilingMessageSymbolManager
      
     public void deleteProgProfMsgSymsFor(int programMessageSymbolID)
                                                        throws RemoteException;
+
+    public void deleteProfilingMessageSymbolWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException;
+
+
+    public void deleteProgramProfilingMessageSymbolWithProgMsgSymID(int pmsID)
+                                                        throws RemoteException;
 }

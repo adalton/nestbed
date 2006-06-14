@@ -73,6 +73,8 @@ public interface ProgramProfilingSymbolManager extends RemoteObservable {
     public void deleteProfilingSymbolWithID(int programSymbolID)
                                                         throws RemoteException;
 
+    public void deleteProfilingSymbolWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException;
 
     public void updateProgramProfilingSymbol(int id,             int configID,
                                              int programSymbolID)

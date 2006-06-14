@@ -274,6 +274,27 @@ public class MoteDeploymentConfigurationManagerImpl
     }
 
 
+    public void deleteMoteDeploymentConfigWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException {
+        log.info("Request to delete MoteDeploymentConfiguration with " +
+                 "ProjectDeploymentConfigurationID: " + pdcID);
+
+        try {
+            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+                if (i.getProjectDeploymentConfigurationID() == pdcID) {
+                    deleteMoteDeploymentConfiguration(i.getID());
+                }
+            }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            String msg = "Exception in deleteMoteDeploymentConfiguration";
+            log.error(msg, ex);
+            throw new RemoteException(msg, ex);
+        }
+    }
+
+
     private MoteDeploymentConfiguration findMoteDeploymentConfiguration(
                                                             int projDepConfID,
                                                             int moteID) {
