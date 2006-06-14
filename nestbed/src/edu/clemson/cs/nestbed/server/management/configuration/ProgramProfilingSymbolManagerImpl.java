@@ -279,6 +279,31 @@ public class ProgramProfilingSymbolManagerImpl
     }
 
 
+    public void deleteProfilingSymbolWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException {
+        log.info("Request to delete ProgramProfilingSymbol with " +
+                 "projectDeploymentConfigurationID: " + pdcID);
+
+        try {
+            for (ProgramProfilingSymbol i :
+                        new ArrayList<ProgramProfilingSymbol>(
+                                                    progProfSymbols.values())) {
+                if (i.getProjectDeploymentConfigurationID() == pdcID) {
+                    deleteProfilingSymbol(i.getID());
+                }
+            }
+        } catch (RemoteException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Exception in deleteProfilingSymbolWithID");
+
+            RemoteException rex = new RemoteException(ex.toString());
+            rex.initCause(ex);
+            throw rex;
+        }
+    }
+
+
     public void updateProgramProfilingSymbol(int id, int configID,
                                              int programSymbolID) 
                                                         throws RemoteException {

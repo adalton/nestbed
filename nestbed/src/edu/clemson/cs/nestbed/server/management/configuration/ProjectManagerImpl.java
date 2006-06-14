@@ -185,12 +185,12 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
     private void cleanupProjectDeploymentConfigurations(int projectID)
                                                         throws RemoteException {
-        ProjectDeploymentConfigurationManager pdcm =
-                        ProjectDeploymentConfigurationManagerImpl.getInstance();
+        ProjectDeploymentConfigurationManager pdcm;
+        pdcm = ProjectDeploymentConfigurationManagerImpl.getInstance();
 
         try {
-            List<ProjectDeploymentConfiguration> configList =
-                                    pdcm.getProjectDeploymentConfigs(projectID);
+            List<ProjectDeploymentConfiguration> configList;
+            configList = pdcm.getProjectDeploymentConfigs(projectID);
 
             for (ProjectDeploymentConfiguration i : configList) {
                 pdcm.deleteProjectDeploymentConfig(i.getID());

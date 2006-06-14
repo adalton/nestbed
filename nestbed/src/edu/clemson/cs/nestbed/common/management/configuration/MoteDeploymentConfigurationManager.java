@@ -74,4 +74,8 @@ public interface MoteDeploymentConfigurationManager extends RemoteObservable {
 
 
     public void deleteConfigsForProgram(int programID)  throws RemoteException;
+
+
+    public void deleteMoteDeploymentConfigWithProjectDepConfID(int pdcID)
+                                                        throws RemoteException;
 }

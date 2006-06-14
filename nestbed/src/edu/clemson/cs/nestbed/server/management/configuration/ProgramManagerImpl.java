@@ -51,8 +51,10 @@ import java.util.zip.ZipException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
@@ -193,7 +195,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             cleanupProgramMessageSymbols(programID);
             cleanupProgramSymbols(programID);
             cleanupMoteDeploymentConfigurations(programID);
-            cleanupProgramMessageSymbols(programID);
 
             Program program = programAdapter.deleteProgram(programID);
             writeLock.lock();
@@ -315,15 +316,19 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
     private void cleanupMoteDeploymentConfigurations(int programID)
                                                        throws RemoteException {
-        MoteDeploymentConfigurationManagerImpl.getInstance().
-                                    deleteConfigsForProgram(programID);
+        MoteDeploymentConfigurationManager mdcm;
+        mdcm = MoteDeploymentConfigurationManagerImpl.getInstance();
+
+        mdcm.deleteConfigsForProgram(programID);
     }
 
 
     private void cleanupProgramMessageSymbols(int programID) 
                                                        throws RemoteException {
-        ProgramMessageSymbolManagerImpl.getInstance().deleteSymbolsForProgram(
-                                                                    programID);
+        ProgramMessageSymbolManager pmsm;
+        pmsm = ProgramMessageSymbolManagerImpl.getInstance();
+
+        pmsm.deleteSymbolsForProgram(programID);
     }
 
 
