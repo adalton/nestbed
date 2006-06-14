@@ -103,8 +103,8 @@ public class MoteDeploymentConfigurationManagerImpl
         readLock.lock();
         try {
             for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
-                if (       i.getMoteID() == moteID
-                        && i.getProgramID() == programID) {
+                if (       (i.getMoteID()    == moteID)
+                        && (i.getProgramID() == programID) ) {
                     mdc = i;
                     break;
                 }

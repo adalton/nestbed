@@ -56,6 +56,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +71,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -107,6 +109,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMe
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
+import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
@@ -365,15 +368,26 @@ public class ConfigManagerFrame extends JFrame {
 
 
     private final JMenu buildProgramMenu() {
-        final JMenu     menu          = new JMenu("Program");
-        final JMenuItem uploadProgram = new JMenuItem("Upload Program");
-        final JMenuItem deleteProgram = new JMenuItem("Delete Program");
+        final JMenu     menu           = new JMenu("Program");
+        final JMenuItem uploadProgram  = new JMenuItem("Upload Program");
+        final JMenuItem deleteProgram  = new JMenuItem("Delete Program");
+        final JMenuItem configureAll   = new JMenuItem("Configure All Motes");
+        final JMenuItem unconfigureAll = new JMenuItem("Unconfigure All " +
+                                                        "Motes");
 
         uploadProgram.addActionListener(new UploadProgramActionListener());
         menu.add(uploadProgram);
 
         deleteProgram.addActionListener(new DeleteProgramActionListener());
         menu.add(deleteProgram);
+
+        menu.add(new JSeparator());
+
+        configureAll.addActionListener(new ConfigureAllActionListener());
+        menu.add(configureAll);
+
+        unconfigureAll.addActionListener(new UnconfigureAllActionListener());
+        menu.add(unconfigureAll);
 
         menu.addMenuListener(new ProgramMenuListener(deleteProgram));
 
@@ -899,17 +913,103 @@ public class ConfigManagerFrame extends JFrame {
     public class DeleteProgramActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             try {
-                TreePath               path;
+                TreePath       path;
                 SortedTreeNode node;
-                Program                program;
+                Program        program;
 
                 path    = programTree.getSelectionPath();
                 node    = (SortedTreeNode) path.getLastPathComponent();
-                program = (Program)                node.getUserObject();
+                program = (Program)        node.getUserObject();
 
                 programManager.deleteProgram(program.getID());
             } catch (RemoteException ex) {
                 log.error("Remote exception while deleting program", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
+            }
+        }
+    }
+
+
+    public class ConfigureAllActionListener implements ActionListener {
+        private final int MAX_RADIO_POWER = 31;
+
+        private Object[] radioValues = new Object[MAX_RADIO_POWER];
+
+
+        public ConfigureAllActionListener() {
+            for (int i = 0; i < MAX_RADIO_POWER; ++i) {
+                radioValues[i] = new Integer(i + 1);
+            }
+        }
+
+
+        public void actionPerformed(ActionEvent e) {
+            try {
+                TreePath       path;
+                SortedTreeNode node;
+                Program        program;
+                Integer        selectedValue;
+
+                path          = programTree.getSelectionPath();
+                node          = (SortedTreeNode) path.getLastPathComponent();
+                program       = (Program)        node.getUserObject();
+                selectedValue = (Integer) JOptionPane.showInputDialog(
+                                              ConfigManagerFrame.this,
+                                              "Select Radio Power Level",
+                                              "Radio Power Level",
+                                              JOptionPane.QUESTION_MESSAGE,
+                                              null, radioValues,
+                                              radioValues[MAX_RADIO_POWER - 1]);
+
+                if (selectedValue != null) {
+                    int radioValue = selectedValue.intValue();
+
+                    for (MoteTestbedAssignment i : mtbaManager.
+                                getMoteTestbedAssignmentList(testbed.getID())) {
+                        moteDepConfMgr.setMoteDeploymentConfiguration(
+                                                        config.getID(),
+                                                        i.getMoteID(),
+                                                        program.getID(),
+                                                        radioValue);
+                    }
+                } else {
+                    log.info("Configure all cancelled by user.");
+                }
+            } catch (RemoteException ex) {
+                log.error("Remote exception while configuring all", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
+            }
+        }
+    }
+
+
+    public class UnconfigureAllActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            try {
+                TreePath       path;
+                SortedTreeNode node;
+                Program        program;
+
+                path          = programTree.getSelectionPath();
+                node          = (SortedTreeNode) path.getLastPathComponent();
+                program       = (Program)        node.getUserObject();
+
+                for (MoteTestbedAssignment i :
+                        new ArrayList<MoteTestbedAssignment>(mtbaManager.
+                            getMoteTestbedAssignmentList(testbed.getID()))) {
+                    MoteDeploymentConfiguration mdc;
+                    mdc = moteDepConfMgr.
+                            getMoteDeploymentConfigurationByProgramID(
+                                                            i.getMoteID(),
+                                                            program.getID());
+
+                    if (mdc != null) {
+                        moteDepConfMgr.deleteMoteDeploymentConfiguration(
+                                                                mdc.getID());
+                    }
+                }
+            } catch (RemoteException ex) {
+                log.error("Remote exception while unconfigureAll program", ex);
                 ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
@@ -1006,20 +1106,32 @@ public class ConfigManagerFrame extends JFrame {
         private JPopupMenu menu;
         private JMenuItem  title;
         private JMenuItem  deleteProgram;
+        private JMenuItem  configureAll;
+        private JMenuItem  unconfigureAll;
 
 
         public ProgramTreeMouseListener() {
-            menu          = new JPopupMenu();
-            title         = new JMenuItem();
-            deleteProgram = new JMenuItem("Delete Program");
+            menu           = new JPopupMenu();
+            title          = new JMenuItem();
+            deleteProgram  = new JMenuItem("Delete Program");
+            configureAll   = new JMenuItem("Configure All Motes");
+            unconfigureAll = new JMenuItem("Unconfigure All Motes");
 
             title.setEnabled(false);
             menu.add(title);
             menu.add(new JSeparator());
 
             deleteProgram.addActionListener(new DeleteProgramActionListener());
+            configureAll.addActionListener(new ConfigureAllActionListener());
+            unconfigureAll.addActionListener(
+                                          new UnconfigureAllActionListener());
 
             menu.add(deleteProgram);
+
+            menu.add(new JSeparator());
+
+            menu.add(configureAll);
+            menu.add(unconfigureAll);
         }
 
 
