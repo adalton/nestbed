@@ -204,8 +204,6 @@ public class MoteConfigPanel extends MotePanel {
                "</tr><tr>");
 
         if (moteDepConfig != null) {
-log.debug("Program:        " + program);
-log.debug("moteDepConfig:  " + moteDepConfig);
             tip.append(
                "<th align=left>" + "Program Name: "      + "</th>" +
                "<td>"            + program.getName()     + "</td>" +
@@ -329,18 +327,31 @@ log.debug("moteDepConfig:  " + moteDepConfig);
             case DELETE_CONFIG:
                 log.debug("Mote deployment configuration removal");
 
-                if (        (moteDepConfig != null)
-                         && (moteDepConfig.getID() == mdConfig.getID())) {
-                    moteDepConfig = null;
-                    radioSpinner.setEnabled(false);
-                    radioSpinner.setValue(MAX_RADIO_POWER);
-                    setToolTipText(getToolTipString());
-                    MoteConfigPanel.this.repaint();
+                if (moteDepConfig != null) {
+                    log.debug("moteDepConfig is not null\n" +
+                              "id:          " + moteDepConfig.getID() + "\n" +
+                              "mdConfig id: " + mdConfig.getID());
+
+                    if (moteDepConfig.getID() == mdConfig.getID()) {
+                        moteDepConfig = null;
+                        // More hackery like above
+                        synchronized(radioSpinner) {
+                            radioSpinner.removeChangeListener(
+                                                        radioChangeListener);
+                            radioSpinner.setEnabled(false);
+                            radioSpinner.setValue(MAX_RADIO_POWER);
+                            radioSpinner.addChangeListener(radioChangeListener);
+                        }
+                        setToolTipText(getToolTipString());
+                        MoteConfigPanel.this.repaint();
+                    }
+                } else {
+                    log.warn("moteDepConfig is null");
                 }
                 break;
 
             default:
-                log.error("Unknoqn message:  " + msg);
+                log.error("Unknown message:  " + msg);
                 break;
             }
         }
