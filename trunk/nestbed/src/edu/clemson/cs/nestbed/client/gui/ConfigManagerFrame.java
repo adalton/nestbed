@@ -47,7 +47,6 @@ import java.awt.dnd.DropTargetAdapter;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
@@ -120,6 +119,7 @@ import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
+import edu.clemson.cs.nestbed.common.util.ZipUtils;
 
 
 public class ConfigManagerFrame extends JFrame {
@@ -874,25 +874,20 @@ public class ConfigManagerFrame extends JFrame {
             FileUploadDialog fud = new FileUploadDialog(ConfigManagerFrame.this,
                                                         "Project Upload");
             fud.setVisible(true);
-            String                name        = fud.getName();
-            String                description = fud.getDescription();
-            String                filename    = fud.getFilename();
+            String name        = fud.getName();
+            String description = fud.getDescription();
+            File   directory   = fud.getDirectory();
 
             try {
                 if (name != null) {
-                    File            file       = new File(filename);
-                    FileInputStream fin        = new FileInputStream(file);
-                    byte[]          fileBuffer = new byte[(int) file.length()];
-
-                    fin.read(fileBuffer);
-
-                    compiling = true;
-                    int programID = programManager.createNewProgram(
+                    byte[] zipData   = ZipUtils.zipDirectory(directory);
+                    int    programID = programManager.createNewProgram(
                                                             testbed.getID(),
                                                             project.getID(),
                                                             name, description,
-                                                            fileBuffer,
+                                                            zipData,
                                                             tosPlatform);
+                    compiling = true;
                     programCompileManager.compileProgram(programID,
                                                          tosPlatform);
                 }
@@ -900,10 +895,10 @@ public class ConfigManagerFrame extends JFrame {
                 log.error("Remote Exception", ex);
                 ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (FileNotFoundException ex) {
-                log.error("File '" + filename + "' not found.", ex);
+                log.error("Directory '" + directory + "' not found.", ex);
                 ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             } catch (IOException ex) {
-                log.error("Error reading file '" + filename + "'", ex);
+                log.error("Error reading directory '" + directory + "'", ex);
                 ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
             }
         }
