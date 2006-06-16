@@ -59,4 +59,46 @@ public class FileUtils {
             try { destinationChannel.close(); } catch (Exception ex) { }
         }
     }
+
+
+    public static File makeProgramDir(File root,      int testbedID,
+                                      int  projectID, int programID) {
+        File dir  = new File(root, Integer.toString(testbedID));
+        dir.mkdir();
+
+        dir = new File(dir, Integer.toString(projectID));
+        dir.mkdir();
+
+        dir = new File(dir, Integer.toString(programID));
+        dir.mkdir();
+
+        return dir;
+    }
+
+
+    public static void deleteDirectory(File directory) {
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+
+            for (int i = 0; i < files.length; ++i) {
+                if (files[i].isDirectory()) {
+                    deleteDirectory(files[i]);
+                } else {
+                    files[i].delete();
+                }
+            }
+
+            directory.delete();
+        }
+    }
+
+
+    public static void cleanupParentDirectories(File root, File directory) {
+        for (File dir = directory; dir != null && !dir.equals(root);
+                                                dir = dir.getParentFile()) {
+            if (dir.exists()) {
+                dir.delete();
+            }
+        }
+    }
 }

@@ -63,11 +63,11 @@ public class FileUploadDialog extends    JDialog
 
     private String      name;
     private String      description;
-    private String      filename;
+    private String      directoryName;
 
     private JTextField  nameField;
     private JTextField  descField;
-    private JTextField  fileField;
+    private JTextField  dirField;
 
     private JOptionPane optionPane;
 
@@ -82,8 +82,8 @@ public class FileUploadDialog extends    JDialog
     }
 
 
-    public String getFilename() {
-        return filename;
+    public File getDirectory() {
+        return (directoryName == null) ? null : new File(directoryName);
     }
 
 
@@ -103,22 +103,22 @@ public class FileUploadDialog extends    JDialog
         fileButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser chooser = new JFileChooser();
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.setFileFilter(new FileFilter() {
                     public boolean accept(File f) {
-                        return (f.getName().toLowerCase().endsWith(".zip") ||
-                                f.isDirectory());
+                        return (f.isDirectory());
                     }
 
 
                     public String getDescription() {
-                        return "Zipped nesC Source Project";
+                        return "Directory";
                     }
                 });
 
                 int returnVal = chooser.showOpenDialog(FileUploadDialog.this);
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    fileField.setText(
+                    dirField.setText(
                                 chooser.getSelectedFile().getAbsolutePath());
                 }
             }
@@ -129,8 +129,8 @@ public class FileUploadDialog extends    JDialog
 
         nameField = new JTextField(10);
         descField = new JTextField(10);
-        fileField = new JTextField(10);
-        fileField.setEditable(false);
+        dirField  = new JTextField(10);
+        dirField.setEditable(false);
 
         panel.add(new JLabel("Name:"));
         panel.add(nameField);
@@ -139,7 +139,7 @@ public class FileUploadDialog extends    JDialog
         panel.add(new JLabel("File:"));
 
         filePanel.add(fileButton, BorderLayout.EAST);
-        filePanel.add(fileField, BorderLayout.CENTER);
+        filePanel.add(dirField, BorderLayout.CENTER);
         panel.add(filePanel);
 
         Object[] options = { OK_STRING, CANCEL_STRING };
@@ -209,9 +209,9 @@ public class FileUploadDialog extends    JDialog
             optionPane.setValue(JOptionPane.UNINITIALIZED_VALUE);
 
             if (OK_STRING.equals(value)) {
-                name        = nameField.getText().trim();
-                description = descField.getText().trim();
-                filename    = fileField.getText().trim();
+                name          = nameField.getText().trim();
+                description   = descField.getText().trim();
+                directoryName = dirField.getText().trim();
 
                 if        (name == null || name.equals("")) {
                     JOptionPane.showMessageDialog(FileUploadDialog.this,
@@ -231,23 +231,23 @@ public class FileUploadDialog extends    JDialog
                     descField.selectAll();
                     descField.requestFocusInWindow();
                     description = null;
-                } else if (filename == null || filename.equals("")) {
+                } else if (directoryName == null || directoryName.equals("")) {
                     JOptionPane.showMessageDialog(FileUploadDialog.this,
-                                        "'" + filename + "' is not a valid " +
-                                        "file.",
+                                        "'" + directoryName +
+                                        "' is not a valid directory.",
                                         "Invalid Program File",
                                         JOptionPane.ERROR_MESSAGE);
-                    fileField.selectAll();
-                    fileField.requestFocusInWindow();
-                    filename = null;
+                    dirField.selectAll();
+                    dirField.requestFocusInWindow();
+                    directoryName = null;
                 } else {
                     // We're done; clear and dismiss the dialog
                     clearAndHide();
                 }
             } else { // User closed dialog or clicked cancel
-                name        = null;
-                description = null;
-                filename    = null;
+                name          = null;
+                description   = null;
+                directoryName = null;
                 clearAndHide();
             }
         }
@@ -258,7 +258,7 @@ public class FileUploadDialog extends    JDialog
     public void clearAndHide() {
         nameField.setText(null);
         descField.setText(null);
-        fileField.setText(null);
+        dirField.setText(null);
         setVisible(false);
     }
 }
