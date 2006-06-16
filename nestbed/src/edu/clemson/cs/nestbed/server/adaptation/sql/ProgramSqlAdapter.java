@@ -114,7 +114,7 @@ public class ProgramSqlAdapter extends    SqlAdapter
                            projectID         + ", " +
                            "'" + name        + "', " +
                            "'" + description + "', " +
-                           "'" + "<unknown>" + "')";
+                           "'" + "[unknown]" + "')";
 
             log.debug("SQL Query:\n" + query);
             statement.executeUpdate(query);
