@@ -29,24 +29,15 @@
 package edu.clemson.cs.nestbed.server.management.configuration;
 
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,10 +48,12 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManag
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
+import edu.clemson.cs.nestbed.common.util.ZipUtils;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterFactory;
 import edu.clemson.cs.nestbed.server.adaptation.AdapterType;
 import edu.clemson.cs.nestbed.server.adaptation.ProgramAdapter;
+import edu.clemson.cs.nestbed.server.util.FileUtils;
 import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
@@ -133,33 +126,30 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
     }
 
 
-    public int createNewProgram(final int    testbedID,
-                                final int    projectID,
-                                final String name,
-                                final String description,
-                                final byte[] buffer,
-                                final String tosPlatform)
-                                                   throws RemoteException {
+    public int createNewProgram(int    testbedID, int    projectID,
+                                String name,      String description,
+                                byte[] zipData,   String tosPlatform)
+                                                       throws RemoteException {
         log.info("Request to create new program:\n"        +
                  "  testbedID:    " + testbedID     + "\n" +
                  "  projectID:    " + projectID     + "\n" +
                  "  name:         " + name          + "\n" +
                  "  description:  " + description   + "\n" +
-                 "  file size:    " + buffer.length);
+                 "  zipData size: " + zipData.length);
 
-        int programID = -1;
+        int     programID = -1;
+        boolean error     = false;
 
         try {
             Program program;
-            program = programAdapter.createNewProgram(projectID, name,
-                                                      description);
+            File    dir;
+
+            program   = programAdapter.createNewProgram(projectID, name,
+                                                        description);
             programID = program.getID();
-
-            File file = saveTempFile(buffer);
-            File dir  = makeProgramDir(testbedID, projectID, projectID);
-
-            dir = extractZipFile(file, dir);
-
+            dir       = FileUtils.makeProgramDir(TOS_ROOT,  testbedID,
+                                                 projectID, projectID);
+            dir       = ZipUtils.unzip(zipData, dir);
             program   = programAdapter.updateProgramPath(programID,
                                                          dir.getAbsolutePath());
 
@@ -171,17 +161,24 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             }
             notifyObservers(Message.NEW_PROGRAM, program);
         } catch (IOException ex) {
+            error = true;
             String msg = "I/O Exception while creating new program";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         } catch (AdaptationException ex) {
+            error = true;
             String msg = "AdaptationException";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         } catch (Exception ex) {
+            error = true;
             String msg = "Exception";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
+        } finally {
+            if (error && programID != -1) {
+                try { deleteProgram(programID); } catch (Exception ex2) { }
+            }
         }
 
         return programID;
@@ -205,8 +202,10 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             }
 
             File sourcePath = new File(program.getSourcePath());
-            deleteDirectory(sourcePath);
-            cleanupParentDirectories(sourcePath);
+
+            FileUtils.deleteDirectory(sourcePath);
+            FileUtils.cleanupParentDirectories(TOS_ROOT, sourcePath);
+
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {
             throw new RemoteException("AdaptationException", ex);
@@ -216,88 +215,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             String msg = "Exception in deleteProgram";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
-        }
-    }
-
-
-    private File saveTempFile(byte[] buffer) throws IOException {
-        File             file = File.createTempFile("nestbed", ".zip");
-        FileOutputStream fout = new FileOutputStream(file);
-
-        fout.write(buffer);
-        fout.close();
-
-        file.deleteOnExit();
-        return file;
-    }
-
-
-    private File extractZipFile(File file, File baseDir)
-                    throws ZipException, IOException {
-
-        File    root    = null;
-        ZipFile zipFile = new ZipFile(file);
-
-        for (Enumeration e = zipFile.entries(); e.hasMoreElements(); ) {
-            ZipEntry zipEntry = (ZipEntry) e.nextElement();
-
-            if (zipEntry.isDirectory()) {
-                File f = new File(baseDir, zipEntry.getName());
-                f.mkdir();
-
-                if (root == null) {
-                    root = f;
-                }
-            } else {
-                BufferedReader in = new BufferedReader(
-                                         new InputStreamReader(
-                                             zipFile.getInputStream(zipEntry)));
-
-                BufferedWriter out = new BufferedWriter(
-                                         new OutputStreamWriter(
-                                             new FileOutputStream(
-                                                 new File(baseDir,
-                                                     zipEntry.toString()))));
-
-                char[] buffer = new char[4096];
-                int    length = in.read(buffer, 0, buffer.length);
-
-                while (length != -1) {
-                    out.write(buffer, 0, length);
-                    length = in.read(buffer, 0, buffer.length);
-                }
-
-                out.close();
-                in.close();
-            }
-        }
-
-        return root;
-    }
-
-
-    private void deleteDirectory(File directory) {
-        if (directory.isDirectory()) {
-            File[] files = directory.listFiles();
-
-            for (int i = 0; i < files.length; ++i) {
-                if (files[i].isDirectory()) {
-                    deleteDirectory(files[i]);
-                } else {
-                    files[i].delete();
-                }
-            }
-
-            directory.delete();
-        }
-    }
-
-
-    private void cleanupParentDirectories(File directory) {
-        for (File dir = directory; dir != null; dir = dir.getParentFile()) {
-            if (dir.exists()) {
-                dir.delete();
-            }
         }
     }
 
@@ -329,20 +246,6 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         pmsm = ProgramMessageSymbolManagerImpl.getInstance();
 
         pmsm.deleteSymbolsForProgram(programID);
-    }
-
-
-    private File makeProgramDir(int testbedID, int projectID, int programID) {
-        File dir  = new File(TOS_ROOT, Integer.toString(testbedID));
-        dir.mkdir();
-
-        dir = new File(dir, Integer.toString(projectID));
-        dir.mkdir();
-
-        dir = new File(dir, Integer.toString(programID));
-        dir.mkdir();
-
-        return dir;
     }
 
 
