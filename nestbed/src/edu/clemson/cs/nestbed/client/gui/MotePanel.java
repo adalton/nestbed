@@ -62,6 +62,8 @@ public class MotePanel extends JPanel {
                                        (int) (1.88 * icon.getHeight(null)));
         setSize(size);
         setPreferredSize(size);
+        setMinimumSize(size);
+        setMaximumSize(size);
     }
 
 

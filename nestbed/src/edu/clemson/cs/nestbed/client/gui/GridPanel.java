@@ -31,6 +31,7 @@ package edu.clemson.cs.nestbed.client.gui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 
@@ -49,6 +50,16 @@ public class GridPanel extends JPanel {
         }
 
         panel = new Component[rows][cols];
+        setLayout(null);
+
+
+        // Evil magic numbers
+        Dimension size = new Dimension(125 * cols, 95 * rows);
+
+        setSize(size);
+        setMaximumSize(size);
+        setMinimumSize(size);
+        setPreferredSize(size);
     }
 
 
@@ -67,8 +78,6 @@ public class GridPanel extends JPanel {
 
         int fieldWidth   = panel[0].length;
         int fieldHeight  = panel.length;
-        //int fieldWidth   = panel.length;
-        //int fieldHeight  = panel[0].length;
 
         int colIncrement = canvasWidth  / fieldWidth;
         int rowIncrement = canvasHeight / fieldHeight;
@@ -77,13 +86,11 @@ public class GridPanel extends JPanel {
         canvasHeight     = rowIncrement * fieldHeight;
 
         // Draw vertical lines
-        //for (int i = (colIncrement / 2); i < canvasHeight; i += colIncrement) {
         for (int i = (colIncrement / 2); i < canvasWidth; i += colIncrement) {
             g.drawLine(i, 0, i, rowIncrement * fieldWidth);
         }
 
         // Draw horizontal lines
-        //for (int i = (rowIncrement / 2); i < canvasWidth; i += rowIncrement) {
         for (int i = (rowIncrement / 2); i < canvasHeight; i += rowIncrement) {
             g.drawLine(0, i, colIncrement * fieldWidth, i);
         }

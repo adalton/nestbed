@@ -1,5 +1,32 @@
 <!-- $Id$ -->
-<project name="nestbed" default="dist" basedir=".">
+<!--
+  - build.xml
+  -
+  - Network Embedded Sensor Testbed (NESTBed)
+  -
+  - Copyright (C) 2006
+  - Dependable Systems Research Group
+  - Department of Computer Science
+  - Clemson University
+  -
+  - This program is free software; you can redistribute it and/or
+  - modify it under the terms of the GNU General Public License
+  - as published by the Free Software Foundation; either version 2
+  - of the License, or (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program; if not, write to the
+  -
+  - Free Software Foundation, Inc.
+  - 51 Franklin Street, Fifth Floor
+  - Boston, MA  02110-1301, USA.
+  -->
+<project name="nestbed" default="default" basedir=".">
     <property file="build.properties"/>
     <property file="${user.home}/build.properties"/>
 
@@ -7,11 +34,13 @@
     <property name="app.version"         value="0.5"/>
 
     <property name="src.home"            value="src"/>
+    <property name="docs.home"           value="docs"/>
     <property name="classes.home"        value="classes"/>
     <property name="lib.home"            value="lib"/>
     <property name="dist.home"           value="dist"/>
     <property name="misc.home"           value="misc"/>
     <property name="bin.home"            value="bin"/>
+    <property name="parser.home"         value="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser"/>
 
     <property name="compile.debug"       value="true"/>
     <property name="compile.deprecation" value="true"/>
@@ -22,20 +51,47 @@
         <pathelement location="${lib.home}/useful.jar"/>
     </path>
 
-    <target name="all" depends="clean,compile"
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="all"
+                depends="clean,dist"
             description="Clean classes and dist directories, then compile"/>
 
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-    <target name="clean" depends="distclean"
+    <target        name="default"
+                depends="-distInit,compile,-jarApplication"
+            description="Builds application ready to run locally"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="dist"
+                depends="default,-copyJarFiles,-signJars,-copyDocs,-copyWebContent"
+            description="Create binary distribution"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="clean"
+                depends="distclean"
             description="Delete old build and dist directories">
         <delete dir="${classes.home}"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Parser.java"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Token.java"/>
-        <delete file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/Lexer.java"/>
+        <delete dir="${docs.home}"/>
+        <delete file="${parser.home}/Parser.java"/>
+        <delete file="${parser.home}/Token.java"/>
+        <delete file="${parser.home}/Lexer.java"/>
     </target>
 
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-    <target name="compile" depends="parser"
+    <target        name="distclean"
+            description="Clean distribution directory">
+        <delete dir="${dist.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="compile"
+                depends="parser"
             description="Compile Java sources">
         <mkdir dir="${classes.home}"/>
         <javac      srcdir="${src.home}"
@@ -43,33 +99,20 @@
                      debug="${compile.debug}"
                deprecation="${compile.deprecation}"
                   optimize="${compile.optimize}">
+
             <compilerarg value="-Xlint:unchecked"/>
-            <classpath refid="compile.classpath"/>
+            <classpath   refid="compile.classpath"/>
+
         </javac>
 
-        <rmic     base="${classes.home}"
-              includes="**/*Impl.class"/>
+        <rmic base="${classes.home}" includes="**/*Impl.class"/>
     </target>
 
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-    <target name="distclean" description="Clean distribution directory">
-        <delete dir="${dist.home}"/>
-    </target>
-
-    <target name="dist" depends="compile,javadoc,distclean"
-            description="Create binary distribution">
-
-        <!-- Copy documentation subdirectories -->
-<!--
-        <mkdir dir="${dist.home}/docs"/>
-        <copy todir="${dist.home}/docs">
-            <fileset dir="${docs.home}"/>
-        </copy>
-
--->
-        <mkdir dir="${dist.home}"/>
-
-        <!-- Create application JAR files -->
+    <target        name="-jarApplication"
+                depends="-distInit,compile"
+            description="Creates application JAR files">
         <jar  jarfile="${dist.home}/${app.name}-${app.version}.jar"
               basedir="${classes.home}"/>
 
@@ -78,21 +121,45 @@
                update="true"
              includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
 
-        <copy todir="${dist.home}/lib">
-            <fileset dir="${lib.home}">
-                <exclude name="nesC/**"/>
-            </fileset>
-        </copy>
-
-        <signjar     alias="nestbed"
-                 storepass="123456">
-            <fileset dir="${dist.home}">
-            </fileset>
-        </signjar>
-
         <symlink      link="${dist.home}/nestbed.jar"
                   resource="${app.name}-${app.version}.jar"
                  overwrite="true"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyJarFiles"
+                depends="-distInit"
+            description="Copies JAR Libraries to dist directory">
+        <copy todir="${dist.home}/lib">
+            <fileset dir="${lib.home}" includes="*.jar"/>
+        </copy>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-signJars"
+                depends="-distInit,-jarApplication,-copyJarFiles"
+            description="Sign all JAR files">
+        <signjar     alias="nestbed"
+                 storepass="123456">
+            <fileset dir="${dist.home}" includes="**/*.jar"/>
+        </signjar>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-distInit"
+                depends="distclean"
+            description="Prepares distribution directory">
+        <mkdir dir="${dist.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyWebContent"
+                depends="-distInit"
+            description="Copies web content to dist directory">
 
         <copy todir="${dist.home}">
             <fileset dir="${misc.home}">
@@ -100,11 +167,37 @@
                 <include name="logView.php"/>
             </fileset>
         </copy>
-        <copy file="${misc.home}/nestbed.jnlp" todir="${dist.home}"/>
     </target>
 
-    <target name="parser"
-            description="Parse the java_cup nesC grammar">
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyDocs"
+                depends="-distInit,javadoc"
+            description="Copies Javadoc API documentation to dist directory">
+        <copy todir="${dist.home}/docs">
+            <fileset dir="${docs.home}"/>
+        </copy>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-isParserReady"
+            description="Checks to see if the parser needs to be built">
+        <condition property="parser_needs_building">
+            <not>
+                <uptodate targetfile="${parser.home}/Parser.java"> 
+                    <srcfiles dir="${parser.home}" includes="nesc.*"/>
+                </uptodate>
+            </not>
+        </condition>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="parser"
+                depends="-isParserReady"
+            description="Parse the java_cup nesC grammar"
+                     if="parser_needs_building">
         <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
             <arg line="parser.sh"/>
         </exec>
@@ -115,20 +208,17 @@
                destdir="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/"
                  nobak="on"/>
         -->
-
-
     </target>
 
-    <target name="javadoc" depends="compile"
-            description="Create Javadoc API documentation">
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-<!--
-        <mkdir          dir="${dist.home}/docs/api"/>
+    <target        name="javadoc"
+            description="Create Javadoc API documentation">
+        <mkdir          dir="${docs.home}/api"/>
         <javadoc sourcepath="${src.home}"
-                    destdir="${dist.home}/docs/api"
+                    destdir="${docs.home}/api"
                packagenames="*">
             <classpath refid="compile.classpath"/>
         </javadoc>
--->
     </target>
 </project>

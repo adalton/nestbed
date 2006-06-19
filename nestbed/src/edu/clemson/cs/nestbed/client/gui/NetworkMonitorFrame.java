@@ -38,11 +38,13 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.border.TitledBorder;
 
@@ -211,13 +213,10 @@ public class NetworkMonitorFrame extends JFrame {
         return menu;
     }
 
-    private final JPanel buildMoteGridPanel() throws RemoteException,
+    private final JComponent buildMoteGridPanel() throws RemoteException,
                                     NotBoundException, MalformedURLException {
-        JPanel    panel     = new JPanel(new BorderLayout());
         GridPanel gridPanel = buildGridPanel();
             
-        panel.setBorder(new TitledBorder("Testbed Topology"));
-
         for (MoteTestbedAssignment i : mtbAssignmentData) {
             int                 row       = i.getMoteLocationY();
             int                 col       = i.getMoteLocationX();
@@ -227,9 +226,14 @@ public class NetworkMonitorFrame extends JFrame {
                                                moteDepConfMgr);
             gridPanel.addPanel(motePanel, row, col);
         }
-        panel.add(gridPanel, BorderLayout.CENTER);
 
-        return panel;
+        JScrollPane scrollPane;
+        scrollPane = new JScrollPane(gridPanel,
+                                     JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                                     JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.setViewportBorder(new TitledBorder("Testbed Topology"));
+
+        return scrollPane;
     }
 
 
