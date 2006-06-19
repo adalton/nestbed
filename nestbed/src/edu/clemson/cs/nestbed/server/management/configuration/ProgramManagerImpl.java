@@ -223,7 +223,8 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
         List<ProgramSymbol> programSymbolList;
         ProgramSymbolManager psm = ProgramSymbolManagerImpl.getInstance();
 
-        programSymbolList = psm.getProgramSymbols(programID);
+        programSymbolList = new ArrayList<ProgramSymbol>(
+                                            psm.getProgramSymbols(programID));
 
         for (ProgramSymbol i : programSymbolList) {
             psm.deleteProgramSymbol(i.getID());

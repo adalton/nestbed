@@ -270,7 +270,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
                  "programMessageSymbolID: " + programMessageSymbolID);
 
         try {
-            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+            List<ProgramProfilingMessageSymbol> list;
+            list = new ArrayList<ProgramProfilingMessageSymbol>(
+                                                        ppmSymbols.values());
+
+            for (ProgramProfilingMessageSymbol i : list) {
                 if (i.getProgramMessageSymbolID() == programMessageSymbolID) {
                     deleteProgramProfilingMessageSymbol(i.getID());
                 }
@@ -291,7 +295,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
                  "ProjectDeploymentConfigurationID: " + pdcID);
 
         try {
-            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+            List<ProgramProfilingMessageSymbol> list;
+            list = new ArrayList<ProgramProfilingMessageSymbol>(
+                                                        ppmSymbols.values());
+
+            for (ProgramProfilingMessageSymbol i : list) {
                 if (i.getProjectDeploymentConfigurationID() == pdcID) {
                     deleteProgramProfilingMessageSymbol(i.getID());
                 }
@@ -313,7 +321,11 @@ public class ProgramProfilingMessageSymbolManagerImpl
                  "ProgramMessageSymbol: " + pmsID);
 
         try {
-            for (ProgramProfilingMessageSymbol i : ppmSymbols.values()) {
+            List<ProgramProfilingMessageSymbol> list;
+            list = new ArrayList<ProgramProfilingMessageSymbol>(
+                                                        ppmSymbols.values());
+
+            for (ProgramProfilingMessageSymbol i : list) {
                 if (i.getProgramMessageSymbolID() == pmsID) {
                     deleteProgramProfilingMessageSymbol(i.getID());
                 }
