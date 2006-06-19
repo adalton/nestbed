@@ -260,9 +260,11 @@ public class ProgramProfilingSymbolManagerImpl
                  "programSymbolID: " + programSymbolID);
 
         try {
-            for (ProgramProfilingSymbol i :
-                        new ArrayList<ProgramProfilingSymbol>(
-                                                    progProfSymbols.values())) {
+            List<ProgramProfilingSymbol> list;
+            list  = new ArrayList<ProgramProfilingSymbol>(
+                                                    progProfSymbols.values());
+
+            for (ProgramProfilingSymbol i : list) {
                 if (i.getProgramSymbolID() == programSymbolID) {
                     deleteProfilingSymbol(i.getID());
                 }
@@ -285,9 +287,11 @@ public class ProgramProfilingSymbolManagerImpl
                  "projectDeploymentConfigurationID: " + pdcID);
 
         try {
-            for (ProgramProfilingSymbol i :
-                        new ArrayList<ProgramProfilingSymbol>(
-                                                    progProfSymbols.values())) {
+            List<ProgramProfilingSymbol> list;
+            list  = new ArrayList<ProgramProfilingSymbol>(
+                                                    progProfSymbols.values());
+
+            for (ProgramProfilingSymbol i : list) {
                 if (i.getProjectDeploymentConfigurationID() == pdcID) {
                     deleteProfilingSymbol(i.getID());
                 }

@@ -167,10 +167,12 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
 
     private void cleanupPrograms(int projectID) throws RemoteException {
         ProgramManager pm          = ProgramManagerImpl.getInstance();
-        List<Program>  programList = pm.getProgramList(projectID);
 
         try {
-            for (Program i : programList) {
+            List<Program> list = pm.getProgramList(projectID);
+            list = new ArrayList<Program>(list);
+
+            for (Program i : list) {
                 pm.deleteProgram(i.getID());
             }
         } catch (RemoteException ex) {
@@ -189,10 +191,11 @@ public class ProjectManagerImpl extends    RemoteObservableImpl
         pdcm = ProjectDeploymentConfigurationManagerImpl.getInstance();
 
         try {
-            List<ProjectDeploymentConfiguration> configList;
-            configList = pdcm.getProjectDeploymentConfigs(projectID);
+            List<ProjectDeploymentConfiguration> list;
+            list = pdcm.getProjectDeploymentConfigs(projectID);
+            list = new ArrayList<ProjectDeploymentConfiguration>(list);
 
-            for (ProjectDeploymentConfiguration i : configList) {
+            for (ProjectDeploymentConfiguration i : list) {
                 pdcm.deleteProjectDeploymentConfig(i.getID());
             }
         } catch (RemoteException ex) {

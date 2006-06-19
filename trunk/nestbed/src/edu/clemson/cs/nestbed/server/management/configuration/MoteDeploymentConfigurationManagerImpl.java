@@ -280,7 +280,10 @@ public class MoteDeploymentConfigurationManagerImpl
                  "ProjectDeploymentConfigurationID: " + pdcID);
 
         try {
-            for (MoteDeploymentConfiguration i : moteDepConfigs.values()) {
+            List<MoteDeploymentConfiguration> list;
+            list = new ArrayList<MoteDeploymentConfiguration>(
+                                                    moteDepConfigs.values());
+            for (MoteDeploymentConfiguration i : list) {
                 if (i.getProjectDeploymentConfigurationID() == pdcID) {
                     deleteMoteDeploymentConfiguration(i.getID());
                 }
