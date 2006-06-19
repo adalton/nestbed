@@ -228,9 +228,7 @@ public class NetworkMonitorFrame extends JFrame {
         }
 
         JScrollPane scrollPane;
-        scrollPane = new JScrollPane(gridPanel,
-                                     JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                                     JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane = new JScrollPane(gridPanel);
         scrollPane.setViewportBorder(new TitledBorder("Testbed Topology"));
 
         return scrollPane;
