@@ -448,14 +448,14 @@ public class ConfigManagerFrame extends JFrame {
 
 
     private final JPanel buildLeftPanel() throws ClassNotFoundException {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(new TitledBorder("Programs"));
+        JPanel    panel = new JPanel(new BorderLayout());
+        Dimension size  = new Dimension(WINDOW_WIDTH  / 4,
+                                        (int) (WINDOW_HEIGHT * (2 / 3.0)));
 
-        Dimension size = new Dimension(WINDOW_WIDTH  / 4,
-                                       (int) (WINDOW_HEIGHT * (2 / 3.0)));
+        panel.setBorder(new TitledBorder("Programs"));
         panel.setSize(size);
         panel.setPreferredSize(size);
-        panel.setMinimumSize(new Dimension(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 4));
+        panel.setMinimumSize(size);
 
         panel.add(new JScrollPane(programTree), BorderLayout.CENTER);
 
@@ -466,8 +466,11 @@ public class ConfigManagerFrame extends JFrame {
     private final JPanel buildBottomPanel() {
         JPanel      panel      = new JPanel(new BorderLayout());
         JTabbedPane tabbedPane = new JTabbedPane();
-
-        panel.setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 6));
+        Dimension   size       = new Dimension(WINDOW_WIDTH,
+                                               WINDOW_HEIGHT / 10);
+                            
+        panel.setSize(size);
+        panel.setPreferredSize(size);
 
         tabbedPane.add("Profiling Symbols",
                        new JScrollPane(profilingSymbolTable));
@@ -481,12 +484,10 @@ public class ConfigManagerFrame extends JFrame {
     }
 
 
-    private final JPanel buildMoteGridPanel() throws RemoteException,
+    private final JComponent buildMoteGridPanel() throws RemoteException,
                                     NotBoundException, MalformedURLException {
-        JPanel    panel     = new JPanel(new BorderLayout());
         GridPanel gridPanel = buildGridPanel();
             
-        panel.setBorder(new TitledBorder("Testbed Topology"));
         for (MoteTestbedAssignment i : mtbAssignmentData) {
             int             row       = i.getMoteLocationY();
             int             col       = i.getMoteLocationX();
@@ -499,9 +500,14 @@ public class ConfigManagerFrame extends JFrame {
             tosPlatform = motePanel.getMoteTosPlatform();
             gridPanel.addPanel(motePanel, row, col);
         }
-        panel.add(gridPanel, BorderLayout.CENTER);
 
-        return panel;
+        JScrollPane scrollPane;
+        scrollPane = new JScrollPane(gridPanel,
+                                     JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                                     JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.setViewportBorder(new TitledBorder("Testbed Topology"));
+
+        return scrollPane;
     }
 
 
