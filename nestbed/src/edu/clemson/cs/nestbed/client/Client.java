@@ -48,7 +48,8 @@ import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 
 
 public class Client {
-    private final static Log log = LogFactory.getLog(Client.class);
+    private final static Log    log     = LogFactory.getLog(Client.class);
+    private final static String VERSION = "@(#)NESTBed-0.5 -- #0007 (on: Monday, June 19, 2006 21:53:20.647 -0400)@";
 
 
     private static void loadProperties() throws IOException {
@@ -80,7 +81,11 @@ public class Client {
                   Client.class.getClassLoader().getResource(
                                                 "clientLog.conf"));
 
-        log.debug("Starting client...");
+        log.info("******************************************************\n" +
+                 "** NESTBed Client Starting\n" +
+                 "******************************************************");
+        log.info("Version:  " + VERSION);
+
         log.debug("Class Loader:  " + Client.class.getClassLoader());
         ParentClassLoader.setParent(Client.class.getClassLoader());
 
