@@ -50,7 +50,9 @@
 
     <target        name="dist"
                 depends="default,-copyJarFiles,-signJars,-copyDocs,-copyWebContent"
-            description="Create binary distribution"/>
+            description="Create binary distribution">
+        <echoproperties/>
+    </target>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
@@ -73,10 +75,39 @@
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
+    <target        name="-updateBuildProperties"
+            description="Update buildinfo.properties">
+        <!-- Update the buildinfo property file w/
+             current build number and date -->
+        <propertyfile    file="${build.info}"
+                      comment="Build Information File - DO NOT CHANGE">
+            <entry key="build.num" type="int" default="0000"
+                   operation="+"   pattern="0000"/>
+            <entry key="build.date" type="date" value="now"
+                   pattern="${build.date.pattern}"/>
+        </propertyfile>
+
+        <!-- Source the newly updated file -->
+        <property file="${build.info}"/>
+
+        <!-- Update the source to include the new version string -->
+        <replaceregexp file="${build.referer.server}"
+                       match="@\(#\).*@"
+                       replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
+
+        <replaceregexp file="${build.referer.client}"
+                       match="@\(#\).*@"
+                       replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
+
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
     <target        name="compile"
-                depends="parser"
+                depends="parser,-updateBuildProperties"
             description="Compile Java sources">
         <mkdir dir="${classes.home}"/>
+
         <javac      srcdir="${src.home}"
                    destdir="${classes.home}"
                      debug="${compile.debug}"
@@ -96,16 +127,16 @@
     <target        name="-jarApplication"
                 depends="-distInit,compile"
             description="Creates application JAR files">
-        <jar  jarfile="${dist.home}/${app.name}-${app.version}.jar"
+        <jar  jarfile="${dist.home}/${jar.name}-${app.version}.jar"
               basedir="${classes.home}"/>
 
-        <jar  jarfile="${dist.home}/${app.name}-${app.version}.jar"
+        <jar  jarfile="${dist.home}/${jar.name}-${app.version}.jar"
               basedir="${misc.home}"
                update="true"
              includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
 
         <symlink      link="${dist.home}/nestbed.jar"
-                  resource="${app.name}-${app.version}.jar"
+                  resource="${jar.name}-${app.version}.jar"
                  overwrite="true"/>
     </target>
 

@@ -87,7 +87,8 @@ import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 
 public class Server {
-    private final static Log log = LogFactory.getLog(Server.class);
+    private final static Log    log     = LogFactory.getLog(Server.class);
+    private final static String VERSION = "@(#)NESTBed-0.5 -- #0007 (on: Monday, June 19, 2006 21:53:20.647 -0400)@";
 
     private static String RMI_BASE_URL;
 
@@ -121,6 +122,8 @@ public class Server {
         log.info("******************************************************\n" +
                  "** NESTBed Server Starting\n" +
                  "******************************************************");
+        log.info("Version:  " + VERSION);
+
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
         shutdownTrigger          = new ShutdownTrigger();
