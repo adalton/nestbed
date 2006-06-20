@@ -27,25 +27,8 @@
   - Boston, MA  02110-1301, USA.
   -->
 <project name="nestbed" default="default" basedir=".">
-    <property file="build.properties"/>
     <property file="${user.home}/build.properties"/>
-
-    <property name="app.name"            value="nestbed"/>
-    <property name="app.version"         value="0.5"/>
-
-    <property name="src.home"            value="src"/>
-    <property name="docs.home"           value="docs"/>
-    <property name="classes.home"        value="classes"/>
-    <property name="lib.home"            value="lib"/>
-    <property name="dist.home"           value="dist"/>
-    <property name="misc.home"           value="misc"/>
-    <property name="bin.home"            value="bin"/>
-    <property name="parser.home"         value="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser"/>
-
-    <property name="compile.debug"       value="true"/>
-    <property name="compile.deprecation" value="true"/>
-    <property name="compile.optimize"    value="false"/>
-
+    <property file="default.properties"/>
 
     <path id="compile.classpath">
         <pathelement location="${lib.home}/useful.jar"/>
