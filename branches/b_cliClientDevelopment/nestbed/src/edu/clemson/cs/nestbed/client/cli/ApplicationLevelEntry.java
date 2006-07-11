@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * ProjectDeploymentConfigurationLevel.java
+ * ApplicationLevelEntry.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -29,23 +29,37 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
-class ProjectDeploymentConfigurationLevel extends Level {
-    public ProjectDeploymentConfigurationLevel(
-                                    Testbed                        testbed,
-                                    Project                        project,
-                                    ProjectDeploymentConfiguration config,
-                                    Level                          parentLevel)
-                                                              throws Exception {
-        super(config.getName(), parentLevel);
+public class ApplicationLevelEntry extends LevelEntry {
+    private Testbed                        testbed;
+    private Project                        project;
+    private ProjectDeploymentConfiguration config;
+    private Program                        program;
+    private Level                          parent;
 
-        addEntry(new ProgramLevelEntry(testbed, project, config, this));
-        addEntry(new Entry("SymbolProfiling"));
-        addEntry(new Entry("MessageProfiling"));
-        addEntry(new Entry("Motes"));
+
+    public ApplicationLevelEntry(Testbed                        testbed,
+                                 Project                        project,
+                                 ProjectDeploymentConfiguration config,
+                                 Program                        program,
+                                 Level                          parent) {
+        super("Programs");
+
+        this.testbed = testbed;
+        this.project = project;
+        this.config  = config;
+        this.program = program;
+        this.parent  = parent;
+    }
+
+
+    public Level getLevel() throws Exception {
+        // TODO: Fix this
+        return parent;
     }
 }

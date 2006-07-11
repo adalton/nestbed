@@ -67,7 +67,9 @@ abstract class Level {
         addCommand("man",   new ManCommand(this));
         addCommand("help",  new ManCommand(this));
         addCommand("quit",  new QuitCommand(this));
+        addCommand("exit",  new QuitCommand(this));
         addCommand("alias", new AliasCommand(this));
+        addCommand("pwd",   new PwdCommand());
 
         // All levels have these LevelEntries
         addEntry(new Entry("."));
@@ -225,6 +227,17 @@ abstract class Level {
             WHITE,
             BLACK,
             QUOTE
+        }
+    }
+
+
+    private class PwdCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            System.out.println(getPrompt());
+        }
+
+        public String getHelpText() {
+            return "Prints the current working directory";
         }
     }
 }

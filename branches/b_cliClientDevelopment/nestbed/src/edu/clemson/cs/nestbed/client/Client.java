@@ -49,7 +49,7 @@ import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 
 public class Client {
     private final static Log    log     = LogFactory.getLog(Client.class);
-    private final static String VERSION = "@(#)NESTBed-0.5 -- #0113 (on: Tuesday, July 11, 2006 16:47:05.111 -0400)@";
+    private final static String VERSION = "@(#)NESTBed-0.5 -- #0158 (on: Tuesday, July 11, 2006 19:40:03.503 -0400)@";
 
 
     private static void loadProperties() throws IOException {
