@@ -243,7 +243,7 @@ DROP TABLE IF EXISTS `Projects`;
 CREATE TABLE `Projects` (
   `id` int(4) unsigned NOT NULL auto_increment,
   `testbedID` int(4) unsigned NOT NULL default '0',
-  `name` varchar(25) NOT NULL default '',
+  `name` varchar(35) NOT NULL default '',
   `description` varchar(255) NOT NULL default '',
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
@@ -259,7 +259,7 @@ CREATE TABLE `Projects` (
 DROP TABLE IF EXISTS `Testbeds`;
 CREATE TABLE `Testbeds` (
   `id` int(4) unsigned NOT NULL auto_increment,
-  `name` varchar(25) NOT NULL default '',
+  `name` varchar(35) NOT NULL default '',
   `description` varchar(255) NOT NULL default '',
   `image` blob NOT NULL,
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,

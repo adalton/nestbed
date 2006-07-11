@@ -40,8 +40,19 @@ public class ComponentList extends AstNode {
         this.componentRef  = componentRef;
     }
 
+
     public ComponentList(ComponentRef componentRef) {
         this(null, componentRef);
+    }
+
+
+    public ComponentRef getComponentRef() {
+        return componentRef;
+    }
+
+
+    public ComponentList getComponentList() {
+        return componentList;
     }
 
 

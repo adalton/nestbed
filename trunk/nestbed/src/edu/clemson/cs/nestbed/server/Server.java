@@ -60,6 +60,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSy
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
 import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
@@ -80,6 +81,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramProfilingSy
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
+import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramWeaverManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.NucleusManagerImpl;
 import edu.clemson.cs.nestbed.server.management.sfcontrol.SerialForwarderManagerImpl;
@@ -88,7 +90,7 @@ import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 public class Server {
     private final static Log    log     = LogFactory.getLog(Server.class);
-    private final static String VERSION = "@(#)NESTBed-0.5 -- #0007 (on: Monday, June 19, 2006 21:53:20.647 -0400)@";
+    private final static String VERSION = "@(#)NESTBed-0.5 -- #0112 (on: Tuesday, July 11, 2006 12:03:19.371 -0400)@";
 
     private static String RMI_BASE_URL;
 
@@ -99,6 +101,7 @@ public class Server {
     private MoteTypeManager                       moteTypeManager;
     private NucleusManager                        nucleusManager;
     private ProgramCompileManager                 programCompileManager;
+    private ProgramWeaverManager                  programWeaverManager;
     private ProgramDeploymentManager              programDeploymentManager;
     private ProgramManager                        programManager;
     private ProgramMessageSymbolManager           progMsgSymbolManager;
@@ -142,6 +145,7 @@ public class Server {
         messageManager           = MessageManagerImpl.getInstance();
         programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
         programCompileManager    = ProgramCompileManagerImpl.getInstance();
+        programWeaverManager     = ProgramWeaverManagerImpl.getInstance();
         nucleusManager           = NucleusManagerImpl.getInstance();
         sfManager                = SerialForwarderManagerImpl.getInstance();
 
@@ -204,6 +208,10 @@ public class Server {
 
         Naming.rebind(RMI_BASE_URL + "ProgramCompileManager",
                       programCompileManager);
+        log.debug("ProgramCompileManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramWeaverManager",
+                      programWeaverManager);
         log.debug("ProgramCompileManager successfully bound.");
 
         Naming.rebind(RMI_BASE_URL + "NucleusManager", nucleusManager);

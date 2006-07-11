@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * ParameterisedIdentifier.java
+ * ProgramWeaverManager.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,42 +26,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.nesc.parser.ast;
+package edu.clemson.cs.nestbed.common.management.instrumentation;
 
 
-public class ParameterisedIdentifier extends AstNode {
-    public String identifier;
-    public String parameters;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.Map;
 
 
-    public ParameterisedIdentifier(String identifier, String parameters) {
-        this.identifier = identifier;
-        this.parameters = parameters;
-    }
-
-
-    public ParameterisedIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-
-    public String toString() {
-        String retStr = identifier.toString();
-
-        if (parameters != null) {
-            retStr += "[" + parameters.toString() + "]";
-        }
-
-        return retStr;
-    }
+public interface ProgramWeaverManager extends Remote {
+    public void weaveInComponents(int                 programID,
+                                  Map<String, String> updatedComponents)
+                                                        throws RemoteException;
 }

@@ -44,6 +44,10 @@ public class Endpoint extends AstNode {
         this(null, id);
     }
 
+    public ParameterisedIdentifier getParameterisedIdentifier() {
+        return parameterisedIdentifier;
+    }
+
 
     public String toString() {
         String retStr = "";

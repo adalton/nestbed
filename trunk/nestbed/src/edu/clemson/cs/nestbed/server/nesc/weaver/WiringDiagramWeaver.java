@@ -137,6 +137,36 @@ public class WiringDiagramWeaver {
     }
 
 
+    public void updateComponent(String oldComponent, String newComponent)
+                                                            throws Exception {
+        for (AstNode i : component.getNodesOfType(Cuses.class)) {
+            Cuses cuses = (Cuses) i;
+
+            for (ComponentList j = cuses.getComponentList(); j != null;
+                                                j = j.getComponentList()) {
+                if (j.getComponentRef().getComponent().equals(oldComponent)) {
+                    j.getComponentRef().setComponent(newComponent);
+                }
+            }
+        }
+
+
+
+        for (AstNode i : component.getNodesOfType(Endpoint.class)) {
+            Endpoint                endpoint;
+            ParameterisedIdentifier id;
+
+            endpoint = (Endpoint) i;
+            id       = endpoint.getParameterisedIdentifier();
+
+
+            if (id.getIdentifier().equals(oldComponent)) {
+                id.setIdentifier(newComponent);
+            }
+        }
+    }
+
+
     public void regenerateNescSource() throws FileNotFoundException {
         PrintWriter out = new PrintWriter(nescFile);
         out.println(component);

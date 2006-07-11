@@ -43,12 +43,7 @@ public class VisitableList extends JList {
 
         this.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int index = getSelectedIndex();
-
-                if (   SwingUtilities.isRightMouseButton(e)
-                    && !isSelectionEmpty()
-                    && getCellBounds(index, index).contains(e.getPoint())) {
-
+                if (SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu popupMenu =
                                 listVisitor.visitPopupMenu(VisitableList.this);
 

@@ -208,7 +208,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         return messageList;
     }
 
-
+/*
     private void weaveInComponents(File dir)
                                     throws FileNotFoundException, Exception {
         log.debug("Weaving in components in directory " + dir);
@@ -284,7 +284,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                 }
             }
         } finally {
-            try { scanner.close(); } catch (Exception ex) { /* empty */ }
+            try { scanner.close(); } catch (Exception ex) { }
         }
 
 
@@ -295,6 +295,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
 
         return component;
     }
+*/
 
 
     private void loadProgramSymbols(Program program, String tosPlatform) 
@@ -397,7 +398,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
 
                 prog = progMgr.getProgram(programID);
 
-                weaveInComponents(new File(prog.getSourcePath()));
+                //weaveInComponents(new File(prog.getSourcePath()));
                 notifyObservers(Message.COMPILE_STARTED, null);
 
                 output.append("-------------------------------------");
@@ -437,9 +438,6 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                 failed = true;
             } catch (InterruptedException ex) {
                 log.error("Compilation interrupted", ex);
-                failed = true;
-            } catch (AdaptationException ex) {
-                log.error("AdaptationException:", ex);
                 failed = true;
             } catch (Exception ex) {
                 log.error("Exception:", ex);

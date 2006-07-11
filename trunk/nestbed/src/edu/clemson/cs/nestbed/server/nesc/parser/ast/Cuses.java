@@ -37,6 +37,7 @@ public class Cuses extends AstNode {
         this.componentList = componentList;
     }
 
+
     public String toString() {
         String retStr = "";
 
@@ -45,5 +46,10 @@ public class Cuses extends AstNode {
         }
 
         return retStr;
+    }
+
+
+    public ComponentList getComponentList() {
+        return componentList;
     }
 }
