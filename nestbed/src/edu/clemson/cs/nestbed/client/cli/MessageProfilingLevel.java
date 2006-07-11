@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MessageProfilingLevel.java
  *
@@ -33,14 +33,8 @@ class MessageProfilingLevel extends Level {
     public MessageProfilingLevel(String name, Level parentLevel) throws Exception {
         super(name, parentLevel);
 
-        addEntry(new LevelEntry("Message1"));
-        addEntry(new LevelEntry("Message2"));
-        addEntry(new LevelEntry("Message3"));
-    }
-
-
-    public Level getLevel(String name) {
-        Level newLevel = this;
-        return newLevel;
+        addEntry(new Entry("Message1"));
+        addEntry(new Entry("Message2"));
+        addEntry(new Entry("Message3"));
     }
 }

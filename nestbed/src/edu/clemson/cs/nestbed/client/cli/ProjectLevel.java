@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProjectLevel.java
  *
@@ -29,15 +29,73 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
-class ProjectLevel extends Level {
-    public ProjectLevel(String name, Level parentLevel) throws Exception {
-        super(name, parentLevel);
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.List;
 
-        addEntry(new LevelEntry("MyConfig1"));
-        addEntry(new LevelEntry("Myconfig2"));
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.model.Project;
+import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
+import edu.clemson.cs.nestbed.common.model.Testbed;
+
+
+class ProjectLevel extends Level {
+    private Testbed                               testbed;
+    private Project                               project;
+    private ProjectDeploymentConfigurationManager configManager;
+    private List<ProjectDeploymentConfiguration>  configs;
+
+
+    public ProjectLevel(Testbed testbed, Project project, Level parentLevel)
+                                                              throws Exception {
+        super(project.getName(), parentLevel);
+        lookupRemoteManagers();
+
+        this.testbed = testbed;
+        this.project = project;
+        this.configs = configManager.getProjectDeploymentConfigs(
+                                                            project.getID());
+
+        for (ProjectDeploymentConfiguration i : configs) {
+            addEntry(new ProjectDeploymentConfigurationLevelEntry(testbed,
+                                                                  project,
+                                                                  i, this));
+        }
+
+        addCommand("rm", new RmCommand());
+        addCommand("mkconf", new MkConfCommand());
     }
 
-    public Level getLevel(String name) throws Exception {
-        return new ConfigurationLevel(name, this);
+
+    private final void lookupRemoteManagers() throws RemoteException,
+                                                     NotBoundException,
+                                                     MalformedURLException {
+        configManager = (ProjectDeploymentConfigurationManager)
+                                    Naming.lookup(RMI_BASE_URL +
+                                    "ProjectDeploymentConfigurationManager");
+    }
+
+
+    private class RmCommand implements Command {
+        public void execute(String[] args) {
+            System.out.println("RmCommand:  TODO");
+        }
+
+        public String getHelpText() {
+            return "Removes the specified configuration";
+        }
+    }
+
+
+    private class MkConfCommand implements Command {
+        public void execute(String[] args) {
+            System.out.println("MkconfCommand:  TODO");
+        }
+
+        public String getHelpText() {
+            return "Creates a new configuration";
+        }
     }
 }

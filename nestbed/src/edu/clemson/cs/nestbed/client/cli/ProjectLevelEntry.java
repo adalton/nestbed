@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * ConfigurationLevel.java
+ * ProjectLevelEntry.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -29,12 +29,26 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
-class ConfigurationLevel extends Level {
-    public ConfigurationLevel(String name, Level parentLevel) throws Exception {
-        super(name, parentLevel);
+import edu.clemson.cs.nestbed.common.model.Project;
+import edu.clemson.cs.nestbed.common.model.Testbed;
 
-        addEntry(new Entry("Programs"));
-        addEntry(new Entry("SymbolProfiling"));
-        addEntry(new Entry("MessageProfiling"));
+
+public class ProjectLevelEntry extends LevelEntry {
+    private Testbed testbed;
+    private Project project;
+    private Level   parent;
+
+
+    public ProjectLevelEntry(Testbed testbed, Project project, Level parent) {
+        super(project.getName());
+
+        this.testbed = testbed;
+        this.project = project;
+        this.parent  = parent;
+    }
+
+
+    public Level getLevel() throws Exception {
+        return new ProjectLevel(testbed, project, parent);
     }
 }

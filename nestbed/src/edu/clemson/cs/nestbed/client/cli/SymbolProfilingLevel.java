@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * SymbolProfilingLevel.java
  *
@@ -33,14 +33,8 @@ class SymbolProfilingLevel extends Level {
     public SymbolProfilingLevel(String name, Level parentLevel) throws Exception {
         super(name, parentLevel);
 
-        addEntry(new LevelEntry("Symbol1"));
-        addEntry(new LevelEntry("Symbol2"));
-        addEntry(new LevelEntry("Symbol3"));
-    }
-
-
-    public Level getLevel(String name) {
-        Level newLevel = this;
-        return newLevel;
+        addEntry(new Entry("Symbol1"));
+        addEntry(new Entry("Symbol2"));
+        addEntry(new Entry("Symbol3"));
     }
 }

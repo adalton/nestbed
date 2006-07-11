@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * Level.java
  *
@@ -37,9 +37,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import java.util.Set;
 
 abstract class Level {
+    protected final static String RMI_BASE_URL;
+
+    static {
+        RMI_BASE_URL = System.getProperty("testbed.rmi.baseurl");
+    }
+
+
     private Level                parentLevel;
     private Level                nextLevel;
     private String               levelName;
@@ -64,8 +70,8 @@ abstract class Level {
         addCommand("alias", new AliasCommand(this));
 
         // All levels have these LevelEntries
-        addEntry(new LevelEntry("."));
-        addEntry(new LevelEntry(".."));
+        addEntry(new Entry("."));
+        addEntry(new Entry(".."));
     }
 
     public Level getParentLevel() {
@@ -115,8 +121,6 @@ abstract class Level {
     }
 
 
-    public abstract Level getLevel(String name) throws Exception;
-
     protected String getPrompt() {
         String prompt = "";
         if (parentLevel != null) {
@@ -138,7 +142,8 @@ abstract class Level {
     }
 
     protected String[] readCommand() throws Exception {
-        return in.readLine().split("\\s");
+        TokenReader reader = new TokenReader(in.readLine());
+        return reader.readTokens();
     }
 
     protected void addEntry(Entry entry) {
@@ -148,4 +153,79 @@ abstract class Level {
     protected void addCommand(String name, Command command) {
         commandMap.put(name, command);
     }
+
+    private static class TokenReader {
+        private String line;
+        private int    index = 0;
+        private State  state;
+
+
+        public TokenReader(String line) {
+            this.line  = line;
+            this.state = State.WHITE;
+        }
+
+
+        public String[] readTokens() {
+            List<String> tokens = new ArrayList<String>();
+            while (index < line.length()) {
+                tokens.add(nextToken());
+            }
+
+            if (state == State.QUOTE) {
+                System.err.println("Error: Unterminated string constant");
+                tokens.clear();
+            }
+            return tokens.toArray(new String[tokens.size()]);
+        }
+
+        private String nextToken() {
+            StringBuffer buffer = new StringBuffer();
+            boolean      done   = false;
+
+            while (index < line.length() && !done) {
+                switch(state) {
+                case WHITE:
+                    if (Character.isWhitespace(line.charAt(index))) {
+                        index++;
+                    } else if (line.charAt(index) == '"') {
+                        state = State.QUOTE;
+                        index++;
+                    } else {
+                        state = State.BLACK;
+                    }
+                    break;
+
+                case BLACK:
+                    if (Character.isWhitespace(line.charAt(index))) {
+                        state = State.WHITE;
+                        done  = true;
+                    } else {
+                        buffer.append(line.charAt(index));
+                        index++;
+                    }
+                    break;
+
+                case QUOTE:
+                    if (line.charAt(index) != '"') {
+                        buffer.append(line.charAt(index));
+                    } else {
+                        state = State.WHITE;
+                        done  = true;
+                    }
+                    index++;
+                    break;
+                }
+            }
+
+            return buffer.toString();
+        }
+
+        enum State {
+            WHITE,
+            BLACK,
+            QUOTE
+        }
+    }
 }
+

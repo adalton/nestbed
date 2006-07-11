@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramLevel.java
  *
@@ -33,18 +33,13 @@ class ProgramLevel extends Level {
     public ProgramLevel(String name, Level parentLevel) throws Exception {
         super(name, parentLevel);
 
-        addEntry(new LevelEntry("Program1"));
-        addEntry(new LevelEntry("Program2"));
-        addEntry(new LevelEntry("Program3"));
+        addEntry(new Entry("Program1"));
+        addEntry(new Entry("Program2"));
+        addEntry(new Entry("Program3"));
 
         addCommand("upload", new UploadCommand());
     }
 
-
-    public Level getLevel(String name) {
-        Level newLevel = this;
-        return newLevel;
-    }
 
     private class UploadCommand implements Command {
         public void execute(String[] args) throws Exception {
