@@ -1,0 +1,238 @@
+<!-- $Id$ -->
+<!--
+  - build.xml
+  -
+  - Network Embedded Sensor Testbed (NESTBed)
+  -
+  - Copyright (C) 2006
+  - Dependable Systems Research Group
+  - Department of Computer Science
+  - Clemson University
+  -
+  - This program is free software; you can redistribute it and/or
+  - modify it under the terms of the GNU General Public License
+  - as published by the Free Software Foundation; either version 2
+  - of the License, or (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program; if not, write to the
+  -
+  - Free Software Foundation, Inc.
+  - 51 Franklin Street, Fifth Floor
+  - Boston, MA  02110-1301, USA.
+  -->
+<project name="nestbed" default="default" basedir=".">
+    <property file="${user.home}/build.properties"/>
+    <property file="default.properties"/>
+
+    <path id="compile.classpath">
+        <pathelement location="${lib.home}/useful.jar"/>
+    </path>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="all"
+                depends="clean,dist"
+            description="Clean classes and dist directories, then compile"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="default"
+                depends="-distInit,compile,-jarApplication"
+            description="Builds application ready to run locally"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="dist"
+                depends="default,-copyJarFiles,-signJars,-copyDocs,-copyWebContent"
+            description="Create binary distribution">
+        <echoproperties/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="clean"
+                depends="distclean"
+            description="Delete old build and dist directories">
+        <delete dir="${classes.home}"/>
+        <delete dir="${docs.home}"/>
+        <delete file="${parser.home}/Parser.java"/>
+        <delete file="${parser.home}/Token.java"/>
+        <delete file="${parser.home}/Lexer.java"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="distclean"
+            description="Clean distribution directory">
+        <delete dir="${dist.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-updateBuildProperties"
+            description="Update buildinfo.properties">
+        <!-- Update the buildinfo property file w/
+             current build number and date -->
+        <propertyfile    file="${build.info}"
+                      comment="Build Information File - DO NOT CHANGE">
+            <entry key="build.num" type="int" default="0000"
+                   operation="+"   pattern="0000"/>
+            <entry key="build.date" type="date" value="now"
+                   pattern="${build.date.pattern}"/>
+        </propertyfile>
+
+        <!-- Source the newly updated file -->
+        <property file="${build.info}"/>
+
+        <!-- Update the source to include the new version string -->
+        <replaceregexp file="${build.referer.server}"
+                       match="@\(#\).*@"
+                       replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
+
+        <replaceregexp file="${build.referer.client}"
+                       match="@\(#\).*@"
+                       replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
+
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="compile"
+                depends="parser,-updateBuildProperties"
+            description="Compile Java sources">
+        <mkdir dir="${classes.home}"/>
+
+        <javac      srcdir="${src.home}"
+                   destdir="${classes.home}"
+                     debug="${compile.debug}"
+               deprecation="${compile.deprecation}"
+                  optimize="${compile.optimize}">
+
+            <compilerarg value="-Xlint:unchecked"/>
+            <classpath   refid="compile.classpath"/>
+
+        </javac>
+
+        <rmic base="${classes.home}" includes="**/*Impl.class"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-jarApplication"
+                depends="-distInit,compile"
+            description="Creates application JAR files">
+        <jar  jarfile="${dist.home}/${jar.name}-${app.version}.jar"
+              basedir="${classes.home}"/>
+
+        <jar  jarfile="${dist.home}/${jar.name}-${app.version}.jar"
+              basedir="${misc.home}"
+               update="true"
+             includes="nestbed.jocl,serverLog.conf,clientLog.conf,server.properties,common.properties"/>
+
+        <symlink      link="${dist.home}/nestbed.jar"
+                  resource="${jar.name}-${app.version}.jar"
+                 overwrite="true"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyJarFiles"
+                depends="-distInit"
+            description="Copies JAR Libraries to dist directory">
+        <copy todir="${dist.home}/lib">
+            <fileset dir="${lib.home}" includes="*.jar"/>
+        </copy>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-signJars"
+                depends="-distInit,-jarApplication,-copyJarFiles"
+            description="Sign all JAR files">
+        <signjar     alias="nestbed"
+                 storepass="123456">
+            <fileset dir="${dist.home}" includes="**/*.jar"/>
+        </signjar>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-distInit"
+                depends="distclean"
+            description="Prepares distribution directory">
+        <mkdir dir="${dist.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyWebContent"
+                depends="-distInit"
+            description="Copies web content to dist directory">
+
+        <copy todir="${dist.home}">
+            <fileset dir="${misc.home}">
+                <include name="nestbed.jnlp"/>
+                <include name="logView.php"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-copyDocs"
+                depends="-distInit,javadoc"
+            description="Copies Javadoc API documentation to dist directory">
+        <copy todir="${dist.home}/docs">
+            <fileset dir="${docs.home}"/>
+        </copy>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="-isParserReady"
+            description="Checks to see if the parser needs to be built">
+        <condition property="parser_needs_building">
+            <not>
+                <uptodate targetfile="${parser.home}/Parser.java"> 
+                    <srcfiles dir="${parser.home}" includes="nesc.*"/>
+                </uptodate>
+            </not>
+        </condition>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="parser"
+                depends="-isParserReady"
+            description="Parse the java_cup nesC grammar"
+                     if="parser_needs_building">
+        <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
+            <arg line="parser.sh"/>
+        </exec>
+        <!--
+        For now, I'm sticking this in parser.sh since there isn't a jflex ebuild
+
+        <jflex    file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/nesc.jflex"
+               destdir="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/"
+                 nobak="on"/>
+        -->
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="javadoc"
+            description="Create Javadoc API documentation">
+        <mkdir          dir="${docs.home}/api"/>
+        <javadoc sourcepath="${src.home}"
+                    destdir="${docs.home}/api"
+               packagenames="*">
+            <classpath refid="compile.classpath"/>
+        </javadoc>
+    </target>
+</project>
