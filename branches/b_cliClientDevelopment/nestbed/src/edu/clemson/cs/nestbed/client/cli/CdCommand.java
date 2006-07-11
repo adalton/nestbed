@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * CdCommand.java
  *
@@ -58,7 +58,7 @@ class CdCommand implements Command {
                 LevelEntry levelEntry = (LevelEntry) i;
 
                 if (levelEntry.getName().equals(args[1])) {
-                    level.setNextLevel(level.getLevel(args[1]));
+                    level.setNextLevel(levelEntry.getLevel());
                     found = true;
                     break;
                 }

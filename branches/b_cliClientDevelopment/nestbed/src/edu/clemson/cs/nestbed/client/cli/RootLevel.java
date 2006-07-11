@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * RootLevel.java
  *
@@ -28,16 +28,37 @@
  */
 package edu.clemson.cs.nestbed.client.cli;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.List;
+
+import edu.clemson.cs.nestbed.common.management.configuration.TestbedManager;
+import edu.clemson.cs.nestbed.common.model.Testbed;
+
 
 class RootLevel extends Level {
+    private TestbedManager testbedManager;
+    private List<Testbed>  testbeds;
+
+
     public RootLevel() throws Exception {
         super("/", null);
+        lookupRemoteManagers();
 
-        addEntry(new LevelEntry("Testbed1"));
-        addEntry(new LevelEntry("Testbed2"));
+        this.testbeds = testbedManager.getTestbedList();
+
+        for (Testbed i : testbeds) {
+            addEntry(new TestbedLevelEntry(i, this));
+        }
     }
 
-    public Level getLevel(String name) throws Exception {
-        return new TestbedLevel(name, this);
+
+    private final void lookupRemoteManagers() throws RemoteException,
+                                                     NotBoundException,
+                                                     MalformedURLException {
+        testbedManager = (TestbedManager)
+                    Naming.lookup(RMI_BASE_URL + "TestbedManager");
     }
 }

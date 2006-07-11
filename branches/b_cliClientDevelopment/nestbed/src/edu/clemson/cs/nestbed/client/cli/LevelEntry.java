@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * LevelEntry.java
  *
@@ -29,7 +29,7 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
-public class LevelEntry extends Entry {
+public abstract class LevelEntry extends Entry {
     public LevelEntry(String name) {
         super(name);
     }
@@ -37,4 +37,6 @@ public class LevelEntry extends Entry {
     public String toString() {
         return super.toString() + "/";
     }
+
+    public abstract Level getLevel() throws Exception;
 }

@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * Example.java
  *
@@ -28,10 +28,42 @@
  */
 package edu.clemson.cs.nestbed.client.cli;
 
-public class Example {
-    public static void main(String[] args) throws Exception {
-        Level level = new RootLevel();
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.rmi.RMISecurityManager;
+import java.util.Properties;
+
+import org.apache.log4j.PropertyConfigurator;
+
+import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
+
+
+public class Example {
+    private static void loadProperties() throws IOException {
+        Properties  systemProperties;
+        InputStream propertyStream;
+
+        systemProperties = System.getProperties();
+        propertyStream   = Example.class.getClassLoader().
+                                     getResourceAsStream("common.properties");
+        systemProperties.load(propertyStream);
+        propertyStream.close();
+    }
+
+    public static void main(String[] args) throws Exception {
+        loadProperties();
+
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new RMISecurityManager());
+        }
+
+        PropertyConfigurator.configure(
+                  Example.class.getClassLoader().getResource(
+                                                "clientLog.conf"));
+        ParentClassLoader.setParent(Example.class.getClassLoader());
+
+        Level level = new RootLevel();
         while ( (level = level.process()) != null);
     }
 }

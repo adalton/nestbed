@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * TestbedLevel.java
  *
@@ -29,19 +29,44 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
-class TestbedLevel extends Level {
-    public TestbedLevel(String name, Level parentLevel) throws Exception {
-        super(name, parentLevel);
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.List;
 
-        addEntry(new LevelEntry("MyProject1"));
-        addEntry(new LevelEntry("MyProject2"));
+import edu.clemson.cs.nestbed.common.management.configuration.ProjectManager;
+import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.model.Project;
+
+
+class TestbedLevel extends Level {
+    private Testbed        testbed;
+    private ProjectManager projectManager;
+    private List<Project>  projects;
+
+
+    public TestbedLevel(Testbed testbed, Level parentLevel) throws Exception {
+        super(testbed.getName(), parentLevel);
+        lookupRemoteManagers();
+
+        this.testbed = testbed;
+        this.projects = projectManager.getProjectList(testbed.getID());
+
+        for (Project i : projects) {
+            addEntry(new ProjectLevelEntry(testbed, i, this));
+        }
 
         addCommand("rm",     new RmCommand());
-        addCommand("mkproj", new MkprojCommand());
+        addCommand("mkproj", new MkProjCommand());
     }
 
-    public Level getLevel(String name) throws Exception {
-        return new ProjectLevel(name, this);
+
+    private final void lookupRemoteManagers() throws RemoteException,
+                                                     NotBoundException,
+                                                     MalformedURLException {
+        projectManager = (ProjectManager)
+                    Naming.lookup(RMI_BASE_URL + "ProjectManager");
     }
 
 
@@ -56,7 +81,7 @@ class TestbedLevel extends Level {
     }
 
 
-    private class MkprojCommand implements Command {
+    private class MkProjCommand implements Command {
         public void execute(String[] args) {
             System.out.println("MkprojCommand:  TODO");
         }
