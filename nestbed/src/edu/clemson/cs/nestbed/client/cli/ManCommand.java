@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ManCommand.java
  *
@@ -55,7 +55,7 @@ class ManCommand implements Command {
         }
 
         if (maxLength > 0) {
-            String formatString = "%-" + maxLength + "s - %s\n";
+            String formatString = "  %-" + maxLength + "s - %s\n";
 
             for (String i : commandNames) {
                 Command command = level.getCommand(i);
