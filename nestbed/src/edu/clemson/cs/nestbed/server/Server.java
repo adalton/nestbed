@@ -90,7 +90,7 @@ import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 public class Server {
     private final static Log    log     = LogFactory.getLog(Server.class);
-    private final static String VERSION = "@(#)NESTBed-0.5 -- #0112 (on: Tuesday, July 11, 2006 12:03:19.371 -0400)@";
+    private final static String VERSION = "@(#)NESTBed-0.5 -- #0113 (on: Tuesday, July 11, 2006 16:47:05.111 -0400)@";
 
     private static String RMI_BASE_URL;
 
