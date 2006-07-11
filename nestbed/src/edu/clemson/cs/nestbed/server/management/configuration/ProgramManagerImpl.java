@@ -148,7 +148,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                                                         description);
             programID = program.getID();
             dir       = FileUtils.makeProgramDir(TOS_ROOT,  testbedID,
-                                                 projectID, projectID);
+                                                 projectID, programID);
             dir       = ZipUtils.unzip(zipData, dir);
             program   = programAdapter.updateProgramPath(programID,
                                                          dir.getAbsolutePath());

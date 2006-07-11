@@ -39,8 +39,19 @@ public class ComponentRef extends AstNode {
         this.renamedComponent = renamedComponent;
     }
 
+
     public ComponentRef(String component) {
         this(component, null);
+    }
+
+
+    public String getComponent() {
+        return component;
+    }
+
+
+    public void setComponent(String component) {
+        this.component = component;
     }
 
 

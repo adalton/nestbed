@@ -82,6 +82,8 @@ import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
@@ -108,6 +110,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMe
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Program;
@@ -149,6 +152,7 @@ public class ConfigManagerFrame extends JFrame {
     private ProgramProfilingMessageSymbolManager progProfMsgSymManager;
     private ProgramMessageSymbolManager          progMsgSymManager;
     private ProgramCompileManager                programCompileManager;
+    private ProgramWeaverManager                 programWeaverManager;
 
     private List<MoteTestbedAssignment>          mtbAssignmentData;
 
@@ -166,7 +170,7 @@ public class ConfigManagerFrame extends JFrame {
                                                        NotBoundException,
                                                        MalformedURLException,
                                                        ClassNotFoundException {
-        super(testbed.getName() + " Configuration Manager");
+        super(testbed.getName() + " Deployment Configuration Manager");
 
         this.testbed = testbed;
         this.project = project;
@@ -264,6 +268,10 @@ public class ConfigManagerFrame extends JFrame {
         programCompileManager = (ProgramCompileManager)
                                      Naming.lookup(RMI_BASE_URL +
                                                        "ProgramCompileManager");
+
+        programWeaverManager  = (ProgramWeaverManager)
+                                     Naming.lookup(RMI_BASE_URL +
+                                                       "ProgramWeaverManager");
     }
 
 
@@ -345,8 +353,7 @@ public class ConfigManagerFrame extends JFrame {
 
         menuBar.add(buildFileMenu());
         menuBar.add(buildProgramMenu());
-        menuBar.add(buildProgramProfilingMenu());
-        menuBar.add(buildProgramProfilingMessageMenu());
+        menuBar.add(buildProfilingMenu());
 
         return menuBar;
     }
@@ -395,52 +402,53 @@ public class ConfigManagerFrame extends JFrame {
     }
 
 
-    private final JMenu buildProgramProfilingMenu() {
-        final JMenu     menu          = new JMenu("Program Profiling");
-        final JMenuItem deleteSymbol  = new JMenuItem("Delete Symbol");
+    private final JMenu buildProfilingMenu() {
+        final JMenu     menu                   = new JMenu("Profiling");
+        final JMenuItem deleteProfilingSymbol  = new JMenuItem("Delete " +
+                                                               "Profiling " +
+                                                               "Symbol");
+        final JMenuItem deleteProfilingMessage = new JMenuItem("Delete " +
+                                                               "Profiling " +
+                                                               "Message");
 
-        deleteSymbol.addActionListener(
-                                new DeleteProgramProfilingSymbolListener());
+        deleteProfilingSymbol.addActionListener(
+                           new DeleteProgramProfilingSymbolListener());
+        menu.add(deleteProfilingSymbol);
 
-        menu.add(deleteSymbol);
+
+        deleteProfilingMessage.addActionListener(
+                           new DeleteProgramProfilingMessageSymbolListener());
+        menu.add(deleteProfilingMessage);
+
 
         menu.addMenuListener(new MenuListener() {
             public void menuSelected(MenuEvent e) {
+                setDeleteProfilingSymbolEnabled();
+                setDeleteProfilingMessageEnabled();
+            }
+
+
+            private void setDeleteProfilingSymbolEnabled() {
                 int row = profilingSymbolTable.getSelectedRow();
 
-                deleteSymbol.setEnabled(
+                deleteProfilingSymbol.setEnabled(
                             (row != -1) &&
                             (row != (profilingSymbolTable.getRowCount() - 1)));
             }
 
-            public void menuCanceled(MenuEvent e)   { /* empty */ }
-            public void menuDeselected(MenuEvent e) { /* empty */ }
-        });
 
-        return menu;
-    }
-
-
-    private final JMenu buildProgramProfilingMessageMenu() {
-        final JMenu     menu          = new JMenu("Message Profiling");
-        final JMenuItem deleteSymbol  = new JMenuItem("Delete Symbol");
-
-        deleteSymbol.addActionListener(
-                           new DeleteProgramProfilingMessageSymbolListener());
-
-        menu.add(deleteSymbol);
-
-        menu.addMenuListener(new MenuListener() {
-            public void menuSelected(MenuEvent e) {
+            private void setDeleteProfilingMessageEnabled() {
                 int row = profilingMsgTable.getSelectedRow();
 
-                deleteSymbol.setEnabled(
+                deleteProfilingMessage.setEnabled(
                             (row != -1) &&
                             (row != (profilingMsgTable.getRowCount() - 1)));
             }
 
+
             public void menuCanceled(MenuEvent e)   { }
             public void menuDeselected(MenuEvent e) { }
+
         });
 
         return menu;
@@ -472,12 +480,18 @@ public class ConfigManagerFrame extends JFrame {
         panel.setSize(size);
         panel.setPreferredSize(size);
 
-        tabbedPane.add("Profiling Symbols",
+        tabbedPane.add("Symbol Profiling",
                        new JScrollPane(profilingSymbolTable));
 
-        tabbedPane.add("Profiling Messages",
+        tabbedPane.add("Message Profiling",
                        new JScrollPane(profilingMsgTable));
 
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                profilingSymbolTable.clearSelection();
+                profilingMsgTable.clearSelection();
+            }
+        });
         panel.add(tabbedPane);
 
         return panel;
@@ -875,9 +889,11 @@ public class ConfigManagerFrame extends JFrame {
 
     public class UploadProgramActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            FileUploadDialog fud = new FileUploadDialog(ConfigManagerFrame.this,
-                                                        "Project Upload");
+            FileUploadDialog fud;
+            fud = new FileUploadDialog(ConfigManagerFrame.this,
+                                       "Project Upload");
             fud.setVisible(true);
+
             String name        = fud.getName();
             String description = fud.getDescription();
             File   directory   = fud.getDirectory();
@@ -891,6 +907,13 @@ public class ConfigManagerFrame extends JFrame {
                                                             name, description,
                                                             zipData,
                                                             tosPlatform);
+                    ComponentRewiringDialog crd;
+                    crd = new ComponentRewiringDialog(ConfigManagerFrame.this);
+                    crd.setVisible(true);
+
+                    programWeaverManager.weaveInComponents(programID,
+                                                           crd.getRewiringMap());
+
                     compiling = true;
                     programCompileManager.compileProgram(programID,
                                                          tosPlatform);

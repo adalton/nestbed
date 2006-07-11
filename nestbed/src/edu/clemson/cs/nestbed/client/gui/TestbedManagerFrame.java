@@ -82,8 +82,8 @@ public class TestbedManagerFrame extends JFrame {
     private final static Log log = LogFactory.getLog(TestbedManagerFrame.class);
 
     private final static String RMI_BASE_URL;
-    private final static String WINDOW_TITLE  = "Testbed Manager";
-    private final static int    WINDOW_WIDTH  = 500;
+    private final static String WINDOW_TITLE  = "NESTbed Manager";
+    private final static int    WINDOW_WIDTH  = 600;
     private final static int    WINDOW_HEIGHT = 400;
     private final static int    SIZE_IGNORED  = 0;
 
@@ -167,15 +167,12 @@ public class TestbedManagerFrame extends JFrame {
         configurationName   = new JTextField();
         configurationDesc   = new JTextField();
 
-        //testbedList         = new JList();
         testbedList         = new VisitableList(new TestbedListVisitor());
         testbedData         = new Vector<Testbed>();
 
-        //projectList         = new JList();
         projectList         = new VisitableList(new ProjectListVisitor());
         projectData         = new Vector<Project>();
 
-        //configurationList   = new JList();
         configurationList   = new VisitableList(new ConfigurationListVisitor());
         configurationData   = new Vector<ProjectDeploymentConfiguration>();
     }
@@ -211,7 +208,7 @@ public class TestbedManagerFrame extends JFrame {
         int choice;
 
         choice = JOptionPane.showConfirmDialog(this,
-                                               "Do you with to exit NESTBed?",
+                                               "Do you wish to exit NESTBed?",
                                                "Exit Confirmation",
                                                JOptionPane.YES_NO_OPTION,
                                                JOptionPane.QUESTION_MESSAGE);
@@ -223,47 +220,53 @@ public class TestbedManagerFrame extends JFrame {
 
     private final JMenu buildProjectMenu() {
         final JMenu     menu          = new JMenu("Project");
-        final JMenuItem newProject    = new JMenuItem("New Project");
-        final JMenuItem deleteProject = new JMenuItem("Delete Project");
+        final JMenuItem addProject    = new JMenuItem("Add");
+        final JMenuItem deleteProject = new JMenuItem("Delete");
 
-        newProject.addActionListener(new NewProjectActionListener());
-        menu.add(newProject);
+        addProject.addActionListener(new AddProjectActionListener());
+        menu.add(addProject);
 
         deleteProject.addActionListener(new DeleteProjectActionListener());
         menu.add(deleteProject);
 
-        menu.addMenuListener(new ProjectMenuListener(newProject,
+        menu.addMenuListener(new ProjectMenuListener(addProject,
                                                      deleteProject));
         return menu;
     }
 
 
     private final JMenu buildConfigurationMenu() {
-        final JMenu     menu          = new JMenu("Configuration");
-        final JMenuItem newConfig     = new JMenuItem("New Configuration");
-        final JMenuItem cloneConfig   = new JMenuItem("Clone Configuration");
-        final JMenuItem deleteConfig  = new JMenuItem("Delete Configuration");
-        final JMenuItem viewConfigMgr = new JMenuItem("View Configuration " +
-                                                      "Manager");
+        final JMenu     menu           = new JMenu("Configuration");
+        final JMenuItem addConfig      = new JMenuItem("Add");
+        final JMenuItem cloneConfig    = new JMenuItem("Clone");
+        final JMenuItem modifyConfig   = new JMenuItem("Modify");
+        final JMenuItem deleteConfig   = new JMenuItem("Delete");
+        final JMenuItem viewNetMonitor = new JMenuItem("View Network Monitor");
 
-        newConfig.addActionListener(new NewConfigurationActionListener());
-        menu.add(newConfig);
+
+        addConfig.addActionListener(new AddConfigurationActionListener());
+        menu.add(addConfig);
 
         cloneConfig.addActionListener(new CloneConfigurationActionListener());
         menu.add(cloneConfig);
+
+        modifyConfig.addActionListener(new ViewConfigurationActionListener());
+        menu.add(modifyConfig);
 
         deleteConfig.addActionListener(new DeleteConfigurationActionListener());
         menu.add(deleteConfig);
 
         menu.add(new JSeparator());
+        viewNetMonitor.addActionListener(
+                                    new ViewNetworkMonitorActionListener());
+        menu.add(viewNetMonitor);
 
-        viewConfigMgr.addActionListener(new ViewConfigurationActionListener());
-        menu.add(viewConfigMgr);
 
-        menu.addMenuListener(new ConfigurationMenuListener(newConfig,
+        menu.addMenuListener(new ConfigurationMenuListener(addConfig,
                                                            cloneConfig,
                                                            deleteConfig,
-                                                           viewConfigMgr));
+                                                           modifyConfig,
+                                                           viewNetMonitor));
         return menu;
     }
 
@@ -283,7 +286,7 @@ public class TestbedManagerFrame extends JFrame {
 
     private final JPanel buildTestbedPanel() throws RemoteException {
         JPanel testbedPanel = new JPanel(new BorderLayout());
-        testbedPanel.setBorder(new TitledBorder("Testbeds"));
+        testbedPanel.setBorder(new TitledBorder("Physical Deployments"));
 
 
         // --- left-side -------------------------------------------------
@@ -450,9 +453,9 @@ public class TestbedManagerFrame extends JFrame {
 
     protected class ProjectListVisitor implements ListVisitor {
         private JPopupMenu popupMenu     = new JPopupMenu();
-        private JMenuItem  title         = new JMenuItem();
-        private JMenuItem  unused        = new JMenuItem();
-        private JMenuItem  deleteProject = new JMenuItem("Delete Project");
+        private JMenuItem  title         = new JMenuItem("Project");
+        private JMenuItem  addProject    = new JMenuItem("Add");
+        private JMenuItem  deleteProject = new JMenuItem("Delete");
 
 
         public ProjectListVisitor() {
@@ -460,16 +463,28 @@ public class TestbedManagerFrame extends JFrame {
             popupMenu.add(title);
             popupMenu.add(new JSeparator());
 
+            addProject.addActionListener(new AddProjectActionListener());
+            popupMenu.add(addProject);
+
             deleteProject.addActionListener(new DeleteProjectActionListener());
             popupMenu.add(deleteProject);
 
-            popupMenu.addPopupMenuListener(
-                                new ProjectMenuListener(unused, deleteProject));
+            popupMenu.addPopupMenuListener(new ProjectMenuListener(addProject,
+                                                              deleteProject));
         }
 
 
         public JPopupMenu visitPopupMenu(VisitableList list) {
-            title.setText(list.getSelectedValue().toString());
+            Object selected = list.getSelectedValue();
+
+            if (selected != null) {
+                String title = selected.toString();
+
+                deleteProject.setText("Delete '" + title + "'");
+            } else {
+                deleteProject.setText("Delete");
+            }
+
             return popupMenu;
         }
 
@@ -496,14 +511,12 @@ public class TestbedManagerFrame extends JFrame {
 
     protected class ConfigurationListVisitor implements ListVisitor {
         private JPopupMenu popupMenu      = new JPopupMenu();
-        private JMenuItem  title          = new JMenuItem();
-        private JMenuItem  unused         = new JMenuItem();
-        private JMenuItem  cloneConfig    = new JMenuItem("Clone " +
-                                                          "Configuration");
-        private JMenuItem  deleteConfig   = new JMenuItem("Delete " +
-                                                         "Configuration");
-        private JMenuItem  viewConfigMgr  = new JMenuItem("View Configuration "
-                                                          + "Manager");
+        private JMenuItem  title          = new JMenuItem("Configuration");
+
+        private JMenuItem  addConfig      = new JMenuItem("Add");
+        private JMenuItem  cloneConfig    = new JMenuItem("Clone");
+        private JMenuItem  modifyConfig   = new JMenuItem("Modify");
+        private JMenuItem  deleteConfig   = new JMenuItem("Delete");
         private JMenuItem  viewNetMonitor = new JMenuItem("View Network " +
                                                           "Monitor");
 
@@ -513,32 +526,54 @@ public class TestbedManagerFrame extends JFrame {
             popupMenu.add(title);
             popupMenu.add(new JSeparator());
 
+
+            addConfig.addActionListener(new AddConfigurationActionListener());
+            popupMenu.add(addConfig);
+
+
+            cloneConfig.addActionListener(
+                                        new CloneConfigurationActionListener());
+            popupMenu.add(cloneConfig);
+
+
+            modifyConfig.addActionListener(
+                                 new ViewConfigurationActionListener());
+            popupMenu.add(modifyConfig);
+
+
             deleteConfig.addActionListener(
                                  new DeleteConfigurationActionListener());
             popupMenu.add(deleteConfig);
 
-            cloneConfig.addActionListener(
-                                new CloneConfigurationActionListener());
-            popupMenu.add(cloneConfig);
 
-            viewConfigMgr.addActionListener(
-                                 new ViewConfigurationActionListener());
-            popupMenu.add(viewConfigMgr);
-
-
+            popupMenu.add(new JSeparator());
             viewNetMonitor.addActionListener(
                                 new ViewNetworkMonitorActionListener());
             popupMenu.add(viewNetMonitor);
 
-            popupMenu.addPopupMenuListener(
-                        new ConfigurationMenuListener(unused, cloneConfig,
-                                                      deleteConfig,
-                                                      viewConfigMgr));
+
+            popupMenu.addPopupMenuListener(new ConfigurationMenuListener(
+                                                   addConfig,    cloneConfig,
+                                                   deleteConfig, modifyConfig,
+                                                   viewNetMonitor));
         }
 
 
         public JPopupMenu visitPopupMenu(VisitableList list) {
-            title.setText(list.getSelectedValue().toString());
+            Object selected = list.getSelectedValue();
+
+            if (selected != null) {
+                String title = selected.toString();
+
+                cloneConfig.setText("Clone '" + title + "'");
+                modifyConfig.setText("Modify '" + title + "'");
+                deleteConfig.setText("Delete '" + title + "'");
+            } else {
+                cloneConfig.setText("Clone");
+                modifyConfig.setText("Modify");
+                deleteConfig.setText("Delete");
+            }
+
             return popupMenu;
         }
 
@@ -745,11 +780,11 @@ public class TestbedManagerFrame extends JFrame {
     }
 
 
-    protected class NewProjectActionListener implements ActionListener {
+    protected class AddProjectActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             try {
                 NewDialog newDialog =
-                    new NewDialog(TestbedManagerFrame.this, "New Project");
+                    new NewDialog(TestbedManagerFrame.this, "Add Project");
                 newDialog.setVisible(true);
 
                 String name        = newDialog.getName();
@@ -761,7 +796,7 @@ public class TestbedManagerFrame extends JFrame {
                     projectManager.createNewProject(testbed.getID(),
                                                     name, description);
                 } else {
-                    log.info("New Project creation aborted by user");
+                    log.info("Add Project aborted by user");
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
@@ -775,7 +810,9 @@ public class TestbedManagerFrame extends JFrame {
         public void actionPerformed(ActionEvent e) {
             try {
                 Project project = (Project) projectList.getSelectedValue();
-                projectManager.deleteProject(project.getID());
+                if (confirmDelete(project.getName())) {
+                    projectManager.deleteProject(project.getID());
+                }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
                 ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
@@ -783,16 +820,28 @@ public class TestbedManagerFrame extends JFrame {
         }
     }
 
+    private boolean confirmDelete(String text) {
+        int choice;
+
+        choice = JOptionPane.showConfirmDialog(this,
+                                               "Do you wisth to delete '"
+                                               + text + "'?",
+                                               "Delete Confirmation",
+                                               JOptionPane.YES_NO_OPTION,
+                                               JOptionPane.QUESTION_MESSAGE);
+        return (choice == JOptionPane.YES_OPTION);
+    }
+
 
     protected class ProjectMenuListener implements MenuListener,
                                                    PopupMenuListener {
-        private JMenuItem newProject;
+        private JMenuItem addProject;
         private JMenuItem deleteProject;
 
 
-        public ProjectMenuListener(JMenuItem newProject,
+        public ProjectMenuListener(JMenuItem addProject,
                                    JMenuItem deleteProject) {
-            this.newProject    = newProject;
+            this.addProject    = addProject;
             this.deleteProject = deleteProject;
         }
 
@@ -814,17 +863,17 @@ public class TestbedManagerFrame extends JFrame {
 
 
         private void setMenuItemState() {
-            newProject.setEnabled(testbedList.getSelectedValue() != null);
+            addProject.setEnabled(testbedList.getSelectedValue() != null);
             deleteProject.setEnabled(projectList.getSelectedValue() != null);
         }
     }
 
 
-    protected class NewConfigurationActionListener implements ActionListener {
+    protected class AddConfigurationActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             try {
                 NewDialog newDialog = new NewDialog(TestbedManagerFrame.this,
-                                                    "New Configuration");
+                                                    "Add Configuration");
                 newDialog.setVisible(true);
 
                 String name        = newDialog.getName();
@@ -837,7 +886,7 @@ public class TestbedManagerFrame extends JFrame {
                                                          project.getID(),
                                                          name, description);
                 } else {
-                    log.info("New Configuration creation aborted by user");
+                    log.info("Add Configuration aborted by user");
                 }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
@@ -884,7 +933,9 @@ public class TestbedManagerFrame extends JFrame {
                 config = (ProjectDeploymentConfiguration)
                                     configurationList.getSelectedValue();
 
-                configManager.deleteProjectDeploymentConfig(config.getID());
+                if (confirmDelete(config.getName())) {
+                    configManager.deleteProjectDeploymentConfig(config.getID());
+                }
             } catch (RemoteException ex) {
                 log.error("RemoteException", ex);
                 ClientUtils.displayErrorMessage(TestbedManagerFrame.this, ex);
@@ -895,20 +946,23 @@ public class TestbedManagerFrame extends JFrame {
 
     protected class ConfigurationMenuListener implements MenuListener,
                                                          PopupMenuListener {
-        private JMenuItem newConfig;
+        private JMenuItem addConfig;
         private JMenuItem cloneConfig;
+        private JMenuItem modifyConfig;
         private JMenuItem deleteConfig;
-        private JMenuItem viewConfigMgr;
+        private JMenuItem viewNetMonitor;
 
 
-        public ConfigurationMenuListener(JMenuItem newConfig,
+        public ConfigurationMenuListener(JMenuItem addConfig,
                                          JMenuItem cloneConfig,
                                          JMenuItem deleteConfig,
-                                         JMenuItem viewConfigMgr) {
-            this.newConfig     = newConfig;
-            this.cloneConfig   = cloneConfig;
-            this.deleteConfig  = deleteConfig;
-            this.viewConfigMgr = viewConfigMgr;
+                                         JMenuItem modifyConfig,
+                                         JMenuItem viewNetMonitor) {
+            this.addConfig      = addConfig;
+            this.cloneConfig    = cloneConfig;
+            this.modifyConfig   = modifyConfig;
+            this.deleteConfig   = deleteConfig;
+            this.viewNetMonitor = viewNetMonitor;
         }
 
 
@@ -928,13 +982,14 @@ public class TestbedManagerFrame extends JFrame {
 
 
         private void setMenuItemState() {
-            newConfig.setEnabled(projectList.getSelectedValue() != null);
-            deleteConfig.setEnabled(
-                                 configurationList.getSelectedValue() != null);
-            cloneConfig.setEnabled(
-                                 configurationList.getSelectedValue() != null);
-            viewConfigMgr.setEnabled(
-                                 configurationList.getSelectedValue() != null);
+            boolean newEnabled   = projectList.getSelectedValue()       != null;
+            boolean otherEnabled = configurationList.getSelectedValue() != null;
+
+            addConfig.setEnabled(newEnabled);
+            cloneConfig.setEnabled(otherEnabled);
+            modifyConfig.setEnabled(otherEnabled);
+            deleteConfig.setEnabled(otherEnabled);
+            viewNetMonitor.setEnabled(otherEnabled);
         }
     }
 
