@@ -50,7 +50,7 @@ class RootLevel extends Level {
         this.testbeds = testbedManager.getTestbedList();
 
         for (Testbed i : testbeds) {
-            addEntry(new TestbedLevelEntry(i, this));
+            addEntry(new TestbedLevelEntry(i));
         }
     }
 
@@ -60,5 +60,19 @@ class RootLevel extends Level {
                                                      MalformedURLException {
         testbedManager = (TestbedManager)
                     Naming.lookup(RMI_BASE_URL + "TestbedManager");
+    }
+
+
+    private class TestbedLevelEntry extends LevelEntry {
+        private Testbed testbed;
+
+        public TestbedLevelEntry(Testbed testbed) {
+            super(testbed.getName());
+            this.testbed = testbed;
+        }
+
+        public Level getLevel() throws Exception {
+            return new TestbedLevel(testbed, RootLevel.this);
+        }
     }
 }

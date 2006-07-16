@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * AliasCommand.java
  *
@@ -69,14 +69,17 @@ class AliasCommand implements Command {
         private String  name;
         private Command command;
 
+
         public AliasWrapper(String name, Command command) {
             this.name    = name;
             this.command = command;
         }
 
         public void execute(String[] args) throws Exception {
+
             command.execute(args);
         }
+
 
         public String getHelpText() {
             return command.getHelpText() + " (Alias for " + name + ")";

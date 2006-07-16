@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * ProgramLevel.java
+ * SpecificProgramLevel.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -42,76 +42,57 @@ import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
-class ProgramLevel extends Level {
+class SpecificProgramLevel extends Level {
     private Testbed                        testbed;
     private Project                        project;
     private ProjectDeploymentConfiguration config;
+    private Program                        program;
     private ProgramManager                 programManager;
     private List<Program>                  programs;
 
 
-    public ProgramLevel(Testbed                        testbed, Project project,
-                        ProjectDeploymentConfiguration config,  Level   parent)
+    public SpecificProgramLevel(
+                        Testbed                        testbed, Project project,
+                        ProjectDeploymentConfiguration config,  Program program,
+                        Level                          parent)
                                                             throws Exception {
-        super("Programs", parent);
-        lookupRemoteManagers();
+        super(program.getName(), parent);
 
         this.testbed  = testbed;
         this.project  = project;
         this.config   = config;
-        this.programs = programManager.getProgramList(project.getID());
+        this.program  = program;
 
-        for (Program i : programs) {
-            addEntry(new ProgramLevelEntry(i));
-        }
-
-        addCommand("rm",     new RmCommand());
-        addCommand("upload", new UploadCommand());
+        addEntry(new MessagesLevelEntry());
+        addEntry(new SymbolsLevelEntry());
     }
 
 
-    private final void lookupRemoteManagers() throws RemoteException,
-                                                     NotBoundException,
-                                                     MalformedURLException {
-        programManager = (ProgramManager) Naming.lookup(RMI_BASE_URL +
-                                                        "ProgramManager");
-    }
-
-
-    private class ProgramLevelEntry extends LevelEntry {
-        private Program program;
-
-        public ProgramLevelEntry(Program program) {
-            super(program.getName());
-            this.program = program;
+    private class MessagesLevelEntry extends LevelEntry {
+        public MessagesLevelEntry() {
+            super("Messages");
         }
 
 
         public Level getLevel() throws Exception {
-            return new SpecificProgramLevel(testbed, project, config,
-                                            program, ProgramLevel.this);
+            return new ProgramMessageLevel(testbed, project, config, program,
+                                           SpecificProgramLevel.this);
         }
     }
 
 
-    private class RmCommand implements Command {
-        public void execute(String[] args) throws Exception {
-            System.out.println("RmCommand:  TODO");
+    private class SymbolsLevelEntry extends LevelEntry {
+        public SymbolsLevelEntry() {
+            super("Symbols");
         }
 
-        public String getHelpText() {
-            return "Removes a program";
-        }
-    }
 
-
-    private class UploadCommand implements Command {
-        public void execute(String[] args) throws Exception {
-            System.out.println("UploadCommand:  TODO");
-        }
-
-        public String getHelpText() {
-            return "Uploads a program";
+        public Level getLevel() throws Exception {
+            return new ProgramSymbolLevel(testbed, project, config, program,
+                                          SpecificProgramLevel.this);
+            //return new SymbolsLevel(...);
+            // TODO:  Fix this
+            //return SpecificProgramLevel.this;
         }
     }
 }

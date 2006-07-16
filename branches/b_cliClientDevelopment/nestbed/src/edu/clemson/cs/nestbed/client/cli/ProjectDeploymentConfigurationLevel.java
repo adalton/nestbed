@@ -35,6 +35,11 @@ import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
 class ProjectDeploymentConfigurationLevel extends Level {
+    private Testbed                        testbed;
+    private Project                        project;
+    private ProjectDeploymentConfiguration config;
+
+
     public ProjectDeploymentConfigurationLevel(
                                     Testbed                        testbed,
                                     Project                        project,
@@ -43,9 +48,38 @@ class ProjectDeploymentConfigurationLevel extends Level {
                                                               throws Exception {
         super(config.getName(), parentLevel);
 
-        addEntry(new ProgramLevelEntry(testbed, project, config, this));
+        this.testbed = testbed;
+        this.project = project;
+        this.config  = config;
+
+        addEntry(new ProgramLevelEntry());
         addEntry(new Entry("SymbolProfiling"));
         addEntry(new Entry("MessageProfiling"));
-        addEntry(new Entry("Motes"));
+        addEntry(new MoteConfigLevelEntry());
+    }
+
+
+    private class ProgramLevelEntry extends LevelEntry {
+        public ProgramLevelEntry() {
+            super("Programs");
+        }
+
+        public Level getLevel() throws Exception {
+            return new ProgramLevel(testbed, project, config,
+                                    ProjectDeploymentConfigurationLevel.this);
+        }
+    }
+
+
+    private class MoteConfigLevelEntry extends LevelEntry {
+        private MoteConfigLevelEntry() {
+            super("Motes");
+        }
+
+
+        public Level getLevel() throws Exception {
+            return new MoteConfigLevel(testbed, project, config,
+                                      ProjectDeploymentConfigurationLevel.this);
+        }
     }
 }
