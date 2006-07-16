@@ -54,7 +54,7 @@ class TestbedLevel extends Level {
         this.projects = projectManager.getProjectList(testbed.getID());
 
         for (Project i : projects) {
-            addEntry(new ProjectLevelEntry(testbed, i, this));
+            addEntry(new ProjectLevelEntry(i));
         }
 
         addCommand("rm",     new RmCommand());
@@ -67,6 +67,20 @@ class TestbedLevel extends Level {
                                                      MalformedURLException {
         projectManager = (ProjectManager)
                     Naming.lookup(RMI_BASE_URL + "ProjectManager");
+    }
+
+
+    private class ProjectLevelEntry extends LevelEntry {
+        private Project project;
+
+        public ProjectLevelEntry(Project project) {
+            super(project.getName());
+            this.project = project;
+        }
+
+        public Level getLevel() throws Exception {
+            return new ProjectLevel(testbed, project, TestbedLevel.this);
+        }
     }
 
 

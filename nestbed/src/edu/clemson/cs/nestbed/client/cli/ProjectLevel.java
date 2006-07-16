@@ -59,12 +59,10 @@ class ProjectLevel extends Level {
                                                             project.getID());
 
         for (ProjectDeploymentConfiguration i : configs) {
-            addEntry(new ProjectDeploymentConfigurationLevelEntry(testbed,
-                                                                  project,
-                                                                  i, this));
+            addEntry(new ProjectDeploymentConfigurationLevelEntry(i));
         }
 
-        addCommand("rm", new RmCommand());
+        addCommand("rm",     new RmCommand());
         addCommand("mkconf", new MkConfCommand());
     }
 
@@ -75,6 +73,25 @@ class ProjectLevel extends Level {
         configManager = (ProjectDeploymentConfigurationManager)
                                     Naming.lookup(RMI_BASE_URL +
                                     "ProjectDeploymentConfigurationManager");
+    }
+
+
+    private class ProjectDeploymentConfigurationLevelEntry extends LevelEntry {
+        private ProjectDeploymentConfiguration config;
+
+        public ProjectDeploymentConfigurationLevelEntry(
+                                        ProjectDeploymentConfiguration config) {
+            super(config.getName());
+            this.config = config;
+        }
+
+
+        public Level getLevel() throws Exception {
+            return new ProjectDeploymentConfigurationLevel(testbed,
+                                                           project,
+                                                           config,
+                                                           ProjectLevel.this);
+        }
     }
 
 

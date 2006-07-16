@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramWeaverManagerImpl.java
  *
@@ -164,6 +164,10 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
         mfWeaver.addLine("CFLAGS += " +
                          "-I$(TOSDIR)/../contrib/nucleus/tos/lib/Nucleus");
         mfWeaver.addLine("CFLAGS += -I/opt/nestbed/lib/RadioPower");
+
+        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/ReliableComm");
+        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/UniformLossyComm");
+        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/PseudoRandom");
 
         mfWeaver.addLine("# The following line *MUST* be last");
         mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");

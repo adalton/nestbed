@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * ProgramLevel.java
+ * ProgramMessageLevel.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -35,83 +35,64 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Program;
+import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
-class ProgramLevel extends Level {
+class ProgramMessageLevel extends Level {
     private Testbed                        testbed;
     private Project                        project;
     private ProjectDeploymentConfiguration config;
-    private ProgramManager                 programManager;
-    private List<Program>                  programs;
+    private Program                        program;
+    private ProgramMessageSymbolManager    messageManager;
+    private List<ProgramMessageSymbol>     messageSymbols;
 
 
-    public ProgramLevel(Testbed                        testbed, Project project,
-                        ProjectDeploymentConfiguration config,  Level   parent)
+    public ProgramMessageLevel(Testbed                        testbed,
+                               Project                        project,
+                               ProjectDeploymentConfiguration config,
+                               Program                        program,
+                               Level                          parent)
                                                             throws Exception {
-        super("Programs", parent);
+        super("Messages", parent);
         lookupRemoteManagers();
 
-        this.testbed  = testbed;
-        this.project  = project;
-        this.config   = config;
-        this.programs = programManager.getProgramList(project.getID());
+        this.testbed        = testbed;
+        this.project        = project;
+        this.config         = config;
+        this.program        = program;
+        this.messageSymbols = messageManager.getProgramMessageSymbols(
+                                                                program.getID());
 
-        for (Program i : programs) {
-            addEntry(new ProgramLevelEntry(i));
+        for (ProgramMessageSymbol i : messageSymbols) {
+            addEntry(new Entry(i.getName()));
         }
 
-        addCommand("rm",     new RmCommand());
-        addCommand("upload", new UploadCommand());
+
+        addCommand("profile", new ProfileCommand());
     }
 
 
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        programManager = (ProgramManager) Naming.lookup(RMI_BASE_URL +
-                                                        "ProgramManager");
+        messageManager = (ProgramMessageSymbolManager)
+                Naming.lookup(RMI_BASE_URL + "ProgramMessageSymbolManager");
     }
 
 
-    private class ProgramLevelEntry extends LevelEntry {
-        private Program program;
-
-        public ProgramLevelEntry(Program program) {
-            super(program.getName());
-            this.program = program;
-        }
-
-
-        public Level getLevel() throws Exception {
-            return new SpecificProgramLevel(testbed, project, config,
-                                            program, ProgramLevel.this);
-        }
-    }
-
-
-    private class RmCommand implements Command {
+    private class ProfileCommand implements Command {
         public void execute(String[] args) throws Exception {
-            System.out.println("RmCommand:  TODO");
+            System.out.println("ProfileCommand:  TODO");
         }
+
 
         public String getHelpText() {
-            return "Removes a program";
-        }
-    }
-
-
-    private class UploadCommand implements Command {
-        public void execute(String[] args) throws Exception {
-            System.out.println("UploadCommand:  TODO");
-        }
-
-        public String getHelpText() {
-            return "Uploads a program";
+            return "Selects a Message Symbol to be profiled";
         }
     }
 }
