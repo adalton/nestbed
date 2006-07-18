@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * SymbolProfilingLevel.java
+ * MessageProfilingLevel.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -35,42 +35,41 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
-import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
-import edu.clemson.cs.nestbed.common.model.ProgramProfilingSymbol;
-import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
+import edu.clemson.cs.nestbed.common.model.ProgramProfilingMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
-class SymbolProfilingLevel extends Level {
-    private Testbed                        testbed;
-    private Project                        project;
-    private ProjectDeploymentConfiguration config;
-    private ProgramSymbolManager           symbolManager;
-    private ProgramProfilingSymbolManager  profilingSymbolMgr;
-    private List<ProgramProfilingSymbol>   profilingSymbols;
+class MessageProfilingLevel extends Level {
+    private Testbed                               testbed;
+    private Project                               project;
+    private ProjectDeploymentConfiguration        config;
+    private ProgramMessageSymbolManager           symbolManager;
+    private ProgramProfilingMessageSymbolManager  profilingSymbolMgr;
+    private List<ProgramProfilingMessageSymbol>   profilingMessages;
 
 
-    public SymbolProfilingLevel(Testbed testbed, Project project,
+    public MessageProfilingLevel(Testbed testbed, Project project,
                                 ProjectDeploymentConfiguration config,
                                 Level parent) throws Exception {
-        super("SymbolProfiling", parent);
+        super("MessageProfiling", parent);
         lookupRemoteManagers();
 
-        this.testbed          = testbed;
-        this.project          = project;
-        this.config           = config;
-        this.profilingSymbols = profilingSymbolMgr.getProgramProfilingSymbols(
-                                                               config.getID());
+        this.testbed           = testbed;
+        this.project           = project;
+        this.config            = config;
+        this.profilingMessages = profilingSymbolMgr.
+                            getProgramProfilingMessageSymbols(config.getID());
 
-        for (ProgramProfilingSymbol i : profilingSymbols) {
-            ProgramSymbol programSymbol;
-            programSymbol = symbolManager.getProgramSymbol(
-                                                i.getProgramSymbolID());
-            addEntry(new Entry(programSymbol.getModule() + "." +
-                               programSymbol.getSymbol()));
+        for (ProgramProfilingMessageSymbol i : profilingMessages) {
+            ProgramMessageSymbol messageSymbol;
+            messageSymbol = symbolManager.getProgramMessageSymbol(
+                                                i.getProgramMessageSymbolID());
+            addEntry(new Entry(messageSymbol.getName()));
         }
 
 
@@ -81,13 +80,13 @@ class SymbolProfilingLevel extends Level {
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        profilingSymbolMgr = (ProgramProfilingSymbolManager)
+        profilingSymbolMgr = (ProgramProfilingMessageSymbolManager)
                             Naming.lookup(RMI_BASE_URL +
-                                         "ProgramProfilingSymbolManager");
+                                         "ProgramProfilingMessageSymbolManager");
 
-        symbolManager      = (ProgramSymbolManager)
+        symbolManager      = (ProgramMessageSymbolManager)
                             Naming.lookup(RMI_BASE_URL +
-                                         "ProgramSymbolManager");
+                                         "ProgramMessageSymbolManager");
     }
 
 
@@ -98,7 +97,7 @@ class SymbolProfilingLevel extends Level {
 
 
         public String getHelpText() {
-            return "Removes the specified symbol from the profiling list";
+            return "Removes the specified message from the profiling list";
         }
     }
 }
