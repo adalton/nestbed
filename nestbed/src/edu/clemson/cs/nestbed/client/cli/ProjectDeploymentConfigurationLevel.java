@@ -53,9 +53,10 @@ class ProjectDeploymentConfigurationLevel extends Level {
         this.config  = config;
 
         addEntry(new ProgramLevelEntry());
-        addEntry(new Entry("SymbolProfiling"));
-        addEntry(new Entry("MessageProfiling"));
+        addEntry(new SymbolProfilingLevelEntry());
+        addEntry(new MessageProfilingEntry());
         addEntry(new MoteConfigLevelEntry());
+        addEntry(new NetworkMonitorLevelEntry());
     }
 
 
@@ -71,6 +72,32 @@ class ProjectDeploymentConfigurationLevel extends Level {
     }
 
 
+    private class SymbolProfilingLevelEntry extends LevelEntry {
+        public SymbolProfilingLevelEntry() {
+            super("SymbolProfiling");
+        }
+
+
+        public Level getLevel() throws Exception {
+            return new SymbolProfilingLevel(testbed, project, config,
+                                    ProjectDeploymentConfigurationLevel.this);
+        }
+    }
+
+
+    private class MessageProfilingEntry extends LevelEntry {
+        public MessageProfilingEntry() {
+            super("MessageProfiling");
+        }
+
+
+        public Level getLevel() throws Exception {
+            return new MessageProfilingLevel(testbed, project, config,
+                                    ProjectDeploymentConfigurationLevel.this);
+        }
+    }
+
+
     private class MoteConfigLevelEntry extends LevelEntry {
         private MoteConfigLevelEntry() {
             super("Motes");
@@ -80,6 +107,20 @@ class ProjectDeploymentConfigurationLevel extends Level {
         public Level getLevel() throws Exception {
             return new MoteConfigLevel(testbed, project, config,
                                       ProjectDeploymentConfigurationLevel.this);
+        }
+    }
+
+
+    private class NetworkMonitorLevelEntry extends LevelEntry {
+        private NetworkMonitorLevelEntry() {
+            super("NetworkMonitor");
+        }
+
+
+        public Level getLevel() throws Exception {
+            return ProjectDeploymentConfigurationLevel.this;
+            //return new MoteConfigLevel(testbed, project, config,
+           //                           ProjectDeploymentConfigurationLevel.this);
         }
     }
 }
