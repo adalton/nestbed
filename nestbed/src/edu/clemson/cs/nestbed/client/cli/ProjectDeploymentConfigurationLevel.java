@@ -118,9 +118,8 @@ class ProjectDeploymentConfigurationLevel extends Level {
 
 
         public Level getLevel() throws Exception {
-            return ProjectDeploymentConfigurationLevel.this;
-            //return new MoteConfigLevel(testbed, project, config,
-           //                           ProjectDeploymentConfigurationLevel.this);
+            return new NetworkMonitorLevel(testbed, project, config,
+                                      ProjectDeploymentConfigurationLevel.this);
         }
     }
 }

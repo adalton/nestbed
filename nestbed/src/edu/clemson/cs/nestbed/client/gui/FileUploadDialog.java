@@ -136,7 +136,7 @@ public class FileUploadDialog extends    JDialog
         panel.add(nameField);
         panel.add(new JLabel("Description:"));
         panel.add(descField);
-        panel.add(new JLabel("File:"));
+        panel.add(new JLabel("Directory:"));
 
         filePanel.add(fileButton, BorderLayout.EAST);
         filePanel.add(dirField, BorderLayout.CENTER);
