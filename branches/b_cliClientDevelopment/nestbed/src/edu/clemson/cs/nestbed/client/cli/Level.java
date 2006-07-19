@@ -32,6 +32,7 @@ package edu.clemson.cs.nestbed.client.cli;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,13 +63,13 @@ abstract class Level {
                                    System.in));
 
         // All levels have these commands
-        addCommand("cd",    new CdCommand(this));
-        addCommand("ls",    new LsCommand(this));
-        addCommand("man",   new ManCommand(this));
-        addCommand("help",  new ManCommand(this));
-        addCommand("quit",  new QuitCommand(this));
-        addCommand("exit",  new QuitCommand(this));
-        addCommand("alias", new AliasCommand(this));
+        addCommand("cd",    new CdCommand());
+        addCommand("ls",    new LsCommand());
+        addCommand("man",   new ManCommand());
+        addCommand("help",  new ManCommand());
+        addCommand("quit",  new QuitCommand());
+        addCommand("exit",  new QuitCommand());
+        addCommand("alias", new AliasCommand());
         addCommand("pwd",   new PwdCommand());
 
         // All levels have these LevelEntries
@@ -76,9 +77,11 @@ abstract class Level {
         addEntry(new Entry(".."));
     }
 
+
     public Level getParentLevel() {
         return (parentLevel != null) ? parentLevel : this;
     }
+
 
     public Level process() throws Exception {
         nextLevel = this;
@@ -138,100 +141,177 @@ abstract class Level {
         return prompt;
     }
 
+
     protected void displayPrompt() {
         System.out.print(getPrompt() + " $ ");
         System.out.flush();
     }
+
 
     protected String[] readCommand() throws Exception {
         TokenReader reader = new TokenReader(in.readLine());
         return reader.readTokens();
     }
 
+
     protected void addEntry(Entry entry) {
         entries.add(entry);
     }
+
 
     protected void addCommand(String name, Command command) {
         commandMap.put(name, command);
     }
 
-    private static class TokenReader {
-        private String line;
-        private int    index = 0;
-        private State  state;
 
-
-        public TokenReader(String line) {
-            this.line  = line;
-            this.state = State.WHITE;
-        }
-
-
-        public String[] readTokens() {
-            List<String> tokens = new ArrayList<String>();
-            while (index < line.length()) {
-                tokens.add(nextToken());
+    protected class CdCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            if (args.length != 2) {
+                System.err.println("usage:  cd <level>");
+                return;
             }
 
-            if (state == State.QUOTE) {
-                System.err.println("Error: Unterminated string constant");
-                tokens.clear();
+            if (args[1].equals(".")) {
+                return;
             }
-            return tokens.toArray(new String[tokens.size()]);
-        }
 
-        private String nextToken() {
-            StringBuffer buffer = new StringBuffer();
-            boolean      done   = false;
+            if (args[1].equals("..")) {
+                setNextLevel(getParentLevel());
+                return;
+            }
 
-            while (index < line.length() && !done) {
-                switch(state) {
-                case WHITE:
-                    if (Character.isWhitespace(line.charAt(index))) {
-                        index++;
-                    } else if (line.charAt(index) == '"') {
-                        state = State.QUOTE;
-                        index++;
-                    } else {
-                        state = State.BLACK;
+            boolean found = false;
+
+            for (Entry i : getEntries()) {
+                if (i instanceof LevelEntry) {
+                    LevelEntry levelEntry = (LevelEntry) i;
+
+                    if (levelEntry.getName().equals(args[1])) {
+                        setNextLevel(levelEntry.getLevel());
+                        found = true;
+                        break;
                     }
-                    break;
-
-                case BLACK:
-                    if (Character.isWhitespace(line.charAt(index))) {
-                        state = State.WHITE;
-                        done  = true;
-                    } else {
-                        buffer.append(line.charAt(index));
-                        index++;
-                    }
-                    break;
-
-                case QUOTE:
-                    if (line.charAt(index) != '"') {
-                        buffer.append(line.charAt(index));
-                    } else {
-                        state = State.WHITE;
-                        done  = true;
-                    }
-                    index++;
-                    break;
                 }
             }
 
-            return buffer.toString();
+            if (!found) {
+                System.err.println("Level " + args[1] + " not found.");
+            }
         }
 
-        enum State {
-            WHITE,
-            BLACK,
-            QUOTE
+        public String getHelpText() {
+            return "Changes to the specified level";
         }
     }
 
 
-    private class PwdCommand implements Command {
+    protected class LsCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            for (Entry i : getEntries()) {
+                System.out.println(i);
+            }
+        }
+
+
+        public String getHelpText() {
+            return "Lists the available levels";
+        }
+    }
+
+
+    protected class ManCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            int maxLength = 0;
+
+            List<String> commandNames;
+            commandNames = new ArrayList<String>(getCommandNames());
+            Collections.sort(commandNames);
+
+            for (String i : commandNames) {
+                maxLength = (i.length() > maxLength) ? i.length() : maxLength;
+            }
+
+            if (maxLength > 0) {
+                String formatString = "  %-" + maxLength + "s - %s\n";
+
+                for (String i : commandNames) {
+                    Command command = getCommand(i);
+                    System.out.printf(formatString, i, command.getHelpText());
+                }
+            }
+        }
+
+
+        public String getHelpText() {
+            return "Get help with commands";
+        }
+    }
+
+
+    protected class QuitCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            System.exit(0);
+        }
+
+
+        public String getHelpText() {
+            return "Quit this applicaton";
+        }
+    }
+
+
+    protected class AliasCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            if (args.length != 3) {
+                System.err.println("Usage:  alias <oldCommand> <newCommand>");
+                return;
+            }
+
+            Command command = getCommand(args[1]);
+            if (command == null) {
+                System.err.println("Command " + args[1] + " not found");
+                return;
+            }
+
+            Command newCommand = getCommand(args[2]);
+            if (newCommand != null) {
+                System.err.println("Command " + args[2] + " already defined");
+                return;
+            }
+
+            addCommand(args[2], new AliasWrapper(args[1], command));
+        }
+
+
+        public String getHelpText() {
+            return "Create an alias for a command";
+        }
+    }
+
+
+    protected class AliasWrapper implements Command {
+        private String  name;
+        private Command command;
+
+
+        public AliasWrapper(String name, Command command) {
+            this.name    = name;
+            this.command = command;
+        }
+
+        public void execute(String[] args) throws Exception {
+
+            command.execute(args);
+        }
+
+
+        public String getHelpText() {
+            return command.getHelpText() + " (Alias for " + name + ")";
+        }
+    }
+
+
+    protected class PwdCommand implements Command {
         public void execute(String[] args) throws Exception {
             System.out.println(getPrompt());
         }

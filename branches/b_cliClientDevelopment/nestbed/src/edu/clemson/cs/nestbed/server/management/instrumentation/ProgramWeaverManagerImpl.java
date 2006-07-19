@@ -169,6 +169,8 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
         mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/UniformLossyComm");
         mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/PseudoRandom");
 
+        mfWeaver.addLine("CFLAGS += -DTOSH_MAX_TASKS_LOG2=8");
+
         mfWeaver.addLine("# The following line *MUST* be last");
         mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");
 

@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * MoteConfigLevel.java
+ * NetworkMonitorLevel.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -35,29 +35,25 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
-import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
-class MoteConfigLevel extends Level {
-    private Testbed                            testbed;
-    private Project                            project;
-    private ProjectDeploymentConfiguration     config;
-    private MoteTestbedAssignmentManager       mtbaManager;
-    private MoteDeploymentConfigurationManager mdConfigManager;
-    private List<MoteTestbedAssignment>        moteTestbedAssignments;
+class NetworkMonitorLevel extends Level {
+    private Testbed                        testbed;
+    private Project                        project;
+    private ProjectDeploymentConfiguration config;
+    private MoteTestbedAssignmentManager   mtbaManager;
+    private List<MoteTestbedAssignment>    moteTestbedAssignments;
 
 
-    public MoteConfigLevel(
-                        Testbed                        testbed, Project project,
-                        ProjectDeploymentConfiguration config,  Level   parent)
-                                                            throws Exception {
-        super("Motes", parent);
+    public NetworkMonitorLevel(Testbed testbed, Project project,
+                               ProjectDeploymentConfiguration config,
+                               Level parent) throws Exception {
+        super("NetworkMonitor", parent);
         lookupRemoteManagers();
 
         this.testbed                = testbed;
@@ -66,7 +62,12 @@ class MoteConfigLevel extends Level {
         this.moteTestbedAssignments = mtbaManager.getMoteTestbedAssignmentList(
                                                             testbed.getID());
 
-        addCommand("ls", new MoteLsCommand());
+        for (MoteTestbedAssignment i : moteTestbedAssignments) {
+            addEntry(new MoteManagementLevelEntry(i));
+        }
+
+        addCommand("ls",      new MonitorLsCommand());
+        addCommand("install", new InstallCommand());
     }
 
 
@@ -76,18 +77,32 @@ class MoteConfigLevel extends Level {
         mtbaManager = (MoteTestbedAssignmentManager)
                             Naming.lookup(RMI_BASE_URL +
                                          "MoteTestbedAssignmentManager");
-        mdConfigManager = (MoteDeploymentConfigurationManager)
-                            Naming.lookup(RMI_BASE_URL +
-                                         "MoteDeploymentConfigurationManager");
     }
 
 
-    private class MoteLsCommand implements Command {
+    private class MoteManagementLevelEntry extends LevelEntry {
+        private MoteTestbedAssignment mtbAssignment;
+
+        public MoteManagementLevelEntry(MoteTestbedAssignment mtbAssignment) {
+            super(Integer.toString(mtbAssignment.getMoteAddress()));
+
+            this.mtbAssignment = mtbAssignment;
+        }
+
+
+        public Level getLevel() throws Exception {
+            // TODO:  Fix this
+            return NetworkMonitorLevel.this;
+        }
+    }
+
+
+    private class MonitorLsCommand implements Command {
         private int                       rows = -1;
         private int                       cols = -1;
         private MoteTestbedAssignment[][] assignments;
 
-        public MoteLsCommand() {
+        public MonitorLsCommand() {
             for (MoteTestbedAssignment i : moteTestbedAssignments) {
                 int x = i.getMoteLocationX();
                 int y = i.getMoteLocationY();
@@ -117,22 +132,22 @@ class MoteConfigLevel extends Level {
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
-                        MoteDeploymentConfiguration mdConfig;
-                        mdConfig = mdConfigManager.
-                                getMoteDeploymentConfiguration(
-                                                  config.getID(),
-                                                  assignments[i][j].getMoteID());
-
-                        if (mdConfig != null) {
-                            System.out.printf(" %3d(%2d) ",
-                                             assignments[i][j].getMoteAddress(),
-                                             mdConfig.getRadioPowerLevel());
-                        } else {
-                            System.out.printf("  [%3d]  ",
+                        //MoteDeploymentConfiguration mdConfig;
+                        //mdConfig = mdConfigManager.
+                        //        getMoteDeploymentConfiguration(
+                        //                          config.getID(),
+                        //                          assignments[i][j].getMoteID());
+//
+//                        if (mdConfig != null) {
+//                            System.out.printf(" %3d(%2d)/ ",
+//                                             assignments[i][j].getMoteAddress(),
+//                                             mdConfig.getRadioPowerLevel());
+//                        } else {
+                            System.out.printf("  [%3d]/  ",
                                              assignments[i][j].getMoteAddress());
-                        }
+//                        }
                     } else {
-                        System.out.print("             ");
+                        System.out.print("              ");
                     }
                 }
                 System.out.println();
@@ -142,6 +157,17 @@ class MoteConfigLevel extends Level {
 
         public String getHelpText() {
             return "Display network topology";
+        }
+    }
+
+
+    private class InstallCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            System.out.println("InstallCommand:  TODO");
+        }
+
+        public String getHelpText() {
+            return "Installs applications on motes";
         }
     }
 }
