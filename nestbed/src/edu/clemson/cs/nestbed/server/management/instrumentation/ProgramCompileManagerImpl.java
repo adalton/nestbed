@@ -311,12 +311,14 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         for (String i : msgList) {
             File headerFile = getMessageFile(dir, i);
 
-            generateMigClass(headerFile, i, dir);
-            byte[] bytecode = compileFile(dir, i, ".java");
+            if (headerFile != null) {
+                generateMigClass(headerFile, i, dir);
+                byte[] bytecode = compileFile(dir, i, ".java");
 
-            ProgramMessageSymbolManagerImpl.getInstance().
-                                        addProgramMessageSymbol(program.getID(),
-                                                                i, bytecode);
+                ProgramMessageSymbolManagerImpl.getInstance().
+                                            addProgramMessageSymbol(program.getID(),
+                                                                    i, bytecode);
+            }
         }
     }
 

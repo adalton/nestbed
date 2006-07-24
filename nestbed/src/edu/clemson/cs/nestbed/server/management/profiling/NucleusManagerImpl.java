@@ -99,8 +99,12 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
             if (!moduleName.equals("<global>")) {
                 symbolName = moduleName + "." + symbolName;
             }
-            nucleusInterface.loadSchema(sourcePath + "/build/" +
-                                        moteType + "/nucleusSchema.xml");
+            String schema = sourcePath + "/build/" + moteType +
+                            "/nucleusSchema.xml";
+
+            log.debug("Nucleus schema file: " + schema);
+
+            nucleusInterface.loadSchema(schema);
 
             log.info("Query for symbol: " + symbolName);
             List result = nucleusInterface.get(NucleusInterface.DEST_LINK,
@@ -164,9 +168,12 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
             if (!moduleName.equals("<global>")) {
                 symbolName = moduleName + "." + symbolName;
             }
+            String schema = sourcePath + "/build/" + moteType +
+                            "/nucleusSchema.xml";
 
-            nucleusInterface.loadSchema(sourcePath + "/build/" +
-                                        moteType + "/nucleusSchema.xml");
+            log.debug("Nucleus schema file: " + schema);
+
+            nucleusInterface.loadSchema(schema);
 
             log.info("Set symbol: " + symbolName + " to " + value);
             okay = nucleusInterface.set(NucleusInterface.DEST_LINK,
