@@ -52,7 +52,6 @@ import net.tinyos.packet.PhoenixSource;
 
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
-import edu.clemson.cs.nestbed.common.util.ByteClassLoader;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
 

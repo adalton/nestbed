@@ -45,16 +45,20 @@ import org.apache.log4j.PropertyConfigurator;
 import edu.clemson.cs.nestbed.client.gui.TestbedManagerFrame;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
+import edu.clemson.cs.nestbed.common.util.VariableProperties;
+import edu.clemson.cs.nestbed.common.util.Version;
 
 
 public class Client {
-    private final static Log    log     = LogFactory.getLog(Client.class);
-    private final static String VERSION = "@(#)NESTBed-0.5 -- #0248 (on: Friday, July 21, 2006 12:51:31.142 -0400)@";
+    private final static Log log = LogFactory.getLog(Client.class);
 
 
     private static void loadProperties() throws IOException {
         Properties  systemProperties;
         InputStream propertyStream;
+
+        // Wrap the system properties with our variable-expanding version
+        System.setProperties(new VariableProperties(System.getProperties()));
 
         systemProperties = System.getProperties();
         propertyStream   = Client.class.getClassLoader().
@@ -84,7 +88,7 @@ public class Client {
         log.info("******************************************************\n" +
                  "** NESTBed Client Starting\n" +
                  "******************************************************");
-        log.info("Version:  " + VERSION);
+        log.info("Version:  " + Version.VERSION);
 
         log.debug("Class Loader:  " + Client.class.getClassLoader());
         ParentClassLoader.setParent(Client.class.getClassLoader());

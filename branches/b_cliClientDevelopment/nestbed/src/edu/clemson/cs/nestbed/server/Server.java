@@ -66,6 +66,8 @@ import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.util.LogOutputStream;
 import edu.clemson.cs.nestbed.common.util.ParentClassLoader;
+import edu.clemson.cs.nestbed.common.util.VariableProperties;
+import edu.clemson.cs.nestbed.common.util.Version;
 
 import edu.clemson.cs.nestbed.server.management.configuration.TestbedManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteTestbedAssignmentManagerImpl;
@@ -90,7 +92,6 @@ import edu.clemson.cs.nestbed.server.util.ShutdownTrigger;
 
 public class Server {
     private final static Log    log     = LogFactory.getLog(Server.class);
-    private final static String VERSION = "@(#)NESTBed-0.5 -- #0248 (on: Friday, July 21, 2006 12:51:31.142 -0400)@";
 
     private static String RMI_BASE_URL;
 
@@ -125,7 +126,7 @@ public class Server {
         log.info("******************************************************\n" +
                  "** NESTBed Server Starting\n" +
                  "******************************************************");
-        log.info("Version:  " + VERSION);
+        log.info("Version:  " + Version.VERSION);
 
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
@@ -226,12 +227,20 @@ public class Server {
         Properties  systemProperties;
         InputStream propertyStream;
 
+
+        // Wrap the system properties with our variable-expanding version
+        System.setProperties(new VariableProperties(System.getProperties()));
+
+
+
         systemProperties = System.getProperties();
         propertyStream   = Server.class.getClassLoader().
                                      getResourceAsStream("server.properties");
         systemProperties.load(propertyStream);
         propertyStream.close();
         
+
+
         propertyStream   = Server.class.getClassLoader().
                                      getResourceAsStream("common.properties");
         systemProperties.load(propertyStream);
@@ -240,7 +249,9 @@ public class Server {
 
 
     public static void main(String[] args) throws Exception {
+        // This **MUST** be called first
         loadProperties();
+
         RMI_BASE_URL = System.getProperty("testbed.rmi.baseurl");
 
         if (System.getSecurityManager() == null) {
