@@ -29,29 +29,14 @@
 package edu.clemson.cs.nestbed.server.management.instrumentation;
 
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,13 +44,9 @@ import org.apache.commons.logging.LogFactory;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
 import edu.clemson.cs.nestbed.common.model.Program;
-import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
 import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramManagerImpl;
-import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
-import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
-import edu.clemson.cs.nestbed.server.util.RemoteObservableImpl;
 
 
 public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
@@ -76,10 +57,28 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
     private final static Log log = LogFactory.getLog(
                                            ProgramWeaverManagerImpl.class);
 
+    private final static String[] NESC_LIBRARY_DIRECTORIES;
+
 
     static {
-        ProgramWeaverManagerImpl impl = null;
+        String   property = "nestbed.libs.nesC";
+        String   value    = System.getProperty(property);
+        String[] tokens;
 
+        if (value != null) {
+            tokens = value.split(":");
+        } else {
+            tokens = new String[0];
+        }
+
+        NESC_LIBRARY_DIRECTORIES = tokens;
+        for (String directory : NESC_LIBRARY_DIRECTORIES) {
+            log.info("NesC Library directory: " + directory);
+        }
+
+
+        // This has to be last -- it depends on what's above
+        ProgramWeaverManagerImpl impl = null;
         try {
             impl = new ProgramWeaverManagerImpl();
         } catch (Exception ex) {
@@ -152,22 +151,15 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
     }
 
 
-    // TODO:  This should really not be hard-coded like this.  It should
-    //        be externally configurable.
     private void updateMakefile(File makefile) throws FileNotFoundException,
                                                       Exception {
         MakefileWeaver mfWeaver = new MakefileWeaver(makefile);
         mfWeaver.addLine("TOSMAKE_PATH += " +
                          "$(TOSDIR)/../contrib/nucleus/scripts");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drip");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drain");
-        mfWeaver.addLine("CFLAGS += " +
-                         "-I$(TOSDIR)/../contrib/nucleus/tos/lib/Nucleus");
-        mfWeaver.addLine("CFLAGS += -I/opt/nestbed/lib/RadioPower");
 
-        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/ReliableComm");
-        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/UniformLossyComm");
-        mfWeaver.addLine("CFLAGS += -I/home/adalton/src/nesC/PseudoRandom");
+        for (String directory : NESC_LIBRARY_DIRECTORIES) {
+            mfWeaver.addLine("CFLAGS += -I" + directory);
+        }
 
         mfWeaver.addLine("CFLAGS += -DTOSH_MAX_TASKS_LOG2=8");
 

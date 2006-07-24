@@ -35,15 +35,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -56,9 +52,6 @@ import org.apache.commons.logging.LogFactory;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.model.Program;
-import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
-import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
-import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramMessageSymbolManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManagerImpl;
@@ -73,18 +66,88 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
     private final static Log log = LogFactory.getLog(
                                            ProgramCompileManagerImpl.class);
 
-    private final static int    MAX_THREADS = 8;
-    private final static String MAKE        = "/usr/bin/make";
-    private final static String MAKEOPTS    = "-C";
-    private final static String GET_TYPES   =
-                    "/home/adalton/src/java/nestbed/bin/getMessageTypes.sh";
-    private final static String GET_FILE    =
-                    "/home/adalton/src/java/nestbed/bin/getMessageFile.sh";
+    private final static String MAKE;
+    private final static String MIG;
+    private final static String MAKEOPTS = "-C";
+    private final static String GET_TYPES;
+    private final static String GET_FILE;
+    private final static int    MAX_THREADS;
 
 
     static {
-        ProgramCompileManagerImpl impl = null;
+        String property;
 
+        property = "nestbed.bin.make";
+        String make = System.getProperty(property);
+        if (make == null || !(new File(make).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + make);
+            System.exit(1);
+        }
+        MAKE = make;
+        log.info(property + " = " + MAKE);
+
+
+
+        property = "nestbed.bin.mig";
+        String mig = System.getProperty(property);
+        if (mig == null || !(new File(mig).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + mig);
+            System.exit(1);
+        }
+        MIG = mig;
+        log.info(property + " = " + MIG);
+
+
+
+        property = "nestbed.bin.getMessageTypes";
+        String getTypes = System.getProperty(property);
+        if (getTypes == null || !(new File(getTypes).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + getTypes);
+            System.exit(1);
+        }
+        GET_TYPES = getTypes;
+        log.info(property + " = " + GET_TYPES);
+
+
+
+        property = "nestbed.bin.getMessageFile";
+        String getFile = System.getProperty(property);
+        if (getFile == null || !(new File(getFile).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + getFile);
+            System.exit(1);
+        }
+        GET_FILE = getFile;
+        log.info(property + " = " + GET_FILE);
+
+
+
+
+        property = "nestbed.options.maxCompileThreads";
+        String maxThreadsStr = System.getProperty(property);
+        int    maxThreads    = 0;
+        if (maxThreadsStr == null) {
+            log.fatal("Property '" + property + "' is not set!");
+            System.exit(1);
+        } else {
+            try {
+                maxThreads = Integer.parseInt(maxThreadsStr);
+            } catch (NumberFormatException ex) {
+                log.fatal("Property '" + property +
+                          "' is not an integer:  " + maxThreadsStr);
+                System.exit(1);
+            }
+        }
+        MAX_THREADS = maxThreads;
+        log.info(property + " = " + MAX_THREADS);
+
+
+
+        // This has to be last -- it depends upon what's above it
+        ProgramCompileManagerImpl impl = null;
         try {
             impl = new ProgramCompileManagerImpl();
         } catch (Exception ex) {
@@ -121,7 +184,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         log.info("Generating MIG classes for messageType: " + messageType +
                  " to directory " + directory.getAbsolutePath());
 
-        processBuilder = new ProcessBuilder("/usr/local/bin/mig", "java",
+        processBuilder = new ProcessBuilder(MIG, "java",
                                             "-java-classname=" + messageType,
                                             headerFile.getAbsolutePath(),
                                             messageType, "-o",
@@ -207,95 +270,6 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
 
         return messageList;
     }
-
-/*
-    private void weaveInComponents(File dir)
-                                    throws FileNotFoundException, Exception {
-        log.debug("Weaving in components in directory " + dir);
-
-        File   makefile      = new File(dir + "/Makefile");
-        String component     = findComponentFromMakefile(makefile);
-        File   componentNesc = new File(dir + "/" + component + ".nc");
-
-        updateWiringDiagram(componentNesc);
-        updateMakefile(makefile);
-
-    }
-
-
-    private void updateWiringDiagram(File componentNesc)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
-
-        weaver.addComponentReference("MgmtQueryC", "NucleusInterface");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusInterface", "StdControl");
-
-        weaver.addComponentReference("RemoteSetC", "NucleusSet");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusSet",       "StdControl");
-
-        weaver.addComponentReference("RadioControlC", "NestbedRadioControl");
-        weaver.addConnection("Main",                "StdControl",
-                             "NestbedRadioControl", "StdControl");
-
-        weaver.regenerateNescSource();
-    }
-
-
-    // TODO:  This should really not be hard-coded like this.  It should
-    //        be externally configurable.
-    private void updateMakefile(File makefile) throws FileNotFoundException,
-                                                      Exception {
-        MakefileWeaver mfWeaver = new MakefileWeaver(makefile);
-        mfWeaver.addLine("TOSMAKE_PATH += " +
-                         "$(TOSDIR)/../contrib/nucleus/scripts");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drip");
-        mfWeaver.addLine("CFLAGS += -I$(TOSDIR)/../beta/Drain");
-        mfWeaver.addLine("CFLAGS += " +
-                         "-I$(TOSDIR)/../contrib/nucleus/tos/lib/Nucleus");
-        mfWeaver.addLine("CFLAGS += -I/opt/nestbed/lib/RadioPower");
-
-        mfWeaver.addLine("# The following line *MUST* be last");
-        mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");
-
-        mfWeaver.regenerateMakefile();
-    }
-
-
-    private String findComponentFromMakefile(File makefile)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        Scanner scanner   = new Scanner(makefile);
-        String  component = null;
-
-        log.debug("Makefile:  " + makefile);
-
-        try {
-            while (scanner.hasNext() && component == null) {
-                String  line    = scanner.nextLine();
-                String  regExp  = "^COMPONENT=(\\S+)";
-                Pattern pattern = Pattern.compile(regExp);
-                Matcher matcher = pattern.matcher(line);
-
-                if (matcher.find()) {
-                    component = matcher.group(1);
-                }
-            }
-        } finally {
-            try { scanner.close(); } catch (Exception ex) { }
-        }
-
-
-        if (component == null) {
-            // FIXME:  Shouldn't be throwing generic Exceptions
-            throw new Exception("No main component found in Makefile.");
-        }
-
-        return component;
-    }
-*/
 
 
     private void loadProgramSymbols(Program program, String tosPlatform) 

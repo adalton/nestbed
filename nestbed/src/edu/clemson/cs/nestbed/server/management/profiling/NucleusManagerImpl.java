@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * NucleusManagerImpl.java
  *
@@ -112,6 +112,7 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
             if (result.size() > 0) {
                 NucleusResult nucleusResult = (NucleusResult) result.get(0);
 
+                @SuppressWarnings({"unchecked"})
                 NucleusValue[] values = (NucleusValue[])
                         nucleusResult.attrs.values().toArray(new NucleusValue[0]);
 

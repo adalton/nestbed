@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * MoteAdapter.java
+ * Version.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,14 +26,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.adaptation;
+package edu.clemson.cs.nestbed.common.util;
 
 
-import java.util.Map;
-
-import edu.clemson.cs.nestbed.common.model.Mote;
-
-
-public interface MoteAdapter {
-    public Map<Integer, Mote> readMotes() throws AdaptationException;
+public interface Version {
+    public final static String VERSION = "@(#)NESTBed-0.5 -- #0292 (on: Monday, July 24, 2006 00:53:28.025 -0400)@";
 }

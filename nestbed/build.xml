@@ -91,11 +91,7 @@
         <property file="${build.info}"/>
 
         <!-- Update the source to include the new version string -->
-        <replaceregexp file="${build.referer.server}"
-                       match="@\(#\).*@"
-                       replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
-
-        <replaceregexp file="${build.referer.client}"
+        <replaceregexp file="${build.referer}"
                        match="@\(#\).*@"
                        replace="@(#)${app.name}-${app.version} -- #${build.num} (on: ${build.date})@"/>
 
@@ -114,7 +110,10 @@
                deprecation="${compile.deprecation}"
                   optimize="${compile.optimize}">
 
-            <compilerarg value="-Xlint:unchecked"/>
+            <compilerarg value="-Xlint:all"/>
+            <compilerarg value="-Xlint:-serial"/>
+            <compilerarg value="-Xlint:-fallthrough"/>
+
             <classpath   refid="compile.classpath"/>
 
         </javac>
@@ -155,10 +154,12 @@
     <target        name="-signJars"
                 depends="-distInit,-jarApplication,-copyJarFiles"
             description="Sign all JAR files">
+            <!--
         <signjar     alias="nestbed"
                  storepass="123456">
             <fileset dir="${dist.home}" includes="**/*.jar"/>
         </signjar>
+        -->
     </target>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->

@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramDeploymentManagerImpl.java
  *
@@ -30,10 +30,10 @@ package edu.clemson.cs.nestbed.server.management.deployment;
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
@@ -65,14 +65,48 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static Log log = LogFactory.getLog(
                                            ProgramDeploymentManagerImpl.class);
 
-    private final static int    MAX_THREADS = 8;
-    private final static String MAKE        = "/usr/bin/make";
-    private final static String MAKEOPTS    = "-C";
+    private final static int    MAX_THREADS;
+    private final static String MAKE;
+    private final static String MAKEOPTS = "-C";
 
 
     static {
-        ProgramDeploymentManagerImpl impl = null;
+        String property;
 
+        property = "nestbed.bin.make";
+        String make = System.getProperty("nestbed.bin.make");
+        if (make == null || !(new File(make).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + make);
+            System.exit(1);
+        }
+        MAKE = make;
+        log.info(property + " = " + MAKE);
+
+
+
+        property = "nestbed.options.maxDeploymentThreads";
+        String maxThreadsStr = System.getProperty(property);
+        int    maxThreads    = 0;
+        if (maxThreadsStr == null) {
+            log.fatal("Property '" + property + "' is not set!");
+            System.exit(1);
+        } else {
+            try {
+                maxThreads = Integer.parseInt(maxThreadsStr);
+            } catch (NumberFormatException ex) {
+                log.fatal("Property '" + property +
+                          "' is not an integer:  " + maxThreadsStr);
+                System.exit(1);
+            }
+        }
+        MAX_THREADS = maxThreads;
+        log.info(property + " = " + MAX_THREADS);
+
+
+
+        // This has to be last -- it depends upon what's above
+        ProgramDeploymentManagerImpl impl = null;
         try {
             impl = new ProgramDeploymentManagerImpl();
         } catch (Exception ex) {

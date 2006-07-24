@@ -1416,7 +1416,10 @@ public class ConfigManagerFrame extends JFrame {
             Comparable     c1   = (Comparable) stn1.getUserObject();
             Comparable     c2   = (Comparable) stn2.getUserObject();
 
-            return c1.compareTo(c2);
+            @SuppressWarnings({"unchecked"})
+            int            retVal = c1.compareTo(c2);
+
+            return retVal;
         }
 
 
