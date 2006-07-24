@@ -25,7 +25,7 @@
 #define QUEUEM_CONSTANTS 1
 
 // the maximum queue size (<255)
-enum { MAX_QUEUE_SIZE = 200 };
+enum { MAX_QUEUE_SIZE = 100 };
 
 // the special NULL constant (do not change)
 enum { QNULL = 255 };

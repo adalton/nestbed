@@ -154,12 +154,10 @@
     <target        name="-signJars"
                 depends="-distInit,-jarApplication,-copyJarFiles"
             description="Sign all JAR files">
-            <!--
         <signjar     alias="nestbed"
                  storepass="123456">
             <fileset dir="${dist.home}" includes="**/*.jar"/>
         </signjar>
-        -->
     </target>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->

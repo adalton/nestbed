@@ -29,7 +29,7 @@ enum { MAX_SEND_ATTEMPTS = 5 };
 
 // the maximum payload size (do not change)
 //enum { MAX_PAYLOAD_SIZE = 20 };
-enum { MAX_PAYLOAD_SIZE = 4 };
+enum { MAX_PAYLOAD_SIZE = (DATA_LENGTH - 2) };
 
 // the active message id used by ReliableCommM
 enum { AM_RELIABLEMESSAGE = 50 };
