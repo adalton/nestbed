@@ -73,8 +73,8 @@ abstract class Level {
         addCommand("pwd",   new PwdCommand());
 
         // All levels have these LevelEntries
-        addEntry(new Entry("."));
-        addEntry(new Entry(".."));
+        addEntry(new DotLevelEntry());
+        addEntry(new DotDotLevelEntry());
     }
 
 
@@ -159,24 +159,54 @@ abstract class Level {
     }
 
 
+    protected void removeEntry(Entry entry) {
+        entries.remove(entry);
+    }
+
+
+    protected Entry getEntryWithName(String name) {
+        for (Entry i : getEntries()) {
+            if (i.getName().equals(name)) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+
     protected void addCommand(String name, Command command) {
         commandMap.put(name, command);
+    }
+
+
+
+    protected class DotLevelEntry extends LevelEntry {
+        public DotLevelEntry() {
+            super(".");
+        }
+
+        public Level getLevel() throws Exception {
+            return Level.this;
+        }
+    }
+
+
+    protected class DotDotLevelEntry extends LevelEntry {
+        public DotDotLevelEntry() {
+            super("..");
+        }
+
+
+        public Level getLevel() throws Exception {
+            return getParentLevel();
+        }
     }
 
 
     protected class CdCommand implements Command {
         public void execute(String[] args) throws Exception {
             if (args.length != 2) {
-                System.err.println("usage:  cd <level>");
-                return;
-            }
-
-            if (args[1].equals(".")) {
-                return;
-            }
-
-            if (args[1].equals("..")) {
-                setNextLevel(getParentLevel());
+                System.err.println("usage:  cd <directory>");
                 return;
             }
 
@@ -195,12 +225,12 @@ abstract class Level {
             }
 
             if (!found) {
-                System.err.println("Level " + args[1] + " not found.");
+                System.err.println("NESTshell: cd: " + args[1] + ": No such file or directory");
             }
         }
 
         public String getHelpText() {
-            return "Changes to the specified level";
+            return "Change the working directory";
         }
     }
 
@@ -214,7 +244,7 @@ abstract class Level {
 
 
         public String getHelpText() {
-            return "Lists the available levels";
+            return "Lists directory contents";
         }
     }
 
@@ -316,8 +346,32 @@ abstract class Level {
             System.out.println(getPrompt());
         }
 
+
         public String getHelpText() {
             return "Prints the current working directory";
+        }
+    }
+
+
+    protected class CatCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            if (args.length != 2) {
+                System.err.println("usage:  cat <file>");
+                return;
+            }
+
+            for (Entry i : getEntries()) {
+                if (i.getName().equals(args[1]) && (i instanceof FileEntry)) {
+                    FileEntry fileEntry = (FileEntry) i;
+                    System.out.println(fileEntry.getFileContents());
+                    break;
+                }
+            }
+        }
+
+
+        public String getHelpText() {
+            return "Displays the contents of a file";
         }
     }
 }

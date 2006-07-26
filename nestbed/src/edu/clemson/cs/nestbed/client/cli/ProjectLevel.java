@@ -29,16 +29,19 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProjectDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
 
 class ProjectLevel extends Level {
@@ -58,12 +61,17 @@ class ProjectLevel extends Level {
         this.configs = configManager.getProjectDeploymentConfigs(
                                                             project.getID());
 
+        configManager.addRemoteObserver(
+                           new ProjectDeploymentConfigurationManagerObserver());
+
+        addEntry(new ProjectDetailFileEntry());
         for (ProjectDeploymentConfiguration i : configs) {
             addEntry(new ProjectDeploymentConfigurationLevelEntry(i));
         }
 
-        addCommand("rm",     new RmCommand());
+        addCommand("rmconf", new RmConfCommand());
         addCommand("mkconf", new MkConfCommand());
+        addCommand("cat",    new CatCommand());
     }
 
 
@@ -73,6 +81,26 @@ class ProjectLevel extends Level {
         configManager = (ProjectDeploymentConfigurationManager)
                                     Naming.lookup(RMI_BASE_URL +
                                     "ProjectDeploymentConfigurationManager");
+    }
+
+
+    private class ProjectDetailFileEntry extends FileEntry {
+        public ProjectDetailFileEntry() {
+            super("details");
+        }
+
+
+        @Override
+        public String getFileContents() throws Exception {
+            StringBuffer buffer = new StringBuffer();
+
+            buffer.append("Name:         ").append(project.getName());
+            buffer.append("\n");
+            buffer.append("Description:  ").append(project.getDescription());
+            buffer.append("\n");
+
+            return buffer.toString();
+        }
     }
 
 
@@ -92,13 +120,51 @@ class ProjectLevel extends Level {
                                                            config,
                                                            ProjectLevel.this);
         }
+
+
+        public ProjectDeploymentConfiguration
+                                          getProjectDeploymentConfiguration() {
+            return config;
+        }
     }
 
 
-    private class RmCommand implements Command {
+    private class RmConfCommand implements Command {
         public void execute(String[] args) {
-            System.out.println("RmCommand:  TODO");
+            if (args.length != 2) {
+                System.err.println("rmconf <name>");
+                return;
+            }
+
+            try {
+                String name  = args[1];
+                Entry  entry = getEntryWithName(name);
+
+                if (entry != null) {
+                    if (entry instanceof
+                                    ProjectDeploymentConfigurationLevelEntry) {
+                        ProjectDeploymentConfigurationLevelEntry pdcEntry;
+                        ProjectDeploymentConfiguration           pdConfig;
+
+                        pdcEntry =
+                            (ProjectDeploymentConfigurationLevelEntry) entry;
+                        pdConfig = pdcEntry.getProjectDeploymentConfiguration();
+
+                        configManager.deleteProjectDeploymentConfig(
+                                                              pdConfig.getID());
+                    } else {
+                        System.err.println("Entry is not a " +
+                                           "ProjectDeploymentConfiguration");
+                    }
+                } else {
+                    System.err.println("No such entry: " + name);
+                } 
+            } catch (RemoteException ex) {
+                System.out.println("Remote Exception occured while removing " +
+                                   "configuration: " + ex);
+            }
         }
+
 
         public String getHelpText() {
             return "Removes the specified configuration";
@@ -108,11 +174,71 @@ class ProjectLevel extends Level {
 
     private class MkConfCommand implements Command {
         public void execute(String[] args) {
-            System.out.println("MkconfCommand:  TODO");
+            if (args.length != 3) {
+                System.err.println("mkconf <name> <description>");
+                return;
+            }
+
+            try {
+                String name        = args[1];
+                String description = args[2];
+
+                configManager.createNewProjectDeploymentConfig(project.getID(),
+                                                               name,
+                                                               description);
+            } catch (RemoteException ex) {
+                System.out.println("Remote Exception occured while creating " +
+                                   "configuration: " + ex);
+            }
         }
+
 
         public String getHelpText() {
             return "Creates a new configuration";
+        }
+    }
+
+
+    private class ProjectDeploymentConfigurationManagerObserver
+                                                 extends    UnicastRemoteObject
+                                                 implements RemoteObserver {
+        public ProjectDeploymentConfigurationManagerObserver()
+                                                        throws RemoteException {
+            super();
+        }
+
+
+        public void update(Serializable msg, Serializable arg)
+                                                        throws RemoteException {
+            ProjectDeploymentConfigurationManager.Message message;
+            ProjectDeploymentConfiguration                conf;
+
+            message = (ProjectDeploymentConfigurationManager.Message) msg;
+            conf    = (ProjectDeploymentConfiguration)                arg;
+
+
+            switch (message) {
+            case NEW_CONFIG:
+                configs.add(conf);
+                addEntry(new ProjectDeploymentConfigurationLevelEntry(conf));
+                break; 
+
+            case DELETE_CONFIG:
+                Entry entry = getEntryWithName(conf.getName());
+
+                if (entry instanceof ProjectDeploymentConfigurationLevelEntry) {
+                    ProjectDeploymentConfigurationLevelEntry pdcEntry;
+                    pdcEntry = (ProjectDeploymentConfigurationLevelEntry) entry;
+
+                    removeEntry(pdcEntry);
+                    // TODO:  pdcEntry.destroy();
+                    configs.remove(pdcEntry);
+                }
+                break;
+
+            default:
+                System.out.println("Unknown message:  " + message);
+            }
         }
     }
 }

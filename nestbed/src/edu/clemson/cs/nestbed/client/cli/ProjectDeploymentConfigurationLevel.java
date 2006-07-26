@@ -52,11 +52,35 @@ class ProjectDeploymentConfigurationLevel extends Level {
         this.project = project;
         this.config  = config;
 
+        addEntry(new ConfigurationDetailFileEntry());
         addEntry(new ProgramLevelEntry());
         addEntry(new SymbolProfilingLevelEntry());
         addEntry(new MessageProfilingEntry());
         addEntry(new MoteConfigLevelEntry());
         addEntry(new NetworkMonitorLevelEntry());
+
+
+        addCommand("cat", new CatCommand());
+    }
+
+
+    private class ConfigurationDetailFileEntry extends FileEntry {
+        public ConfigurationDetailFileEntry() {
+            super("details");
+        }
+
+
+        @Override
+        public String getFileContents() throws Exception {
+            StringBuffer buffer = new StringBuffer();
+
+            buffer.append("Name:         ").append(config.getName());
+            buffer.append("\n");
+            buffer.append("Description:  ").append(config.getDescription());
+            buffer.append("\n");
+
+            return buffer.toString();
+        }
     }
 
 
