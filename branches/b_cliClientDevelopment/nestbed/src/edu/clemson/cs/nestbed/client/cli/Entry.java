@@ -40,7 +40,28 @@ public class Entry {
         return name;
     }
 
+
+    @Override
     public String toString() {
         return name;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        boolean equal = false;
+
+        if (o instanceof Entry) {
+            Entry entry = (Entry) o;
+            equal = name.equals(entry.name);
+        }
+
+        return equal;
+    }
+
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

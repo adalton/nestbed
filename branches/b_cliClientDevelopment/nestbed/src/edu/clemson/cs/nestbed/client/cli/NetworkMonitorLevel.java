@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * NetworkMonitorLevel.java
  *
@@ -35,7 +35,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
@@ -43,11 +45,15 @@ import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
 class NetworkMonitorLevel extends Level {
-    private Testbed                        testbed;
-    private Project                        project;
-    private ProjectDeploymentConfiguration config;
-    private MoteTestbedAssignmentManager   mtbaManager;
-    private List<MoteTestbedAssignment>    moteTestbedAssignments;
+    private Testbed                            testbed;
+    private Project                            project;
+    private ProjectDeploymentConfiguration     config;
+    private MoteTestbedAssignmentManager       mtbaManager;
+    private MoteDeploymentConfigurationManager mdConfigManager;
+    private List<MoteTestbedAssignment>        moteTestbedAssignments;
+    private int                                numRows;
+    private int                                numCols;
+    private MoteState[][]                      moteState;
 
 
     public NetworkMonitorLevel(Testbed testbed, Project project,
@@ -63,6 +69,28 @@ class NetworkMonitorLevel extends Level {
                                                             testbed.getID());
 
         for (MoteTestbedAssignment i : moteTestbedAssignments) {
+            int x = i.getMoteLocationX();
+            int y = i.getMoteLocationY();
+
+            if (y > numRows) {
+                numRows = y;
+            }
+
+            if (x > numCols) {
+                numCols = x;
+            }
+        }
+        ++numRows;
+        ++numCols;
+
+        this.moteState = new MoteState[numRows][numCols];
+        for (int i = 0; i < moteState.length; ++i) {
+            for (int j = 0; j < moteState[i].length; ++j) {
+                moteState[i][j] = MoteState.U;
+            }
+        }
+
+        for (MoteTestbedAssignment i : moteTestbedAssignments) {
             addEntry(new MoteManagementLevelEntry(i));
         }
 
@@ -74,9 +102,13 @@ class NetworkMonitorLevel extends Level {
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        mtbaManager = (MoteTestbedAssignmentManager)
-                            Naming.lookup(RMI_BASE_URL +
+        mtbaManager     = (MoteTestbedAssignmentManager)
+                                Naming.lookup(RMI_BASE_URL +
                                          "MoteTestbedAssignmentManager");
+
+        mdConfigManager = (MoteDeploymentConfigurationManager)
+                                Naming.lookup(RMI_BASE_URL +
+                                         "MoteDeploymentConfigurationManager");
     }
 
 
@@ -91,32 +123,21 @@ class NetworkMonitorLevel extends Level {
 
 
         public Level getLevel() throws Exception {
-            // TODO:  Fix this
-            return NetworkMonitorLevel.this;
+            int x = mtbAssignment.getMoteLocationX();
+            int y = mtbAssignment.getMoteLocationY();
+
+            return new MoteManagementLevel(testbed, project, config,
+                                           mtbAssignment, moteState[y][x],
+                                           NetworkMonitorLevel.this);
         }
     }
 
 
     private class MonitorLsCommand implements Command {
-        private int                       rows = -1;
-        private int                       cols = -1;
         private MoteTestbedAssignment[][] assignments;
 
         public MonitorLsCommand() {
-            for (MoteTestbedAssignment i : moteTestbedAssignments) {
-                int x = i.getMoteLocationX();
-                int y = i.getMoteLocationY();
-
-                if (y > rows) {
-                    rows = y;
-                }
-
-                if (x > cols) {
-                    cols = x;
-                }
-            }
-
-            assignments = new MoteTestbedAssignment[++rows][++cols];
+            assignments = new MoteTestbedAssignment[numRows][numCols];
 
             for (MoteTestbedAssignment i : moteTestbedAssignments) {
                 int x = i.getMoteLocationX();
@@ -132,20 +153,19 @@ class NetworkMonitorLevel extends Level {
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
-                        //MoteDeploymentConfiguration mdConfig;
-                        //mdConfig = mdConfigManager.
-                        //        getMoteDeploymentConfiguration(
-                        //                          config.getID(),
-                        //                          assignments[i][j].getMoteID());
-//
-//                        if (mdConfig != null) {
-//                            System.out.printf(" %3d(%2d)/ ",
-//                                             assignments[i][j].getMoteAddress(),
-//                                             mdConfig.getRadioPowerLevel());
-//                        } else {
-                            System.out.printf("  [%3d]/  ",
+                        MoteDeploymentConfiguration mdConfig;
+                        mdConfig = mdConfigManager.
+                                getMoteDeploymentConfiguration(
+                                                  config.getID(),
+                                                  assignments[i][j].getMoteID());
+                        if (mdConfig != null) {
+                            System.out.printf(" %3d[%s]/ ", 
+                                             assignments[i][j].getMoteAddress(),
+                                             moteState[i][j]);
+                        } else {
+                            System.out.printf("  [%3d]/ ",
                                              assignments[i][j].getMoteAddress());
-//                        }
+                        }
                     } else {
                         System.out.print("              ");
                     }

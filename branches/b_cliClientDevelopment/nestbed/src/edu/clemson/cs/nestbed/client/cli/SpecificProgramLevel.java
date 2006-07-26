@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * SpecificProgramLevel.java
  *
@@ -63,8 +63,32 @@ class SpecificProgramLevel extends Level {
         this.config   = config;
         this.program  = program;
 
+
+        addEntry(new SpecificProgramDetailFileEntry());
         addEntry(new MessagesLevelEntry());
         addEntry(new SymbolsLevelEntry());
+
+        addCommand("cat", new CatCommand());
+    }
+
+
+    private class SpecificProgramDetailFileEntry extends FileEntry {
+        public SpecificProgramDetailFileEntry() {
+            super("details");
+        }
+
+
+        @Override
+        public String getFileContents() throws Exception {
+            StringBuffer buffer = new StringBuffer();
+
+            buffer.append("Name:         ").append(program.getName());
+            buffer.append("\n");
+            buffer.append("Description:  ").append(program.getDescription());
+            buffer.append("\n");
+
+            return buffer.toString();
+        }
     }
 
 

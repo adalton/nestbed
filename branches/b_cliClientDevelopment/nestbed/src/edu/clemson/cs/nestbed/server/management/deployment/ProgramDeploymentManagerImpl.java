@@ -35,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
@@ -68,7 +69,6 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static int    MAX_THREADS;
     private final static String MAKE;
     private final static String MAKEOPTS = "-C";
-
 
     static {
         String property;
@@ -118,6 +118,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     }
 
     private ExecutorService threadPool;
+    private Random          random     = new Random();
 
 
     public static ProgramDeploymentManager getInstance() {
@@ -187,9 +188,13 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
         threadPool.execute(new Runnable() {
             public void run() {
                 try {
-                    // make -C <sourcePath> \
-                    //     <tosPlatform> nucleus reinstall.<moteAddress> \
-                    //     bsl,/dev/motes/<moteSerialID>
+                    try {
+                        // Sleep randomly between 3 and 8 seconds
+                        Thread.sleep(1000 * (3 + random.nextInt(6)));
+                    } catch (InterruptedException ex) {
+                        // Ignore
+                    }
+
                     ProcessBuilder  processBuilder;
                     Program program  = ProgramManagerImpl.getInstance().
                                                         getProgram(programID);
