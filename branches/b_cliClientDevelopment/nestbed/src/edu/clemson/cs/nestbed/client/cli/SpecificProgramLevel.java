@@ -114,9 +114,6 @@ class SpecificProgramLevel extends Level {
         public Level getLevel() throws Exception {
             return new ProgramSymbolLevel(testbed, project, config, program,
                                           SpecificProgramLevel.this);
-            //return new SymbolsLevel(...);
-            // TODO:  Fix this
-            //return SpecificProgramLevel.this;
         }
     }
 }

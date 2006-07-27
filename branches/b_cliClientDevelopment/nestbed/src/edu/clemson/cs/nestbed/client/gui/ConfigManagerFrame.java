@@ -569,7 +569,7 @@ public class ConfigManagerFrame extends JFrame {
                         outputWindow.setVisible(false);
                         outputWindow.dispose();
                     }
-                    outputWindow = new OutputWindow("Compilation Results");
+                    outputWindow = new OutputWindow("Compilation Status");
                     outputWindow.setVisible(true);
                 }
                 break;

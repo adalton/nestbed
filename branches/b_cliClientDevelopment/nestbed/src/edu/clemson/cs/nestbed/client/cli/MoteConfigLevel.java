@@ -29,107 +29,232 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
+import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
 
 class MoteConfigLevel extends Level {
     private Testbed                            testbed;
     private Project                            project;
     private ProjectDeploymentConfiguration     config;
+    private MoteTestbedAssignment[][]          assignments;
+    private MoteManager                        moteManager;
+    private ProgramManager                     programManager;
     private MoteTestbedAssignmentManager       mtbaManager;
     private MoteDeploymentConfigurationManager mdConfigManager;
-    private List<MoteTestbedAssignment>        moteTestbedAssignments;
 
 
-    public MoteConfigLevel(
-                        Testbed                        testbed, Project project,
-                        ProjectDeploymentConfiguration config,  Level   parent)
+    public MoteConfigLevel(Testbed                        testbed,
+                           Project                        project,
+                           ProjectDeploymentConfiguration config,
+                           Level                          parent)
                                                             throws Exception {
         super("Motes", parent);
         lookupRemoteManagers();
 
-        this.testbed                = testbed;
-        this.project                = project;
-        this.config                 = config;
-        this.moteTestbedAssignments = mtbaManager.getMoteTestbedAssignmentList(
-                                                            testbed.getID());
+        this.testbed = testbed;
+        this.project = project;
+        this.config  = config;
 
-        addCommand("ls", new MoteLsCommand());
+        mdConfigManager.addRemoteObserver(
+                              new MoteDeploymentConfigurationManagerObserver());
+
+        List<MoteTestbedAssignment> mtbAssignments;
+        int                         rows = -1;
+        int                         cols = -1;
+
+        mtbAssignments = mtbaManager.getMoteTestbedAssignmentList(
+                                                              testbed.getID());
+
+        for (MoteTestbedAssignment i : mtbAssignments) {
+            int x = i.getMoteLocationX();
+            int y = i.getMoteLocationY();
+
+            if (y > rows) {
+                rows = y;
+            }
+
+            if (x > cols) {
+                cols = x;
+            }
+        }
+
+        assignments = new MoteTestbedAssignment[++rows][++cols];
+
+        for (MoteTestbedAssignment i : mtbAssignments) {
+            int x = i.getMoteLocationX();
+            int y = i.getMoteLocationY();
+
+            assignments[y][x] = i;
+
+            addEntry(new MoteTestbedAssignmentEntry(i));
+        }
+
+        addCommand("ls",          new MoteLsCommand());
+        addCommand("configure",   new ConfigureCommand());
+        addCommand("unconfigure", new UnconfigureCommand());
     }
 
 
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        mtbaManager = (MoteTestbedAssignmentManager)
-                            Naming.lookup(RMI_BASE_URL +
+        moteManager     = (MoteManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "MoteManager");
+
+        programManager  = (ProgramManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "ProgramManager");
+
+        mtbaManager     = (MoteTestbedAssignmentManager)
+                              Naming.lookup(RMI_BASE_URL +
                                          "MoteTestbedAssignmentManager");
         mdConfigManager = (MoteDeploymentConfigurationManager)
-                            Naming.lookup(RMI_BASE_URL +
+                               Naming.lookup(RMI_BASE_URL +
                                          "MoteDeploymentConfigurationManager");
     }
 
 
-    private class MoteLsCommand implements Command {
-        private int                       rows = -1;
-        private int                       cols = -1;
-        private MoteTestbedAssignment[][] assignments;
+    private class MoteDeploymentConfigurationManagerObserver
+                                                extends    UnicastRemoteObject
+                                                implements RemoteObserver {
 
-        public MoteLsCommand() {
-            for (MoteTestbedAssignment i : moteTestbedAssignments) {
-                int x = i.getMoteLocationX();
-                int y = i.getMoteLocationY();
-
-                if (y > rows) {
-                    rows = y;
-                }
-
-                if (x > cols) {
-                    cols = x;
-                }
-            }
-
-            assignments = new MoteTestbedAssignment[++rows][++cols];
-
-            for (MoteTestbedAssignment i : moteTestbedAssignments) {
-                int x = i.getMoteLocationX();
-                int y = i.getMoteLocationY();
-
-                assignments[y][x] = i;
-            }
-
+        public MoteDeploymentConfigurationManagerObserver()
+                                                        throws RemoteException {
+            super();
         }
 
 
+        public void update(Serializable msg, Serializable arg)
+                                                        throws RemoteException {
+            MoteDeploymentConfigurationManager.Message message;
+            MoteDeploymentConfiguration                mdConfig;
+
+            message  = (MoteDeploymentConfigurationManager.Message) msg;
+            mdConfig = (MoteDeploymentConfiguration)                arg;
+
+            switch (message) {
+            case NEW_CONFIG:
+                for (Entry i : getEntries()) {
+                    if (i instanceof MoteTestbedAssignmentEntry) {
+                        MoteTestbedAssignmentEntry mtbaEntry;
+                        mtbaEntry = (MoteTestbedAssignmentEntry) i;
+
+                        if (mtbaEntry.getMote().getID() ==
+                                                        mdConfig.getMoteID()) {
+                            mtbaEntry.setMoteDeploymentConfiguration(mdConfig);
+                        }
+                    }
+                }
+                break;
+
+            case DELETE_CONFIG:
+                for (Entry i : getEntries()) {
+                    if (i instanceof MoteTestbedAssignmentEntry) {
+                        MoteTestbedAssignmentEntry mtbaEntry;
+                        mtbaEntry = (MoteTestbedAssignmentEntry) i;
+
+                        if (mtbaEntry.getMote().getID() ==
+                                                        mdConfig.getMoteID()) {
+                            mtbaEntry.setMoteDeploymentConfiguration(null);
+                        }
+                    }
+                }
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+
+    private class MoteTestbedAssignmentEntry extends Entry {
+        private MoteTestbedAssignment       moteTestbedAssignment;
+        private Mote                        mote;
+        private MoteDeploymentConfiguration mdConfig;
+
+
+        public MoteTestbedAssignmentEntry(MoteTestbedAssignment mtbAssign)
+                                                        throws RemoteException {
+            super(Integer.toString(mtbAssign.getMoteAddress()));
+
+            this.moteTestbedAssignment = mtbAssign;
+            this.mote                  = moteManager.getMote(
+                                                        mtbAssign.getMoteID());
+            this.mdConfig              = mdConfigManager.
+                                              getMoteDeploymentConfiguration(
+                                                     config.getID(),
+                                                     moteTestbedAssignment.
+                                                                   getMoteID());
+        }
+
+
+        public MoteTestbedAssignment getMoteTestbedAssignment() {
+            return moteTestbedAssignment;
+        }
+
+
+        public Mote getMote() {
+            return mote;
+        }
+
+
+        public void setMoteDeploymentConfiguration(
+                                        MoteDeploymentConfiguration mdConfig) {
+            this.mdConfig = mdConfig;
+        }
+
+
+        public MoteDeploymentConfiguration getMoteDeploymentConfig() {
+            return mdConfig;
+        }
+    }
+
+
+    private class MoteLsCommand implements Command {
         public void execute(String[] args) throws Exception {
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
-                        MoteDeploymentConfiguration mdConfig;
-                        mdConfig = mdConfigManager.
-                                getMoteDeploymentConfiguration(
-                                                  config.getID(),
-                                                  assignments[i][j].getMoteID());
+                        String name = Integer.toString(
+                                            assignments[i][j].getMoteAddress());
+                        Entry entry = getEntryWithName(name);
 
-                        if (mdConfig != null) {
-                            System.out.printf(" %3d(%2d) ",
+                        if (entry instanceof MoteTestbedAssignmentEntry) {
+                            MoteTestbedAssignmentEntry  mtbaEntry;
+                            MoteDeploymentConfiguration mdConfig;
+
+                            mtbaEntry = (MoteTestbedAssignmentEntry) entry;
+                            mdConfig  = mtbaEntry.getMoteDeploymentConfig();
+
+                            if (mdConfig != null) {
+                                System.out.printf(" %3d(%2d) ",
                                              assignments[i][j].getMoteAddress(),
                                              mdConfig.getRadioPowerLevel());
-                        } else {
-                            System.out.printf("  [%3d]  ",
-                                             assignments[i][j].getMoteAddress());
+                            } else {
+                                System.out.printf("  [%3d]  ",
+                                            assignments[i][j].getMoteAddress());
+                            }
                         }
                     } else {
                         System.out.print("             ");
@@ -142,6 +267,88 @@ class MoteConfigLevel extends Level {
 
         public String getHelpText() {
             return "Display network topology";
+        }
+    }
+
+
+    private class ConfigureCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            if (args.length != 4) {
+                System.out.printf("usage:  %s <moteAddress> <programName> " +
+                                  "<radioPowerLevel>\n", args[0]);
+                return;
+            }
+
+            int     moteAddress     = Integer.parseInt(args[1]);
+            String  programName     = args[2];
+            int     radioPowerLevel = Integer.parseInt(args[3]);
+            Program program         = null;
+
+            for (Program i : programManager.getProgramList(project.getID())) {
+                if (i.getName().equals(programName)) {
+                    program = i;
+                    break;
+                }
+            }
+
+            if (program != null) {
+                Entry entry = getEntryWithName(args[1]);
+
+                if (entry instanceof MoteTestbedAssignmentEntry) {
+                    MoteTestbedAssignmentEntry mtbaEntry;
+                    Mote                       mote;
+
+                    mtbaEntry = (MoteTestbedAssignmentEntry) entry;
+                    mote      = mtbaEntry.getMote();
+
+                    mdConfigManager.setMoteDeploymentConfiguration(
+                                                               config.getID(),
+                                                               mote.getID(),
+                                                               program.getID(),
+                                                               radioPowerLevel);
+                } else {
+                    System.err.printf("No such mote:  %d\n", moteAddress);
+                }
+            } else {
+                System.err.printf("No such program:  %s\n", programName);
+            }
+        }
+
+
+        public String getHelpText() {
+            return "Configure the specified mote";
+        }
+    }
+
+
+    private class UnconfigureCommand implements Command {
+        public void execute(String[] args) throws Exception {
+            if (args.length != 2) {
+                System.err.printf("usage:  %s <moteAddress>\n", args[0]);
+                return;
+            }
+
+            String name  = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof MoteTestbedAssignmentEntry) {
+                MoteTestbedAssignmentEntry  mtbaEntry;
+                MoteDeploymentConfiguration mdConfig;
+
+                mtbaEntry = (MoteTestbedAssignmentEntry) entry;
+                mdConfig  = mtbaEntry.getMoteDeploymentConfig();
+
+                mdConfigManager.deleteMoteDeploymentConfiguration(
+                                                        mdConfig.getID());
+            } else {
+                System.err.printf("%s is not a MoteTestbedAssignmentEntry\n",
+                                  name);
+            }
+        }
+
+
+        public String getHelpText() {
+            return "Unconfigure the specified mote";
         }
     }
 }

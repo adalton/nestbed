@@ -215,8 +215,6 @@ class TestbedLevel extends Level {
                     removeEntry(plEntry);
                     // TODO:  plEntry.destroy();
                     projects.remove(proj);
-                } else {
-                    System.out.println("not a ProjectLevelEntry");
                 }
                 break;
 

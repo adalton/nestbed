@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MoteSymbolProfilingLevel.java
  *
@@ -37,6 +37,7 @@ import java.util.List;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
@@ -47,6 +48,7 @@ import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+
 
 
 class MoteSymbolProfilingLevel extends Level {
@@ -62,6 +64,7 @@ class MoteSymbolProfilingLevel extends Level {
     private ProgramProfilingSymbolManager  profSymMgr;
     private List<ProgramProfilingSymbol>   profilingSymbols;
     private ProgramSymbolManager           progSymMgr;
+    private NucleusManager                 nucleusManager;
 
 
     public MoteSymbolProfilingLevel(Testbed                        testbed,
@@ -98,8 +101,7 @@ class MoteSymbolProfilingLevel extends Level {
                 ProgramSymbol programSymbol = progSymMgr.getProgramSymbol(
                                                         i.getProgramSymbolID());
 
-                addEntry(new Entry(programSymbol.getModule() + "." +
-                                   programSymbol.getSymbol()));
+                addEntry(new ProgramProfilingSymbolEntry(i, programSymbol));
             }
         }
 
@@ -112,19 +114,80 @@ class MoteSymbolProfilingLevel extends Level {
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        profSymMgr = (ProgramProfilingSymbolManager)
+        profSymMgr     = (ProgramProfilingSymbolManager)
                             Naming.lookup(RMI_BASE_URL +
                                           "ProgramProfilingSymbolManager");
 
-        progSymMgr = (ProgramSymbolManager)
+        progSymMgr     = (ProgramSymbolManager)
                             Naming.lookup(RMI_BASE_URL +
                                           "ProgramSymbolManager");
+
+        nucleusManager = (NucleusManager)
+                            Naming.lookup(RMI_BASE_URL +
+                                          "NucleusManager");
+    }
+
+
+    private class ProgramProfilingSymbolEntry extends Entry {
+        private ProgramProfilingSymbol programProfilingSymbol;
+        private ProgramSymbol          programSymbol;
+
+
+        public ProgramProfilingSymbolEntry(ProgramProfilingSymbol pps,
+                                           ProgramSymbol          ps) {
+            super(ps.getModule() + "." + ps.getSymbol());
+
+            this.programProfilingSymbol = pps;
+            this.programSymbol          = ps;
+        }
+
+
+        public ProgramProfilingSymbol getProgramProfilingSymbol() {
+            return programProfilingSymbol;
+        }
+
+
+        public ProgramSymbol getProgramSymbol() {
+            return programSymbol;
+        }
     }
 
 
     private class QueryCommand implements Command {
         public void execute(String[] args) throws Exception {
-            System.out.println("query:  TODO");
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <symbol>\n", args[0]);
+                return;
+            }
+
+            String name = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof ProgramProfilingSymbolEntry) {
+                ProgramProfilingSymbolEntry ppsEntry;
+                int                         profilingSymbolID;
+                String                      programSourcePath;
+                String                      tosPlatform;
+                String                      moteSerialID;
+                int                         value;
+
+                ppsEntry          = (ProgramProfilingSymbolEntry) entry;
+                profilingSymbolID = ppsEntry.getProgramProfilingSymbol()
+                                                                    .getID();
+                programSourcePath = program.getSourcePath();
+                tosPlatform       = moteType.getTosPlatform();
+                moteSerialID      = mote.getMoteSerialID();
+
+                value             = nucleusManager.querySymbol(
+                                                            profilingSymbolID,
+                                                            programSourcePath,
+                                                            tosPlatform,
+                                                            moteSerialID);
+
+                System.out.printf("%s = %d\n", name, value);
+            } else {
+                System.out.printf("Unknown symbol: %s\n", name);
+            }
         }
 
 
