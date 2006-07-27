@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ModuleLevel.java
  *
@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
@@ -51,7 +51,7 @@ class ModuleLevel extends Level {
     private Project                        project;
     private ProjectDeploymentConfiguration config;
     private Program                        program;
-    //private ProgramSymbolManager           symbolManager;
+    private ProgramProfilingSymbolManager  progProfManager;
     private List<ProgramSymbol>            programSymbols;
 
 
@@ -64,7 +64,7 @@ class ModuleLevel extends Level {
                        Level                          parent)
                                                             throws Exception {
         super(moduleName, parent);
-        //lookupRemoteManagers();
+        lookupRemoteManagers();
 
         this.testbed        = testbed;
         this.project        = project;
@@ -73,16 +73,49 @@ class ModuleLevel extends Level {
         this.programSymbols = programSymbols;
 
         for (ProgramSymbol i : programSymbols) {
-            addEntry(new Entry(i.getSymbol()));
+            addEntry(new ProgramSymbolEntry(i));
         }
 
         addCommand("profile", new ProfileCommand());
     }
 
 
+    private class ProgramSymbolEntry extends Entry {
+        private ProgramSymbol programSymbol;
+
+
+        public ProgramSymbolEntry(ProgramSymbol programSymbol) {
+            super(programSymbol.getSymbol());
+
+            this.programSymbol = programSymbol;
+        }
+
+
+        public ProgramSymbol getProgramSymbol() {
+            return programSymbol;
+        }
+    }
+
+
     private class ProfileCommand implements Command {
         public void execute(String[] args) throws Exception {
-            System.out.println("ProfileCommand:  TODO");
+            if (args.length != 2) {
+                System.err.printf("usage:  %s <name>\n", args[0]);
+                return;
+            }
+
+            String name = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof ProgramSymbolEntry) {
+                ProgramSymbolEntry psEntry = (ProgramSymbolEntry) entry;
+                ProgramSymbol      progSym = psEntry.getProgramSymbol();
+
+                progProfManager.createNewProfilingSymbol(config.getID(),
+                                                         progSym.getID());
+            } else {
+                System.err.printf("%s is not a program symbol\n", name);
+            }
         }
 
 
@@ -92,10 +125,11 @@ class ModuleLevel extends Level {
     }
 
 
-//    private final void lookupRemoteManagers() throws RemoteException,
-//                                                     NotBoundException,
-//                                                     MalformedURLException {
-//        symbolManager = (ProgramSymbolManager)
-//                        Naming.lookup(RMI_BASE_URL + "ProgramSymbolManager");
-//    }
+    private final void lookupRemoteManagers() throws RemoteException,
+                                                     NotBoundException,
+                                                     MalformedURLException {
+        progProfManager = (ProgramProfilingSymbolManager)
+                        Naming.lookup(RMI_BASE_URL +
+                                  "ProgramProfilingSymbolManager");
+    }
 }

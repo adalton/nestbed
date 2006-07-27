@@ -29,19 +29,27 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
+import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
+import edu.clemson.cs.nestbed.common.model.MoteType;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
 
 class NetworkMonitorLevel extends Level {
@@ -50,6 +58,9 @@ class NetworkMonitorLevel extends Level {
     private ProjectDeploymentConfiguration     config;
     private MoteTestbedAssignmentManager       mtbaManager;
     private MoteDeploymentConfigurationManager mdConfigManager;
+    private MoteManager                        moteManager;
+    private MoteTypeManager                    moteTypeManager;
+    private ProgramDeploymentManager           progDeployMgr;
     private List<MoteTestbedAssignment>        moteTestbedAssignments;
     private int                                numRows;
     private int                                numCols;
@@ -90,6 +101,10 @@ class NetworkMonitorLevel extends Level {
             }
         }
 
+
+        progDeployMgr.addRemoteObserver(new ProgramDeploymentManagerObserver());
+
+
         for (MoteTestbedAssignment i : moteTestbedAssignments) {
             addEntry(new MoteManagementLevelEntry(i));
         }
@@ -102,6 +117,14 @@ class NetworkMonitorLevel extends Level {
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
+        moteManager     = (MoteManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "MoteManager");
+
+        moteTypeManager = (MoteTypeManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "MoteTypeManager");
+
         mtbaManager     = (MoteTestbedAssignmentManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "MoteTestbedAssignmentManager");
@@ -109,16 +132,88 @@ class NetworkMonitorLevel extends Level {
         mdConfigManager = (MoteDeploymentConfigurationManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "MoteDeploymentConfigurationManager");
+
+        progDeployMgr   = (ProgramDeploymentManager)
+                                Naming.lookup(RMI_BASE_URL +
+                                         "ProgramDeploymentManager");
+    }
+
+
+    private class ProgramDeploymentManagerObserver extends   UnicastRemoteObject
+                                                   implements RemoteObserver {
+        public ProgramDeploymentManagerObserver() throws RemoteException {
+            super();
+        }
+
+
+        public void update(Serializable msg, Serializable arg)
+                                                    throws RemoteException {
+            ProgramDeploymentManager.Message message;
+            String                           moteSerialID;
+            MoteTestbedAssignment            mtbAssignment;
+
+            message       = (ProgramDeploymentManager.Message) msg;
+            moteSerialID  = (String)                           arg;
+            mtbAssignment = null;
+
+            for (Entry i : getEntries()) {
+                if (i instanceof MoteManagementLevelEntry) {
+                    MoteManagementLevelEntry mmle;
+                    Mote                     mote;
+
+                    mmle = (MoteManagementLevelEntry) i;
+                    mote = mmle.getMote();
+
+                    if (mote.getMoteSerialID().equals(moteSerialID)) {
+                        mtbAssignment = mmle.getMoteTestbedAssignment();
+                        break;
+                    }
+                }
+            }
+
+            if (mtbAssignment != null) {
+                int x = mtbAssignment.getMoteLocationX();
+                int y = mtbAssignment.getMoteLocationY();
+
+                switch (message) {
+                case PROGRAM_INSTALL_BEGIN:
+                    moteState[y][x] = MoteState.I;
+                    break;
+
+                case PROGRAM_INSTALL_SUCCESS:
+                    moteState[y][x] = MoteState.P;
+                    break;
+
+                case PROGRAM_INSTALL_FAILURE:
+                    moteState[y][x] = MoteState.F;
+                    break;
+
+                default:
+                    System.err.println("Unknown message:  " + message);
+                    break;
+                }
+            }
+        }
     }
 
 
     private class MoteManagementLevelEntry extends LevelEntry {
-        private MoteTestbedAssignment mtbAssignment;
+        private MoteTestbedAssignment       mtbAssignment;
+        private Mote                        mote;
+        private MoteType                    moteType;
+        private MoteDeploymentConfiguration mdConfig;
 
-        public MoteManagementLevelEntry(MoteTestbedAssignment mtbAssignment) {
-            super(Integer.toString(mtbAssignment.getMoteAddress()));
+        public MoteManagementLevelEntry(MoteTestbedAssignment mtbAssign)
+                                                        throws RemoteException {
+            super(Integer.toString(mtbAssign.getMoteAddress()));
 
-            this.mtbAssignment = mtbAssignment;
+            this.mtbAssignment = mtbAssign;
+            this.mote          = moteManager.getMote(mtbAssign.getMoteID());
+            this.moteType      = moteTypeManager.getMoteType(
+                                                        mote.getMoteTypeID());
+            this.mdConfig      = mdConfigManager.getMoteDeploymentConfiguration(
+                                                     config.getID(),
+                                                     mtbAssign.getMoteID());
         }
 
 
@@ -129,6 +224,32 @@ class NetworkMonitorLevel extends Level {
             return new MoteManagementLevel(testbed, project, config,
                                            mtbAssignment, moteState[y][x],
                                            NetworkMonitorLevel.this);
+        }
+
+
+        public MoteTestbedAssignment getMoteTestbedAssignment() {
+            return mtbAssignment;
+        }
+
+
+        public Mote getMote() {
+            return mote;
+        }
+
+
+        public MoteType getMoteType() {
+            return moteType;
+        }
+
+
+        public void setMoteDeploymentConfiguration(
+                                        MoteDeploymentConfiguration mdConfig) {
+            this.mdConfig = mdConfig;
+        }
+
+
+        public MoteDeploymentConfiguration getMoteDeploymentConfig() {
+            return mdConfig;
         }
     }
 
@@ -183,11 +304,47 @@ class NetworkMonitorLevel extends Level {
 
     private class InstallCommand implements Command {
         public void execute(String[] args) throws Exception {
-            System.out.println("InstallCommand:  TODO");
+            if (args.length != 2) {
+                System.err.printf("usage: %s <moteAddress>\n", args[0]);
+                return;
+            }
+
+            String name  = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof MoteManagementLevelEntry) {
+                MoteManagementLevelEntry    mmlEntry;
+                MoteDeploymentConfiguration mdConfig;
+
+                mmlEntry = (MoteManagementLevelEntry) entry;
+                mdConfig = mmlEntry.getMoteDeploymentConfig();
+
+                if (mdConfig != null) {
+                    MoteTestbedAssignment mtbAssignment;
+                    Mote                  mote;
+                    MoteType              moteType;
+
+                    mtbAssignment = mmlEntry.getMoteTestbedAssignment();
+                    mote          = mmlEntry.getMote();
+                    moteType      = mmlEntry.getMoteType();
+
+                    progDeployMgr.installProgram(mtbAssignment.getMoteAddress(),
+                                                 mote.getMoteSerialID(),
+                                                 moteType.getTosPlatform(),
+                                                 mdConfig.getProgramID(),
+                                                 new StringBuffer());
+                } else {
+                    System.err.printf("Mote %s has not been configured\n",
+                                      name);
+                }
+            } else {
+                System.err.printf("Mote %s not found\n", name);
+            }
         }
 
+
         public String getHelpText() {
-            return "Installs applications on motes";
+            return "Installs assigned application on specified mote";
         }
     }
 }

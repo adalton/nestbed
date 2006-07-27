@@ -29,10 +29,12 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
@@ -42,6 +44,7 @@ import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
 
 class SymbolProfilingLevel extends Level {
@@ -51,6 +54,7 @@ class SymbolProfilingLevel extends Level {
     private ProgramSymbolManager           symbolManager;
     private ProgramProfilingSymbolManager  profilingSymbolMgr;
     private List<ProgramProfilingSymbol>   profilingSymbols;
+
 
 
     public SymbolProfilingLevel(Testbed testbed, Project project,
@@ -65,12 +69,14 @@ class SymbolProfilingLevel extends Level {
         this.profilingSymbols = profilingSymbolMgr.getProgramProfilingSymbols(
                                                                config.getID());
 
+        profilingSymbolMgr.addRemoteObserver(
+                                   new ProgramProfilingSymbolManagerObserver());
+
         for (ProgramProfilingSymbol i : profilingSymbols) {
             ProgramSymbol programSymbol;
             programSymbol = symbolManager.getProgramSymbol(
                                                 i.getProgramSymbolID());
-            addEntry(new Entry(programSymbol.getModule() + "." +
-                               programSymbol.getSymbol()));
+            addEntry(new ProgramProfilingSymbolEntry(i, programSymbol));
         }
 
 
@@ -91,9 +97,101 @@ class SymbolProfilingLevel extends Level {
     }
 
 
+    private class ProgramProfilingSymbolManagerObserver
+                                                  extends    UnicastRemoteObject
+                                                  implements RemoteObserver {
+
+        public ProgramProfilingSymbolManagerObserver() throws RemoteException {
+            super();
+        }
+
+
+        public void update(Serializable msg, Serializable arg)
+                                                        throws RemoteException {
+            ProgramProfilingSymbolManager.Message message;
+            ProgramProfilingSymbol                profilingSymbol;
+            ProgramSymbol                         programSymbol;
+
+            message         = (ProgramProfilingSymbolManager.Message) msg;
+            profilingSymbol = (ProgramProfilingSymbol)                arg;
+            programSymbol   = symbolManager.getProgramSymbol(
+                                          profilingSymbol.getProgramSymbolID());
+
+            switch (message) {
+                case NEW_SYMBOL:
+                    addEntry(new ProgramProfilingSymbolEntry(profilingSymbol,
+                                                             programSymbol));
+                    profilingSymbols.add(profilingSymbol);
+                    break;
+
+                case DELETE_SYMBOL:
+                    String name  = programSymbol.getModule() + "." +
+                                   programSymbol.getSymbol();
+                    Entry  entry = getEntryWithName(name);
+
+                    if (entry instanceof ProgramProfilingSymbolEntry) {
+                        ProgramProfilingSymbolEntry ppsEntry;
+                        ppsEntry = (ProgramProfilingSymbolEntry) entry;
+
+                        removeEntry(ppsEntry);
+                        // TODO:  ppsEntry.destroy();
+                        profilingSymbols.remove(profilingSymbol);
+                    } else {
+                        System.err.printf("%s is not a " +
+                                          "ProgramProfilingSymbolEntry\n",
+                                          name);
+                    }
+                    break;
+
+                default:
+                    System.err.println("Unknown message: " + message);
+                    break;
+            }
+        }
+    }
+
+
+    private class ProgramProfilingSymbolEntry extends Entry {
+        private ProgramProfilingSymbol programProfilingSymbol;
+        private ProgramSymbol          programSymbol;
+
+
+        public ProgramProfilingSymbolEntry(ProgramProfilingSymbol ppSymbol,
+                                           ProgramSymbol          pSymbol) {
+            super(pSymbol.getModule() + "." + pSymbol.getSymbol());
+
+            this.programProfilingSymbol = ppSymbol;
+            this.programSymbol          = pSymbol;
+        }
+
+
+        public ProgramProfilingSymbol getProgramProfilingSymbol() {
+            return programProfilingSymbol;
+        }
+    }
+
+
     private class RmCommand implements Command {
         public void execute(String[] args) throws Exception {
-            System.out.println("RmCommand:  TODO");
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <name>\n", args[0]);
+                return;
+            }
+
+            String name  = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof ProgramProfilingSymbolEntry) {
+                ProgramProfilingSymbolEntry ppsEntry;
+                ProgramProfilingSymbol      ppSymbol;
+
+                ppsEntry = (ProgramProfilingSymbolEntry) entry;
+                ppSymbol = ppsEntry.getProgramProfilingSymbol();
+
+                profilingSymbolMgr.deleteProfilingSymbol(ppSymbol.getID());
+            } else {
+                System.err.printf("%s not a ProgramSymbolEntry\n", name);
+            }
         }
 
 
