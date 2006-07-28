@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id:$ */
 includes RadioControl;
 
 configuration RadioControlC {
