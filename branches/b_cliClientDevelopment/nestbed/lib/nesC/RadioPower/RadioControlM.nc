@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id:$ */
 module RadioControlM {
     provides interface StdControl;
     uses     interface Leds;
@@ -12,13 +12,6 @@ implementation {
         return SUCCESS;
     }
 
-    command result_t StdControl.start() {
-        return SUCCESS;
-    }
-
-    command result_t StdControl.stop() {
-        return SUCCESS;
-    }
 
     event TOS_MsgPtr ReceivePower.receive(TOS_MsgPtr msgPtr) {
         PowerMessage* powerMessage = (PowerMessage*) msgPtr->data;
@@ -26,4 +19,8 @@ implementation {
         call Leds.set(powerMessage->powerLevel);
         return msgPtr;
     }
+
+
+    command result_t StdControl.start() { return SUCCESS; }
+    command result_t StdControl.stop()  { return SUCCESS; }
 }
