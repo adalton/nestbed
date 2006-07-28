@@ -48,6 +48,7 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.JToolTip;
@@ -91,11 +92,7 @@ public class MoteManagementPanel extends MotePanel {
     }
 
 
-    private JPopupMenu                         menu;
-    private JMenuItem                          title;
     private JMenuItem                          installProgram;
-    private JMenuItem                          viewMoteDetails;
-    private JMenuItem                          runSerialForwarder;
 
     private MessageManager                     messageManager;
     private ProgramManager                     programManager;
@@ -358,6 +355,13 @@ public class MoteManagementPanel extends MotePanel {
 
 
     protected class MotePanelMouseListener extends MouseAdapter {
+        private JPopupMenu menu;
+        private JMenuItem  title;
+        private JMenuItem  viewMoteDetails;
+        private JMenuItem  resetMote;
+        private JMenuItem  runSerialForwarder;
+
+
         public MotePanelMouseListener() {
             menu               = new JPopupMenu();
             title              = new JMenuItem("Mote " +
@@ -366,6 +370,7 @@ public class MoteManagementPanel extends MotePanel {
             viewMoteDetails    = new JMenuItem("View Mote Details");
             runSerialForwarder = new JMenuItem("Run Serial Forwarder");
             installProgram     = new JMenuItem();
+            resetMote          = new JMenuItem("Reset mote");
 
             title.setEnabled(false);
             menu.add(title);
@@ -408,6 +413,34 @@ public class MoteManagementPanel extends MotePanel {
                 }
             });
             menu.add(viewMoteDetails);
+
+
+            resetMote.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        int choice;
+
+                        choice = JOptionPane.showConfirmDialog(
+                                    MoteManagementPanel.this,
+                                    "Are you sure you want to reset mote " +
+                                    mtbAssignment.getMoteAddress(),
+                                    "Reset Confirmation",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE);
+                        if (choice == JOptionPane.YES_OPTION) {
+                            progDeployMgr.resetMote(
+                                                mtbAssignment.getMoteAddress(),
+                                                mote.getMoteSerialID(),
+                                                program.getID());
+                        }
+
+                    } catch (Exception ex) {
+                        log.error("Exception\n", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
+                    }
+                }
+            });
+            menu.add(resetMote);
 
 
             runSerialForwarder.addActionListener(new ActionListener() {

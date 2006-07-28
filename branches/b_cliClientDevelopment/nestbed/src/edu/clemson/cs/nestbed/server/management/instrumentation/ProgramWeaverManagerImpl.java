@@ -139,9 +139,9 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
         weaver.addConnection("Main",             "StdControl",
                              "NucleusSet",       "StdControl");
 
-        weaver.addComponentReference("RadioControlC", "NestbedRadioControl");
-        weaver.addConnection("Main",                "StdControl",
-                             "NestbedRadioControl", "StdControl");
+        weaver.addComponentReference("NestbedControlC", "NestbedControl");
+        weaver.addConnection("Main",           "StdControl",
+                             "NestbedControl", "StdControl");
 
         for (String i : updatedComponents.keySet()) {
             weaver.updateComponent(i, updatedComponents.get(i));

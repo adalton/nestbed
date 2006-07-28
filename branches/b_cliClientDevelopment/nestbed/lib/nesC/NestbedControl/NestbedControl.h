@@ -1,6 +1,6 @@
-/* $Id:$ */
+/* $Id$ */
 /*
- * Version.java
+ * NestbedControl.h
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,9 +26,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.util;
+#ifndef __NESTBED_CONTROL_H
+#define __NESTBEDRADIO_CONTROL_H
 
+enum {
+    AM_CONTROLMESSAGE = 17
+};
 
-public interface Version {
-    public final static String VERSION = "@(#)NESTBed-0.5 -- #0432 (on: Friday, July 28, 2006 14:12:26.698 -0400)@";
-}
+enum Command {
+    SET_POWER,
+    RESET,
+};
+
+typedef struct ControlMessage {
+    uint8_t cmd;
+    uint8_t arg;
+} ControlMessage;
+
+#endif

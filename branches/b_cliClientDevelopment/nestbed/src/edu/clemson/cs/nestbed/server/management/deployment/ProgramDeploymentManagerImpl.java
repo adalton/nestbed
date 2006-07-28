@@ -49,7 +49,7 @@ import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.MoteType;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.server.nesc.comm.MoteComm;
-import edu.clemson.cs.nestbed.server.nesc.comm.mig.PowerMessage;
+import edu.clemson.cs.nestbed.server.nesc.comm.mig.ControlMessage;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteDeploymentConfigurationManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteTestbedAssignmentManagerImpl;
@@ -168,12 +168,32 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     }
 
 
-    public void installProgram(final int          moteAddress,
-                               final String       moteSerialID,
-                               final String       tosPlatform,
-                               final int          programID,
-                               final StringBuffer output) 
-                                                       throws RemoteException {
+    public void resetMote(int moteAddress, String moteSerialID, int programID)
+                                                        throws RemoteException {
+        try {
+            String         commPort = "/dev/motes/" + moteSerialID;
+            MoteComm       moteComm = new MoteComm(moteAddress, commPort);
+            ControlMessage controlMsg = new ControlMessage();
+
+            controlMsg.set_cmd((short) ControlCommands.RESET.ordinal());
+
+            moteComm.start();
+            moteComm.send(controlMsg);
+            moteComm.stop();
+
+            try { Thread.sleep(3000); } catch (Exception ex) { }
+
+            setRadioPowerLevel(moteAddress, commPort, moteSerialID, programID);
+        } catch (IOException ex) {
+            throw new RemoteException("I/O Exception while trying to  " +
+                                      "reset mote.", ex);
+        }
+    }
+                          
+
+    public void installProgram(int          moteAddress, String moteSerialID,
+                               String       tosPlatform, int    programID,
+                               StringBuffer output) throws RemoteException {
         installProgramInternal(moteAddress, moteSerialID,
                                tosPlatform, programID, output);
     }
@@ -217,7 +237,13 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
 
                     if (exitValue == 0) {
                         try { Thread.sleep(3000); } catch (Exception ex) { }
-                        setRadioPowerLevel(moteAddress, commPort, tosPlatform,
+                        log.debug("Setting radio power on mote with\n" +
+                                  "    address:       " + moteAddress + "\n" +
+                                  "    commPort:      " + commPort    + "\n" +
+                                  "    tosPlatform:   " + tosPlatform + "\n" +
+                                  "    moteSerialID:  " + moteSerialID);
+
+                        setRadioPowerLevel(moteAddress,  commPort,
                                            moteSerialID, programID);
 
                         notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
@@ -240,30 +266,25 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     }
 
 
-    private void setRadioPowerLevel(int    address,     String commPort,
-                                    String tosPlatform, String moteSerialID,
-                                    int    programID) throws RemoteException,
-                                                             IOException {
-        log.debug("Setting radio power on mote with\n" +
-                  "    address:       " + address     + "\n" +
-                  "    commPort:      " + commPort    + "\n" +
-                  "    tosPlatform:   " + tosPlatform + "\n" +
-                  "    moteSerialID:  " + moteSerialID);
+    private void setRadioPowerLevel(int    address,      String commPort,
+                                    String moteSerialID, int    programID)
+                                           throws RemoteException, IOException {
 
-        PowerMessage powerMessage = new PowerMessage();
-        Mote         mote         = MoteManagerImpl.getInstance().getMote(
-                                                                moteSerialID);
-        int          moteID       = mote.getID();
-        int          powerLevel   = MoteDeploymentConfigurationManagerImpl.
-                                        getInstance().
+        ControlMessage controlMsg = new ControlMessage();
+        Mote           mote       = MoteManagerImpl.getInstance().getMote(
+                                                                  moteSerialID);
+        int            moteID     = mote.getID();
+        int            powerLevel = MoteDeploymentConfigurationManagerImpl.
+                                          getInstance().
                                       getMoteDeploymentConfigurationByProgramID(
                                         moteID, programID).getRadioPowerLevel();
-        MoteComm     moteComm     = new MoteComm(address, commPort);
+        MoteComm       moteComm   = new MoteComm(address, commPort);
 
-        powerMessage.set_powerLevel((short) powerLevel);
+        controlMsg.set_cmd((short) ControlCommands.SET_POWER.ordinal());
+        controlMsg.set_arg((short) powerLevel);
 
         moteComm.start();
-        moteComm.send(powerMessage);
+        moteComm.send(controlMsg);
         moteComm.stop();
     }
 
