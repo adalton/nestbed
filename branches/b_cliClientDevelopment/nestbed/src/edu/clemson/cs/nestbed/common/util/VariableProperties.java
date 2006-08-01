@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * VariableProperties.java
  *
@@ -87,6 +87,12 @@ public class VariableProperties extends Properties {
 
     public VariableProperties(Properties properties) {
         super(properties);
+    }
+
+
+    @Override
+    public Object setProperty(String key, String value) {
+        return super.setProperty(key, expandProperty(value));
     }
 
 

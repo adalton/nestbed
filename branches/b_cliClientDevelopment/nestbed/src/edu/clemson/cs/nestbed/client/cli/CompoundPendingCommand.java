@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */
 /*
- * NestbedControlC.nc
+ * CompoundPendingCommand.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,26 +26,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-includes NestbedControl;
+package edu.clemson.cs.nestbed.client.cli;
 
-configuration NestbedControlC {
-    provides interface StdControl;
-}
 
-implementation {
-    components Main;
-    components GenericComm;
-    components CC2420ControlM;
-    components ResetC;
-    components NestbedControlM as Comp;
-    components NoLeds          as LedsComponent;
+import java.util.ArrayList;
+import java.util.List;
 
-    Main.StdControl   -> GenericComm.Control;
 
-    Comp.Leds         -> LedsComponent.Leds;
-    Comp.ReceivePower -> GenericComm.ReceiveMsg[AM_CONTROLMESSAGE];
-    Comp.Radio        -> CC2420ControlM.CC2420Control;
-    Comp.Reset        -> ResetC.Reset;
+public abstract class CompoundPendingCommand implements PendingCommand {
+    private List<PendingCommand> pendingCommands =
+                                        new ArrayList<PendingCommand>();
 
-    StdControl        =  Comp.StdControl;
+
+    public abstract Level runCommand(Level level) throws Exception;
+
+
+    public void addPendingCommand(PendingCommand command) {
+        pendingCommands.add(command);
+    }
+
+
+    public List<PendingCommand> getPendingCommands() {
+        return pendingCommands;
+    }
 }

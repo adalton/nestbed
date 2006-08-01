@@ -232,7 +232,7 @@ class MoteConfigLevel extends Level {
 
 
     private class MoteLsCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
@@ -262,6 +262,8 @@ class MoteConfigLevel extends Level {
                 }
                 System.out.println();
             }
+
+            return MoteConfigLevel.this;
         }
 
 
@@ -272,11 +274,13 @@ class MoteConfigLevel extends Level {
 
 
     private class ConfigureCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = MoteConfigLevel.this;
+
             if (args.length != 4) {
                 System.out.printf("usage:  %s <moteAddress> <programName> " +
                                   "<radioPowerLevel>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             int     moteAddress     = Integer.parseInt(args[1]);
@@ -312,6 +316,8 @@ class MoteConfigLevel extends Level {
             } else {
                 System.err.printf("No such program:  %s\n", programName);
             }
+
+            return nextLevel;
         }
 
 
@@ -322,10 +328,12 @@ class MoteConfigLevel extends Level {
 
 
     private class UnconfigureCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = MoteConfigLevel.this;
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <moteAddress>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name  = args[1];
@@ -344,6 +352,7 @@ class MoteConfigLevel extends Level {
                 System.err.printf("%s is not a MoteTestbedAssignmentEntry\n",
                                   name);
             }
+            return nextLevel;
         }
 
 

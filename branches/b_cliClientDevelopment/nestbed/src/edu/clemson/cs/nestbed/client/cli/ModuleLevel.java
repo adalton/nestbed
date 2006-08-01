@@ -98,10 +98,12 @@ class ModuleLevel extends Level {
 
 
     private class ProfileCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = ModuleLevel.this;
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <name>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name = args[1];
@@ -116,6 +118,8 @@ class ModuleLevel extends Level {
             } else {
                 System.err.printf("%s is not a program symbol\n", name);
             }
+
+            return nextLevel;
         }
 
 

@@ -1,6 +1,6 @@
-/* $Id$ */
+/* $Id:$ */ 
 /*
- * NestbedControlC.nc
+ * GeneralPendingCommand.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,26 +26,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-includes NestbedControl;
+package edu.clemson.cs.nestbed.client.cli;
 
-configuration NestbedControlC {
-    provides interface StdControl;
-}
 
-implementation {
-    components Main;
-    components GenericComm;
-    components CC2420ControlM;
-    components ResetC;
-    components NestbedControlM as Comp;
-    components NoLeds          as LedsComponent;
+class GeneralPendingCommand implements PendingCommand {
+    private String[] args;
 
-    Main.StdControl   -> GenericComm.Control;
 
-    Comp.Leds         -> LedsComponent.Leds;
-    Comp.ReceivePower -> GenericComm.ReceiveMsg[AM_CONTROLMESSAGE];
-    Comp.Radio        -> CC2420ControlM.CC2420Control;
-    Comp.Reset        -> ResetC.Reset;
+    public GeneralPendingCommand(String[] args) {
+        this.args = args;
+    }
 
-    StdControl        =  Comp.StdControl;
+
+    public Level runCommand(Level level) throws Exception {
+        String[] expandedArgs = new String[args.length];
+        for (int i = 0; i < expandedArgs.length; ++i) {
+            Variables.set("__internal", args[i]);
+            expandedArgs[i] = Variables.unset("__internal");
+        }
+
+        return level.runCommand(expandedArgs);
+    }
 }
