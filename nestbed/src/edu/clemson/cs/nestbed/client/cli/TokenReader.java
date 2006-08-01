@@ -84,6 +84,9 @@ public class TokenReader {
                 if (Character.isWhitespace(line.charAt(index))) {
                     state = ReadState.WHITE;
                     done  = true;
+                } else if (line.charAt(index) == '"') {
+                    state = ReadState.QUOTE;
+                    index++;
                 } else {
                     buffer.append(line.charAt(index));
                     index++;

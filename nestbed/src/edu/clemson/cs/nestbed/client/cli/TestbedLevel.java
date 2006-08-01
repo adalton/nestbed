@@ -119,10 +119,12 @@ class TestbedLevel extends Level {
 
 
     private class RmProjCommand implements Command {
-        public void execute(String[] args) {
+        public Level execute(String[] args) {
+            Level nextLevel = TestbedLevel.this;
+
             if (args.length != 2) {
                 System.err.println("rmproj <name>");
-                return;
+                return nextLevel;
             }
 
             try {
@@ -148,6 +150,8 @@ class TestbedLevel extends Level {
                 System.out.println("Remote Exception occured while creating " +
                                    "project: " + ex);
             }
+
+            return nextLevel;
         }
 
 
@@ -158,10 +162,13 @@ class TestbedLevel extends Level {
 
 
     private class MkProjCommand implements Command {
-        public void execute(String[] args) {
+        public Level execute(String[] args) {
+            Level nextLevel = TestbedLevel.this;
+
+
             if (args.length != 3) {
                 System.err.println("mkproj <name> <description>");
-                return;
+                return nextLevel;
             }
 
             try {
@@ -174,6 +181,8 @@ class TestbedLevel extends Level {
                 System.out.println("Remote Exception occured while creating " +
                                    "project: " + ex);
             }
+
+            return nextLevel;
         }
 
 

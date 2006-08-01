@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MessageProfilingLevel.java
  *
@@ -91,8 +91,9 @@ class MessageProfilingLevel extends Level {
 
 
     private class RmCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
             System.out.println("RmCommand:  TODO");
+            return MessageProfilingLevel.this;
         }
 
 

@@ -29,7 +29,10 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.rmi.RMISecurityManager;
 import java.util.Properties;
@@ -51,6 +54,7 @@ public class Example {
         propertyStream.close();
     }
 
+
     public static void main(String[] args) throws Exception {
         loadProperties();
 
@@ -62,6 +66,18 @@ public class Example {
                   Example.class.getClassLoader().getResource(
                                                 "clientLog.conf"));
         ParentClassLoader.setParent(Example.class.getClassLoader());
+
+
+        if (args.length == 0) {
+            Level.setBufferedReader(new BufferedReader(
+                                        new InputStreamReader(
+                                            new FileInputStream(args[1]))));
+            Level.setInteractive(false);
+        } else {
+            Level.setBufferedReader(new BufferedReader(
+                                        new InputStreamReader(System.in)));
+            Level.setInteractive(true);
+        }
 
         Level level = new RootLevel();
         while ( (level = level.process()) != null);

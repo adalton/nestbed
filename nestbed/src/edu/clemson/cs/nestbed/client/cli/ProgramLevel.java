@@ -128,10 +128,12 @@ class ProgramLevel extends Level {
 
 
     private class RmCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = ProgramLevel.this;
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <name>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name  = args[1];
@@ -145,6 +147,8 @@ class ProgramLevel extends Level {
             } else {
                 System.err.println(name + " is not a Program");
             }
+
+            return nextLevel;
         }
 
         public String getHelpText() {
@@ -154,11 +158,13 @@ class ProgramLevel extends Level {
 
 
     private class UploadCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = ProgramLevel.this;
+
             if (args.length != 4) {
                 System.err.printf("usage:  %s <name> <description> " +
                                   "<directory>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name        = args[1];
@@ -184,6 +190,7 @@ class ProgramLevel extends Level {
                 System.out.println("Directory " + directory +
                                    " does not exist.");
             }
+            return nextLevel;
         }
 
         public String getHelpText() {

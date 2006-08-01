@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * Command.java
  *
@@ -30,6 +30,6 @@ package edu.clemson.cs.nestbed.client.cli;
 
 
 interface Command {
-    public void   execute(String[] args) throws Exception;
+    public Level  execute(String[] args) throws Exception;
     public String getHelpText();
 }

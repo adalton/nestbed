@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramMessageLevel.java
  *
@@ -86,8 +86,9 @@ class ProgramMessageLevel extends Level {
 
 
     private class ProfileCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
             System.out.println("ProfileCommand:  TODO");
+            return ProgramMessageLevel.this;
         }
 
 

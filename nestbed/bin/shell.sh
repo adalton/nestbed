@@ -10,4 +10,5 @@ CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/tinyos.jar"
 
 JAVA_OPTS="-Djava.security.policy=/home/adalton/src/java/nestbed/misc/java.policy"
 
-exec java -classpath ${CLASSPATH} ${JAVA_OPTS} edu.clemson.cs.nestbed.client.cli.Example $*
+#exec java -classpath ${CLASSPATH} ${JAVA_OPTS} edu.clemson.cs.nestbed.client.cli.Example $*
+exec java -classpath ${CLASSPATH} ${JAVA_OPTS} edu.clemson.cs.nestbed.client.cli.Example $* < script

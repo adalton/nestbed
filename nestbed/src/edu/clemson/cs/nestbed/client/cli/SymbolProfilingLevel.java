@@ -172,10 +172,12 @@ class SymbolProfilingLevel extends Level {
 
 
     private class RmCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = SymbolProfilingLevel.this;
+
             if (args.length != 2) {
                 System.out.printf("usage:  %s <name>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name  = args[1];
@@ -192,6 +194,8 @@ class SymbolProfilingLevel extends Level {
             } else {
                 System.err.printf("%s not a ProgramSymbolEntry\n", name);
             }
+
+            return nextLevel;
         }
 
 

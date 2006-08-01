@@ -111,6 +111,7 @@ class NetworkMonitorLevel extends Level {
 
         addCommand("ls",      new MonitorLsCommand());
         addCommand("install", new InstallCommand());
+        addCommand("reset",   new ResetCommand());
     }
 
 
@@ -266,11 +267,10 @@ class NetworkMonitorLevel extends Level {
 
                 assignments[y][x] = i;
             }
-
         }
 
 
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
@@ -293,6 +293,8 @@ class NetworkMonitorLevel extends Level {
                 }
                 System.out.println();
             }
+
+            return NetworkMonitorLevel.this;
         }
 
 
@@ -303,10 +305,12 @@ class NetworkMonitorLevel extends Level {
 
 
     private class InstallCommand implements Command {
-        public void execute(String[] args) throws Exception {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = NetworkMonitorLevel.this;
+
             if (args.length != 2) {
                 System.err.printf("usage: %s <moteAddress>\n", args[0]);
-                return;
+                return nextLevel;
             }
 
             String name  = args[1];
@@ -340,11 +344,62 @@ class NetworkMonitorLevel extends Level {
             } else {
                 System.err.printf("Mote %s not found\n", name);
             }
+
+            return nextLevel;
         }
 
 
         public String getHelpText() {
             return "Installs assigned application on specified mote";
+        }
+    }
+
+
+    private class ResetCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = NetworkMonitorLevel.this;
+
+            if (args.length != 2) {
+                System.err.printf("usage: %s <moteAddress>\n", args[0]);
+                return nextLevel;
+            }
+
+            String name  = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof MoteManagementLevelEntry) {
+                MoteManagementLevelEntry    mmlEntry;
+                MoteDeploymentConfiguration mdConfig;
+
+                mmlEntry = (MoteManagementLevelEntry) entry;
+                mdConfig = mmlEntry.getMoteDeploymentConfig();
+
+                if (mdConfig != null) {
+                    MoteTestbedAssignment mtbAssignment;
+                    Mote                  mote;
+                    MoteType              moteType;
+
+                    mtbAssignment = mmlEntry.getMoteTestbedAssignment();
+                    mote          = mmlEntry.getMote();
+                    moteType      = mmlEntry.getMoteType();
+
+                    progDeployMgr.resetMote(mtbAssignment.getMoteAddress(),
+                                            mote.getMoteSerialID(),
+                                            mdConfig.getProgramID());
+                } else {
+                    System.err.printf("Mote %s has not been configured\n",
+                                      name);
+                }
+            } else {
+                System.err.printf("Mote %s not found\n", name);
+            }
+
+            return nextLevel;
+        }
+
+
+        public String getHelpText() {
+            return "Reset specified mote";
         }
     }
 }

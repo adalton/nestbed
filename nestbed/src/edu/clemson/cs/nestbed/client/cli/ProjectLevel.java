@@ -130,10 +130,12 @@ class ProjectLevel extends Level {
 
 
     private class RmConfCommand implements Command {
-        public void execute(String[] args) {
+        public Level execute(String[] args) {
+            Level nextLevel = ProjectLevel.this;
+
             if (args.length != 2) {
                 System.err.println("rmconf <name>");
-                return;
+                return nextLevel;
             }
 
             try {
@@ -163,6 +165,8 @@ class ProjectLevel extends Level {
                 System.out.println("Remote Exception occured while removing " +
                                    "configuration: " + ex);
             }
+
+            return nextLevel;
         }
 
 
@@ -173,10 +177,12 @@ class ProjectLevel extends Level {
 
 
     private class MkConfCommand implements Command {
-        public void execute(String[] args) {
+        public Level execute(String[] args) {
+            Level nextLevel = ProjectLevel.this;
+
             if (args.length != 3) {
                 System.err.println("mkconf <name> <description>");
-                return;
+                return nextLevel;
             }
 
             try {
@@ -190,6 +196,8 @@ class ProjectLevel extends Level {
                 System.out.println("Remote Exception occured while creating " +
                                    "configuration: " + ex);
             }
+
+            return nextLevel;
         }
 
 
