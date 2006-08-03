@@ -35,7 +35,7 @@ enum { MAX_PAYLOAD_SIZE = (DATA_LENGTH - 2) };
 enum { AM_RELIABLEMESSAGE = 50 };
 
 // the maximum number of nodes
-enum { MAX_NODES = 50 };
+enum { MAX_NODES = 80 };
 
 // the maximum number of *retransmission rounds* 
 // before a link is considered (temporarily) 
