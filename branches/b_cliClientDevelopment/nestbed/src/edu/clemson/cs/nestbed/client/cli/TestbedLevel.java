@@ -122,8 +122,11 @@ class TestbedLevel extends Level {
         public Level execute(String[] args) {
             Level nextLevel = TestbedLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.println("rmproj <name>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -142,13 +145,16 @@ class TestbedLevel extends Level {
                         projectManager.deleteProject(project.getID());
                     } else {
                         System.err.println("Entry is not a project");
+                        Variables.set("status", "2");
                     }
                 } else {
                     System.err.println("No such entry: " + name);
+                    Variables.set("status", "3");
                 } 
             } catch (RemoteException ex) {
                 System.out.println("Remote Exception occured while creating " +
                                    "project: " + ex);
+                Variables.set("status", "4");
             }
 
             return nextLevel;
@@ -165,9 +171,11 @@ class TestbedLevel extends Level {
         public Level execute(String[] args) {
             Level nextLevel = TestbedLevel.this;
 
+            Variables.set("status", "0");
 
             if (args.length != 3) {
                 System.err.println("mkproj <name> <description>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -180,6 +188,7 @@ class TestbedLevel extends Level {
             } catch (RemoteException ex) {
                 System.out.println("Remote Exception occured while creating " +
                                    "project: " + ex);
+                Variables.set("status", "2");
             }
 
             return nextLevel;

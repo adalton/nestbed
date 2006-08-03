@@ -88,6 +88,7 @@ class ProgramMessageLevel extends Level {
     private class ProfileCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println("ProfileCommand:  TODO");
+            Variables.set("status", "1");
             return ProgramMessageLevel.this;
         }
 

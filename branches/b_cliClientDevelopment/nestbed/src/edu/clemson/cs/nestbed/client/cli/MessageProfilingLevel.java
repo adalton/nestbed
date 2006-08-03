@@ -93,6 +93,7 @@ class MessageProfilingLevel extends Level {
     private class RmCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println("RmCommand:  TODO");
+            Variables.set("status", "1");
             return MessageProfilingLevel.this;
         }
 

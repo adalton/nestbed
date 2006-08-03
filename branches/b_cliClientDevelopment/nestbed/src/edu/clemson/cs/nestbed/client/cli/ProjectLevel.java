@@ -133,8 +133,11 @@ class ProjectLevel extends Level {
         public Level execute(String[] args) {
             Level nextLevel = ProjectLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.println("rmconf <name>");
+                Variables.set("status", "0");
                 return nextLevel;
             }
 
@@ -157,13 +160,16 @@ class ProjectLevel extends Level {
                     } else {
                         System.err.println("Entry is not a " +
                                            "ProjectDeploymentConfiguration");
+                        Variables.set("status", "1");
                     }
                 } else {
                     System.err.println("No such entry: " + name);
+                    Variables.set("status", "2");
                 } 
             } catch (RemoteException ex) {
                 System.out.println("Remote Exception occured while removing " +
                                    "configuration: " + ex);
+                Variables.set("status", "3");
             }
 
             return nextLevel;
@@ -180,8 +186,11 @@ class ProjectLevel extends Level {
         public Level execute(String[] args) {
             Level nextLevel = ProjectLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 3) {
                 System.err.println("mkconf <name> <description>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -195,6 +204,7 @@ class ProjectLevel extends Level {
             } catch (RemoteException ex) {
                 System.out.println("Remote Exception occured while creating " +
                                    "configuration: " + ex);
+                Variables.set("status", "2");
             }
 
             return nextLevel;

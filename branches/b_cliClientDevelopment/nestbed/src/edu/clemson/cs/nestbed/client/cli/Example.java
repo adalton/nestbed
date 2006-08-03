@@ -70,13 +70,13 @@ public class Example {
 
         if (args.length == 0) {
             Level.setBufferedReader(new BufferedReader(
-                                        new InputStreamReader(
-                                            new FileInputStream(args[1]))));
-            Level.setInteractive(false);
-        } else {
-            Level.setBufferedReader(new BufferedReader(
                                         new InputStreamReader(System.in)));
             Level.setInteractive(true);
+        } else {
+            Level.setBufferedReader(new BufferedReader(
+                                        new InputStreamReader(
+                                            new FileInputStream(args[0]))));
+            Level.setInteractive(false);
         }
 
         Level level = new RootLevel();
