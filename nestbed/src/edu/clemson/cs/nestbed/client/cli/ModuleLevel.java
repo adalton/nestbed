@@ -101,8 +101,11 @@ class ModuleLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = ModuleLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <name>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -117,6 +120,7 @@ class ModuleLevel extends Level {
                                                          progSym.getID());
             } else {
                 System.err.printf("%s is not a program symbol\n", name);
+                Variables.set("status", "2");
             }
 
             return nextLevel;

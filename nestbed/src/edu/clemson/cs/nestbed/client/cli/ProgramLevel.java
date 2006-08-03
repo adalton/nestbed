@@ -131,8 +131,11 @@ class ProgramLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = ProgramLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <name>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -146,6 +149,7 @@ class ProgramLevel extends Level {
                 programManager.deleteProgram(prog.getID());
             } else {
                 System.err.println(name + " is not a Program");
+                Variables.set("status", "2");
             }
 
             return nextLevel;
@@ -161,9 +165,12 @@ class ProgramLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = ProgramLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 4) {
                 System.err.printf("usage:  %s <name> <description> " +
                                   "<directory>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -189,6 +196,7 @@ class ProgramLevel extends Level {
             } else {
                 System.out.println("Directory " + directory +
                                    " does not exist.");
+                Variables.set("status", "2");
             }
             return nextLevel;
         }

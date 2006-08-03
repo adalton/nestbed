@@ -157,8 +157,11 @@ class MoteSymbolProfilingLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = MoteSymbolProfilingLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.out.printf("usage:  %s <symbol>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -189,6 +192,7 @@ class MoteSymbolProfilingLevel extends Level {
                 System.out.printf("%s = %d\n", name, value);
             } else {
                 System.out.printf("Unknown symbol: %s\n", name);
+                Variables.set("status", "2");
             }
 
             return nextLevel;
@@ -204,6 +208,7 @@ class MoteSymbolProfilingLevel extends Level {
     private class SetCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println("set:  TODO");
+            Variables.set("status", "1");
             return MoteSymbolProfilingLevel.this;
         }
 

@@ -368,7 +368,7 @@ public class MoteManagementPanel extends MotePanel {
                                            mtbAssignment.getMoteAddress() +
                                            " (" + mote.getMoteSerialID() + ")");
             viewMoteDetails    = new JMenuItem("View Mote Details");
-            runSerialForwarder = new JMenuItem("Run Serial Forwarder");
+            runSerialForwarder = new JMenuItem("Create Gateway");
             installProgram     = new JMenuItem();
             resetMote          = new JMenuItem("Reset mote");
 
@@ -448,12 +448,12 @@ public class MoteManagementPanel extends MotePanel {
                     try {
                         if (sfManager.isSerialForwarderEnabled(mote.getID())) {
                             sfManager.disableSerialForwarder(mote.getID());
-                            runSerialForwarder.setText("Run Serial Forwarder");
+                            runSerialForwarder.setText("Create Gateway");
                         } else {
                             sfManager.enableSerialForwarder(
                                                   mote.getID(),
                                                   mtbAssignment.getMoteAddress());
-                            runSerialForwarder.setText("Stop Serial Forwarder");
+                            runSerialForwarder.setText("Destroy Gateway");
                         }
                     } catch (Exception ex) {
                         log.error("Exception\n", ex);

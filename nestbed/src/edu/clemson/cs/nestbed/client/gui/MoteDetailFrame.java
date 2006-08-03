@@ -310,8 +310,8 @@ public class MoteDetailFrame extends JFrame {
         panel.setLayout(new BorderLayout());
         panel.add(tabbedPane, BorderLayout.CENTER);
 
-        tabbedPane.add("Profiling Symbols",  new JScrollPane(symbolTable));
-        tabbedPane.add("Profiling Messages", new JScrollPane(messageTable));
+        tabbedPane.add("Symbol Profiling",  new JScrollPane(symbolTable));
+        tabbedPane.add("Message Profiling", new JScrollPane(messageTable));
 
         return panel;
     }

@@ -271,6 +271,8 @@ class NetworkMonitorLevel extends Level {
 
 
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
@@ -308,8 +310,11 @@ class NetworkMonitorLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = NetworkMonitorLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.printf("usage: %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -340,9 +345,11 @@ class NetworkMonitorLevel extends Level {
                 } else {
                     System.err.printf("Mote %s has not been configured\n",
                                       name);
+                    Variables.set("status", "2");
                 }
             } else {
                 System.err.printf("Mote %s not found\n", name);
+                Variables.set("status", "3");
             }
 
             return nextLevel;
@@ -359,8 +366,11 @@ class NetworkMonitorLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = NetworkMonitorLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.printf("usage: %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -389,9 +399,11 @@ class NetworkMonitorLevel extends Level {
                 } else {
                     System.err.printf("Mote %s has not been configured\n",
                                       name);
+                    Variables.set("status", "2");
                 }
             } else {
                 System.err.printf("Mote %s not found\n", name);
+                Variables.set("status", "3");
             }
 
             return nextLevel;

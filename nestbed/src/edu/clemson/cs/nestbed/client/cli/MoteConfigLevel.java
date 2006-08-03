@@ -233,6 +233,8 @@ class MoteConfigLevel extends Level {
 
     private class MoteLsCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             for (int i = 0; i < assignments.length; ++i) {
                 for (int j = 0; j < assignments[i].length; ++j) {
                     if (assignments[i][j] != null) {
@@ -277,9 +279,12 @@ class MoteConfigLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = MoteConfigLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 4) {
                 System.out.printf("usage:  %s <moteAddress> <programName> " +
                                   "<radioPowerLevel>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -312,9 +317,11 @@ class MoteConfigLevel extends Level {
                                                                radioPowerLevel);
                 } else {
                     System.err.printf("No such mote:  %d\n", moteAddress);
+                    Variables.set("status", "2");
                 }
             } else {
                 System.err.printf("No such program:  %s\n", programName);
+                Variables.set("status", "3");
             }
 
             return nextLevel;
@@ -331,8 +338,11 @@ class MoteConfigLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = MoteConfigLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.printf("usage:  %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -351,6 +361,7 @@ class MoteConfigLevel extends Level {
             } else {
                 System.err.printf("%s is not a MoteTestbedAssignmentEntry\n",
                                   name);
+                Variables.set("status", "2");
             }
             return nextLevel;
         }

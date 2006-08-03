@@ -175,8 +175,11 @@ class SymbolProfilingLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = SymbolProfilingLevel.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.out.printf("usage:  %s <name>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -193,6 +196,7 @@ class SymbolProfilingLevel extends Level {
                 profilingSymbolMgr.deleteProfilingSymbol(ppSymbol.getID());
             } else {
                 System.err.printf("%s not a ProgramSymbolEntry\n", name);
+                Variables.set("status", "2");
             }
 
             return nextLevel;

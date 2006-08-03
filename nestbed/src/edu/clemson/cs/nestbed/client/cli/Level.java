@@ -88,6 +88,7 @@ abstract class Level {
         addCommand("env",     new EnvCommand());
         addCommand("shell",   new ShellCommand());
         addCommand("foreach", new ForeachCommand());
+        addCommand("iferror", new IfErrorCommand());
 
         // All levels have these LevelEntries
         addEntry(new RootLevelEntry());
@@ -164,7 +165,7 @@ abstract class Level {
     }
 
 
-    protected String[] readLine() throws Exception {
+    public static String[] readLine() throws Exception {
         TokenReader reader = new TokenReader(in.readLine());
         String[]   tokens  =  reader.readTokens();
 
@@ -177,7 +178,7 @@ abstract class Level {
     }
 
 
-    protected String[] readLineNoExpand() throws Exception {
+    public static String[] readLineNoExpand() throws Exception {
         TokenReader reader = new TokenReader(in.readLine());
         String[]   tokens  =  reader.readTokens();
 
@@ -255,9 +256,11 @@ abstract class Level {
     protected class CdCommand implements Command {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
+            Variables.set("status", "0");
 
             if (args.length != 2) {
                 System.err.println("usage:  cd <directory>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -279,6 +282,7 @@ abstract class Level {
             if (!found) {
                 System.out.printf("NESTshell:  %s:  %s:  No such file " +
                                   "or directory\n", args[0], target);
+                Variables.set("status", "2");
             }
 
             return nextLevel;
@@ -292,6 +296,8 @@ abstract class Level {
 
     protected class LsCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             for (Entry i : getEntries()) {
                 // Filter out the / entry
                 if (!i.getName().equals("/")) {
@@ -312,6 +318,8 @@ abstract class Level {
     protected class ManCommand implements Command {
         public Level execute(String[] args) throws Exception {
             int maxLength = 0;
+
+            Variables.set("status", "0");
 
             List<String> commandNames;
             commandNames = new ArrayList<String>(getCommandNames());
@@ -342,6 +350,7 @@ abstract class Level {
 
     protected class QuitCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
             System.exit(0);
             return null; // Should never get here
         }
@@ -357,20 +366,25 @@ abstract class Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 3) {
                 System.err.println("Usage:  alias <oldCommand> <newCommand>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
             Command command = getCommand(args[1]);
             if (command == null) {
                 System.err.println("Command " + args[1] + " not found");
+                Variables.set("status", "2");
                 return nextLevel;
             }
 
             Command newCommand = getCommand(args[2]);
             if (newCommand != null) {
                 System.err.println("Command " + args[2] + " already defined");
+                Variables.set("status", "3");
                 return nextLevel;
             }
 
@@ -409,6 +423,7 @@ abstract class Level {
     protected class PwdCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println(getPrompt());
+            Variables.set("status", "0");
             return Level.this;
         }
 
@@ -423,8 +438,11 @@ abstract class Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.out.printf("usage:  %s <varName>=<value>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -433,6 +451,7 @@ abstract class Level {
 
             if (tokens.length != 2) {
                 System.err.println("Malformed expression:  " + exp);
+                Variables.set("status", "2");
                 return nextLevel;
             }
 
@@ -455,8 +474,11 @@ abstract class Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.out.printf("usage:  %s <varName>\n", args[0]);
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -477,6 +499,8 @@ abstract class Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
 
+            Variables.set("status", "0");
+
             for (int i = 1; i < args.length; ++i) {
                 System.out.printf("%s ", args[i]);
             }
@@ -494,6 +518,8 @@ abstract class Level {
 
     protected class EnvCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             for (Iterator<String> i = Variables.nameIterator(); i.hasNext(); ) {
                 String varName = i.next();
                 String value   = Variables.get(varName);
@@ -511,10 +537,13 @@ abstract class Level {
 
     protected class ShellCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             Level nextLevel = Level.this;
 
             if (args.length < 2) {
                 System.err.printf("usage:  %s <command> [<arg>, ...]");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
@@ -524,14 +553,13 @@ abstract class Level {
             }
 
             ProcessBuilder builder = new ProcessBuilder(cmd);
-
             builder.redirectErrorStream(true);
 
-            Process        process = builder.start();
-
+            Process process = builder.start();
             printProcessOutput(process);
-
             process.waitFor();
+
+            Variables.set("status", Integer.toString(process.exitValue()));
 
             return nextLevel;
         }
@@ -558,57 +586,10 @@ abstract class Level {
     }
 
 
-    protected class ForeachCompoundPendingCommand
-                                                extends CompoundPendingCommand {
-        private String   variable;
-        private String[] targets;
-
-
-        public ForeachCompoundPendingCommand(String[] args) throws Exception {
-            if (args.length != 3) {
-                throw new Exception("ForeachCompoundPendingCommand:  FIXME");
-            }
-
-            variable = args[1];
-            targets  = readLine();
-
-            if (!readLine()[0].equals("do")) {
-                throw new Exception("ForeachCompoundPendingCommand:  FIXME");
-                //System.err.printf("%s syntax error\n", args[0]);
-                //return nextLevel;
-            }
-
-            String[] command = readLineNoExpand();
-
-            while (!command[0].equals("done")) {
-                if (command[0].equals("foreach")) {
-                    addPendingCommand(
-                                    new ForeachCompoundPendingCommand(command));
-                } else {
-                    addPendingCommand(new GeneralPendingCommand(command));
-                }
-                command = readLineNoExpand();
-            }
-        }
-
-
-        public Level runCommand(Level nextLevel) throws Exception {
-            for (int i = 0; i < targets.length; ++i) {
-                Variables.set(variable, targets[i]);
-
-                for (PendingCommand j : getPendingCommands()) {
-                    nextLevel = j.runCommand(nextLevel);
-                }
-            }
-            Variables.unset(variable);
-
-            return nextLevel;
-        }
-    }
-
-
     protected class ForeachCommand implements Command {
         public Level execute(String[] args) throws Exception {
+            Variables.set("status", "0");
+
             PendingCommand command = new ForeachCompoundPendingCommand(args);
             return command.runCommand(Level.this);
         }
@@ -621,12 +602,29 @@ abstract class Level {
     }
 
 
+    protected class IfErrorCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            PendingCommand command = new IfErrorCompoundPendingCommand(args);
+            return command.runCommand(Level.this);
+        }
+
+
+        public String getHelpText() {
+            return "If the error status flag is set, " +
+                   "execute the specified commands";
+        }
+    }
+
+
     protected class CatCommand implements Command {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = Level.this;
 
+            Variables.set("status", "0");
+
             if (args.length != 2) {
                 System.err.println("usage:  cat <file>");
+                Variables.set("status", "1");
                 return nextLevel;
             }
 
