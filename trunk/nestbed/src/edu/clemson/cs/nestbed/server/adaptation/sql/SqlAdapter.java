@@ -44,6 +44,6 @@ abstract class SqlAdapter {
     protected final static String CONN_STR;
 
     static {
-        CONN_STR = System.getProperty("testbed.database.connectionString");
+        CONN_STR = System.getProperty("nestbed.options.databaseConnectionString");
     }
 }

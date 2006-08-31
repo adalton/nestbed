@@ -61,13 +61,35 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
                                 implements ProgramManager {
 
     private final static ProgramManager instance;
-    private final static Log            log      = LogFactory.getLog(
+    private final static Log            log       = LogFactory.getLog(
                                                       ProgramManagerImpl.class);
-    private final static File   TOS_ROOT    = new File("/tmp/nestbed");
+    private final static File           PROG_ROOT;
 
     static {
-        ProgramManagerImpl impl = null;
+        String property;
 
+        property = "nestbed.dir.programs";
+        String progRootStr = System.getProperty(property);
+        File   progRoot    = null;
+        if (progRootStr == null) {
+            log.fatal("Property '" + property + "' is not set");
+            System.exit(1);
+
+        } else {
+            progRoot = new File(progRootStr);
+
+            if (!progRoot.exists()) {
+                log.fatal("Directory " + progRootStr + " does not exist!");
+                System.exit(1);
+            }
+        }
+        PROG_ROOT = progRoot;
+        log.info(property + " = " + PROG_ROOT);
+
+
+
+        // This must be last -- it depends upon what's above
+        ProgramManagerImpl impl = null;
         try {
             impl = new ProgramManagerImpl();
         } catch (Exception ex) {
@@ -147,7 +169,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             program   = programAdapter.createNewProgram(projectID, name,
                                                         description);
             programID = program.getID();
-            dir       = FileUtils.makeProgramDir(TOS_ROOT,  testbedID,
+            dir       = FileUtils.makeProgramDir(PROG_ROOT, testbedID,
                                                  projectID, programID);
             dir       = ZipUtils.unzip(zipData, dir);
             program   = programAdapter.updateProgramPath(programID,
@@ -204,7 +226,7 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
             File sourcePath = new File(program.getSourcePath());
 
             FileUtils.deleteDirectory(sourcePath);
-            FileUtils.cleanupParentDirectories(TOS_ROOT, sourcePath);
+            FileUtils.cleanupParentDirectories(PROG_ROOT, sourcePath);
 
             notifyObservers(Message.DELETE_PROGRAM, program);
         } catch (AdaptationException ex) {

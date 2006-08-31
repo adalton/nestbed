@@ -289,8 +289,8 @@ public class MoteDetailFrame extends JFrame {
         panel.add(programDescField);
 
         addressField.setText(Integer.toString(mtba.getMoteAddress()));
-        locationField.setText("("  + mtba.getMoteLocationX() +
-                              ", " + mtba.getMoteLocationY() + ")");
+        locationField.setText("("  + mtba.getMoteLocationY() +
+                              ", " + mtba.getMoteLocationX() + ")");
         serialIdField.setText(mote.getMoteSerialID());
         typeField.setText(moteType.getName());
         totalRomField.setText(Integer.toString(moteType.getTotalROM()));
@@ -310,8 +310,8 @@ public class MoteDetailFrame extends JFrame {
         panel.setLayout(new BorderLayout());
         panel.add(tabbedPane, BorderLayout.CENTER);
 
-        tabbedPane.add("Profiling Symbols",  new JScrollPane(symbolTable));
-        tabbedPane.add("Profiling Messages", new JScrollPane(messageTable));
+        tabbedPane.add("Symbol Profiling",  new JScrollPane(symbolTable));
+        tabbedPane.add("Message Profiling", new JScrollPane(messageTable));
 
         return panel;
     }

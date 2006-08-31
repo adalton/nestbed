@@ -35,5 +35,5 @@ import edu.clemson.cs.nestbed.common.model.Mote;
 
 
 public interface MoteAdapter {
-    public Map<Integer, Mote> readMotes()      throws AdaptationException;
+    public Map<Integer, Mote> readMotes() throws AdaptationException;
 }

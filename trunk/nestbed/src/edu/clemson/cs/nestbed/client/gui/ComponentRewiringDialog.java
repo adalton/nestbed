@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ComponentRewiringDialog.java
  *
@@ -178,8 +178,8 @@ public class ComponentRewiringDialog extends    JDialog
         JRadioButton uniformLossyComm = new JRadioButton("UniformLossyComm");
 
         genericComm.setActionCommand("GenericComm");
-        reliableComm.setActionCommand("ReliableComm");
-        uniformLossyComm.setActionCommand("UniformLossyComm");
+        reliableComm.setActionCommand("ReliableCommC");
+        uniformLossyComm.setActionCommand("UniformLossyCommC");
 
         genericComm.addActionListener(new RadioButtonActionListener());
         reliableComm.addActionListener(new RadioButtonActionListener());

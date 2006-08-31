@@ -66,7 +66,7 @@ public class BuildTestbed {
 
             log.info(motes);
 
-            String connStr = System.getProperty("testbed.database.connectionString");
+            String connStr = System.getProperty("nestbed.options.databaseConnectionString");
             log.info("connStr: " + connStr);
 
             conn      = DriverManager.getConnection(connStr);
