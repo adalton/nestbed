@@ -66,6 +66,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static Log log = LogFactory.getLog(
                                            ProgramDeploymentManagerImpl.class);
 
+    private final static int    MAX_RETRY = 2;
     private final static int    MAX_THREADS;
     private final static String MAKE;
     private final static String MAKEOPTS = "-C";
@@ -181,8 +182,6 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
             moteComm.send(controlMsg);
             moteComm.stop();
 
-            try { Thread.sleep(3000); } catch (Exception ex) { }
-
             setRadioPowerLevel(moteAddress, commPort, moteSerialID, programID);
         } catch (IOException ex) {
             throw new RemoteException("I/O Exception while trying to  " +
@@ -205,70 +204,108 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                         final int          programID,
                                         final StringBuffer output) 
                                                        throws RemoteException {
-        threadPool.execute(new Runnable() {
-            public void run() {
+        threadPool.execute(new InstallThread(moteAddress, moteSerialID,
+                                             tosPlatform, programID,
+                                             output));
+    }
+
+    private class InstallThread implements Runnable {
+        private int          moteAddress;
+        private String       moteSerialID;
+        private String       tosPlatform;
+        private int          programID;
+        private StringBuffer output;
+        private int          retryCount;
+
+
+        public InstallThread(int          moteAddress, String moteSerialID,
+                             String       tosPlatform, int    programID,
+                             StringBuffer output)  {
+            this.moteAddress  = moteAddress;
+            this.moteSerialID = moteSerialID;
+            this.tosPlatform  = tosPlatform;
+            this.programID    = programID;
+            this.output       = output;
+            this.retryCount   = 0;
+        }
+
+
+        public void run() {
+            log.debug("Installing\n" +
+                      "    address:       " + moteAddress  + "\n" +
+                      "    moteSerialID:  " + moteSerialID + "\n" +
+                      "    tosPlatform:   " + tosPlatform  + "\n" +
+                      "    programID:     " + programID    + "\n" +
+                      "    retryCount:    " + retryCount);
+            try {
                 try {
-                    try {
-                        // Sleep randomly between 3 and 8 seconds
-                        Thread.sleep(1000 * (3 + random.nextInt(6)));
-                    } catch (InterruptedException ex) {
-                        // Ignore
-                    }
+                    // Sleep randomly between 4 and 9 seconds
+                    Thread.sleep(1000 * (4 + random.nextInt(6)));
+                } catch (InterruptedException ex) { }
 
-                    ProcessBuilder  processBuilder;
-                    Program program  = ProgramManagerImpl.getInstance().
-                                                        getProgram(programID);
-                    String  commPort = "/dev/motes/" + moteSerialID;
+                Program         program;
+                ProcessBuilder  processBuilder;
+                String          commPort;
+                Process         process;
 
-                    processBuilder = new ProcessBuilder(MAKE, MAKEOPTS, 
-                                                        program.getSourcePath(),
-                                                        tosPlatform, "nucleus",
-                                                        "reinstall." +
-                                                        moteAddress, "bsl," +
-                                                        commPort);
-                    processBuilder.redirectErrorStream(true);
-                    notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
+                commPort       = "/dev/motes/" + moteSerialID;
+                program        = ProgramManagerImpl.getInstance().getProgram(
+                                                                    programID);
+                processBuilder = new ProcessBuilder(MAKE, MAKEOPTS, 
+                                                    program.getSourcePath(),
+                                                    tosPlatform, "nucleus",
+                                                    "reinstall." +
+                                                    moteAddress, "bsl," +
+                                                    commPort);
+                processBuilder.redirectErrorStream(true);
+
+                notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
+                                moteSerialID);
+
+                process = processBuilder.start();
+                output.append(getProcessOutput(process, null));
+
+                process.waitFor();
+                int exitValue = process.exitValue();
+
+                if (exitValue == 0) {
+                    setRadioPowerLevel(moteAddress,  commPort,
+                                       moteSerialID, programID);
+
+                    notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
                                     moteSerialID);
-
-                    Process process = processBuilder.start();
-                    output.append(getProcessOutput(process, null));
-                    process.waitFor();
-                    int exitValue = process.exitValue();
-
-                    if (exitValue == 0) {
-                        try { Thread.sleep(3000); } catch (Exception ex) { }
-                        log.debug("Setting radio power on mote with\n" +
-                                  "    address:       " + moteAddress + "\n" +
-                                  "    commPort:      " + commPort    + "\n" +
-                                  "    tosPlatform:   " + tosPlatform + "\n" +
-                                  "    moteSerialID:  " + moteSerialID);
-
-                        setRadioPowerLevel(moteAddress,  commPort,
-                                           moteSerialID, programID);
-
-                        notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
-                                        moteSerialID);
-                    } else {
-                        notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
-                                        moteSerialID);
-                    }
-                } catch (InterruptedException ex) {
-                    String msg = "process interrupted while waiting for " +
-                                 "install";
-                    log.error(msg, ex);
-                } catch (IOException ex) {
-                    String msg = "I/O Exception while installing program";
-
-                    log.error(msg, ex);
+                } else {
+                    notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                    moteSerialID);
+                    maybeRetry();
                 }
+            } catch (InterruptedException ex) {
+                String msg = "process interrupted while waiting for " +
+                             "install";
+                log.error(msg, ex);
+                maybeRetry();
+            } catch (IOException ex) {
+                String msg = "I/O Exception while installing program";
+
+                log.error(msg, ex);
+                maybeRetry();
             }
-        });
+        }
+
+        private void maybeRetry() {
+            if (++retryCount < MAX_RETRY) {
+                log.info("Install failed -- retrying");
+                threadPool.execute(this);
+            }
+        }
     }
 
 
     private void setRadioPowerLevel(int    address,      String commPort,
                                     String moteSerialID, int    programID)
                                            throws RemoteException, IOException {
+
+        try { Thread.sleep(3000); } catch (Exception ex) { }
 
         ControlMessage controlMsg = new ControlMessage();
         Mote           mote       = MoteManagerImpl.getInstance().getMote(
@@ -279,6 +316,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                       getMoteDeploymentConfigurationByProgramID(
                                         moteID, programID).getRadioPowerLevel();
         MoteComm       moteComm   = new MoteComm(address, commPort);
+
 
         controlMsg.set_cmd((short) ControlCommands.SET_POWER.ordinal());
         controlMsg.set_arg((short) powerLevel);
