@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ForeachCompoundPendingCommand.java
  *
@@ -40,6 +40,25 @@ public class ForeachCompoundPendingCommand extends CompoundPendingCommand {
 
         variable = args[1];
         targets  = Level.readLine();
+
+        if (targets[0].charAt(0) == '[') {
+            StringBuffer buffer = new StringBuffer();
+            String       token       = targets[0];
+            String       range       = token.substring(1, token.length() - 1);
+            String[]     rangeTokens = range.split("-");
+
+            if (rangeTokens.length != 2) {
+                throw new Exception("ForeachCompoundPendingCommand:  FIXME");
+            }
+
+            for (int i = Integer.parseInt(rangeTokens[0]);
+                                i < Integer.parseInt(rangeTokens[1]); ++i) {
+                buffer.append(i).append(" ");
+            }
+            buffer.append(rangeTokens[1]);
+
+            targets = buffer.toString().split("\\s");
+        }
 
         if (!Level.readLine()[0].equals("do")) {
             throw new Exception("ForeachCompoundPendingCommand:  FIXME");

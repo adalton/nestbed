@@ -35,6 +35,8 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
@@ -65,6 +67,8 @@ class NetworkMonitorLevel extends Level {
     private int                                numRows;
     private int                                numCols;
     private MoteState[][]                      moteState;
+    private int                                installCount;
+    private Map<Integer, Boolean>              installMap;
 
 
     public NetworkMonitorLevel(Testbed testbed, Project project,
@@ -78,6 +82,8 @@ class NetworkMonitorLevel extends Level {
         this.config                 = config;
         this.moteTestbedAssignments = mtbaManager.getMoteTestbedAssignmentList(
                                                             testbed.getID());
+        this.installMap             = new HashMap<Integer, Boolean>();
+        this.installCount           = 0;
 
         for (MoteTestbedAssignment i : moteTestbedAssignments) {
             int x = i.getMoteLocationX();
@@ -112,6 +118,7 @@ class NetworkMonitorLevel extends Level {
         addCommand("ls",      new MonitorLsCommand());
         addCommand("install", new InstallCommand());
         addCommand("reset",   new ResetCommand());
+        addCommand("wait",    new WaitCommand());
     }
 
 
@@ -137,6 +144,28 @@ class NetworkMonitorLevel extends Level {
         progDeployMgr   = (ProgramDeploymentManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "ProgramDeploymentManager");
+    }
+
+
+    private void updateInstallState(int address, Boolean installing) {
+        synchronized(installMap) {
+            installMap.put(address, installing);
+
+            if (installing == Boolean.TRUE) {
+                installCount++;
+            } else {
+                installCount--;
+
+                if (installCount < 0) {
+                    System.err.println("More installs finished than started?");
+                    installCount = 0;
+                }
+
+                if (installCount == 0) {
+                    installMap.notifyAll();
+                }
+            }
+        }
     }
 
 
@@ -173,8 +202,9 @@ class NetworkMonitorLevel extends Level {
             }
 
             if (mtbAssignment != null) {
-                int x = mtbAssignment.getMoteLocationX();
-                int y = mtbAssignment.getMoteLocationY();
+                int x       = mtbAssignment.getMoteLocationX();
+                int y       = mtbAssignment.getMoteLocationY();
+                int address = mtbAssignment.getMoteAddress();
 
                 switch (message) {
                 case PROGRAM_INSTALL_BEGIN:
@@ -183,10 +213,12 @@ class NetworkMonitorLevel extends Level {
 
                 case PROGRAM_INSTALL_SUCCESS:
                     moteState[y][x] = MoteState.P;
+                    updateInstallState(address, Boolean.FALSE);
                     break;
 
                 case PROGRAM_INSTALL_FAILURE:
                     moteState[y][x] = MoteState.F;
+                    updateInstallState(address, Boolean.FALSE);
                     break;
 
                 default:
@@ -318,8 +350,21 @@ class NetworkMonitorLevel extends Level {
                 return nextLevel;
             }
 
-            String name  = args[1];
-            Entry  entry = getEntryWithName(name);
+            String name    = args[1];
+            int    address = Integer.parseInt(name);
+
+            synchronized(installMap) {
+                if (     (installMap.get(address) != null) && 
+                         (installMap.get(address) == Boolean.FALSE) ) {
+                    System.err.printf("Already installing on mote %d\n",
+                                      address);
+                    Variables.set("status", "2");
+                    return nextLevel;
+                }
+            }
+
+
+            Entry entry = getEntryWithName(name);
 
             if (entry instanceof MoteManagementLevelEntry) {
                 MoteManagementLevelEntry    mmlEntry;
@@ -342,14 +387,16 @@ class NetworkMonitorLevel extends Level {
                                                  moteType.getTosPlatform(),
                                                  mdConfig.getProgramID(),
                                                  new StringBuffer());
+
+                    updateInstallState(address, Boolean.TRUE);
                 } else {
                     System.err.printf("Mote %s has not been configured\n",
                                       name);
-                    Variables.set("status", "2");
+                    Variables.set("status", "3");
                 }
             } else {
                 System.err.printf("Mote %s not found\n", name);
-                Variables.set("status", "3");
+                Variables.set("status", "4");
             }
 
             return nextLevel;
@@ -412,6 +459,29 @@ class NetworkMonitorLevel extends Level {
 
         public String getHelpText() {
             return "Reset specified mote";
+        }
+    }
+
+
+    private class WaitCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            int timeout = 0;
+            if (args.length == 2) {
+                timeout = Integer.parseInt(args[1]);
+            }
+
+            Variables.set("status", "0");
+            synchronized (installMap) {
+                while (installCount > 0) {
+                    installMap.wait(timeout);
+                }
+            }
+            return NetworkMonitorLevel.this;
+        }
+
+
+        public String getHelpText() {
+            return "Wait for all current installs to complete";
         }
     }
 }
