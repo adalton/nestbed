@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * ProgramDeploymentManager.java
  *
@@ -46,4 +46,7 @@ public interface ProgramDeploymentManager extends RemoteObservable {
     public void installProgram(int          moteAddress, String moteSerialID,
                                String       tosPlatform, int    programID,
                                StringBuffer output)      throws RemoteException;
+
+    public void resetMote(int moteAddress, String moteSerialID, int programID)
+                                                        throws RemoteException;
 }

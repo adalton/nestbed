@@ -104,7 +104,7 @@ public class RemoteObservableImpl extends    UnicastRemoteObject
 //                  "    type:   " + argType + "\n" +
 //                  "    value:  " + arg);
 
-        for (RemoteObserver i : observers) {
+        for (RemoteObserver i : new ArrayList<RemoteObserver>(observers)) {
             try {
                 i.update(msg, arg);
             } catch (ConnectException e) {

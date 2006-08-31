@@ -101,12 +101,12 @@ public class MoteComm implements MessageListener {
         phoenixSource = BuildSource.makePhoenix(packetSource, null);
         phoenixSource.setPacketErrorHandler(new PhoenixError() {
             public void error(IOException ex) {
-                log.warn("IOException in phoenix source on " +
-                         commPort);
+                log.warn("IOException in phoenix source on " + commPort, ex);
                 stop();
             }
         });
-        moteIf        = new MoteIF(phoenixSource);
+
+        moteIf = new MoteIF(phoenixSource);
 
         for (MessageClassPair i : listenerMap.values()) {
             moteIf.registerListener(i.message, this);
