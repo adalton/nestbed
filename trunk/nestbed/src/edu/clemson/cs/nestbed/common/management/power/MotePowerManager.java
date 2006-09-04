@@ -1,6 +1,6 @@
 /* $Id:$ */
 /*
- * Version.java
+ * MotePowerManager.java
  *
  * Network Embedded Sensor Testbed (NESTBed)
  *
@@ -26,9 +26,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.common.util;
+package edu.clemson.cs.nestbed.common.management.power;
 
 
-public interface Version {
-    public final static String VERSION = "@(#)NESTBed-0.5 -- #0534 (on: Monday, September 04, 2006 11:56:07.875 -0400)@";
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+
+public interface MotePowerManager extends Remote {
+    public void    powerOff(int moteID)  throws RemoteException;
+    public void    powerOn(int moteID)   throws RemoteException;
+    public boolean poweredOn(int moteID) throws RemoteException;
 }
