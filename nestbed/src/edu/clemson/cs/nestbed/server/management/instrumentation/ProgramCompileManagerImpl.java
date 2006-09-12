@@ -250,6 +250,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         log.info("getMessageList(): directory = " + dir.getAbsolutePath() +
                  ", tosPlatform = " + tosPlatform);
         List<String>   messageList    = new ArrayList<String>();
+        /*
         ProcessBuilder processBuilder = 
                                 new ProcessBuilder(GET_TYPES,
                                                    dir.getAbsolutePath(),
@@ -267,6 +268,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
             messageList.add(line);
         }
         in.close();
+        */
 
         return messageList;
     }

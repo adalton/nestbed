@@ -37,6 +37,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -94,6 +95,37 @@ public class Server {
     private final static Log    log     = LogFactory.getLog(Server.class);
 
     private static String RMI_BASE_URL;
+
+    static {
+        Properties variableProperties = new VariableProperties();
+        try {
+            InputStream propertyStream = Server.class.getClassLoader().
+                                       getResourceAsStream("server.properties");
+            variableProperties.load(propertyStream);
+            propertyStream.close();
+        } catch (Exception ex) {
+            System.err.println("Unable to load server.properties");
+        }
+
+
+        try {
+            InputStream propertyStream = Server.class.getClassLoader().
+                                       getResourceAsStream("common.properties");
+            variableProperties.load(propertyStream);
+            propertyStream.close();
+        } catch (Exception ex) {
+            System.err.println("Unable to load common.properties");
+        }
+
+
+        Properties systemProperties = System.getProperties();
+        for (Enumeration e = variableProperties.propertyNames();
+                                                        e.hasMoreElements(); ) {
+            String p = e.nextElement().toString();
+            systemProperties.setProperty(p, variableProperties.getProperty(p));
+        }
+    }
+
 
     private MessageManager                        messageManager;
     private MoteDeploymentConfigurationManager    moteDepConfigManager;
@@ -223,35 +255,7 @@ public class Server {
     }
 
 
-    private static void loadProperties() throws IOException {
-        Properties  systemProperties;
-        InputStream propertyStream;
-
-
-        // Wrap the system properties with our variable-expanding version
-        System.setProperties(new VariableProperties(System.getProperties()));
-
-
-
-        systemProperties = System.getProperties();
-        propertyStream   = Server.class.getClassLoader().
-                                     getResourceAsStream("server.properties");
-        systemProperties.load(propertyStream);
-        propertyStream.close();
-        
-
-
-        propertyStream   = Server.class.getClassLoader().
-                                     getResourceAsStream("common.properties");
-        systemProperties.load(propertyStream);
-        propertyStream.close();
-    }
-
-
     public static void main(String[] args) throws Exception {
-        // This **MUST** be called first
-        loadProperties();
-
         RMI_BASE_URL = System.getProperty("testbed.rmi.baseurl");
 
         if (System.getSecurityManager() == null) {

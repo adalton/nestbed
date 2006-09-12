@@ -18,7 +18,7 @@ public class ControlMessage extends net.tinyos.message.Message {
     public static final int DEFAULT_MESSAGE_SIZE = 2;
 
     /** The Active Message type associated with this message. */
-    public static final int AM_TYPE = 17;
+    public static final int AM_TYPE = 170;
 
     /** Create a new ControlMessage of size 2. */
     public ControlMessage() {
