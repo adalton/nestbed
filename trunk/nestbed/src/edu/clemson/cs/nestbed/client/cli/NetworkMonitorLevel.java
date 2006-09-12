@@ -119,6 +119,8 @@ class NetworkMonitorLevel extends Level {
         addCommand("install", new InstallCommand());
         addCommand("reset",   new ResetCommand());
         addCommand("wait",    new WaitCommand());
+        addCommand("mkgw",    new CreateGatewayCommand());
+        addCommand("rmgw",    new RemoveGatewayCommand());
     }
 
 
@@ -208,6 +210,7 @@ class NetworkMonitorLevel extends Level {
 
                 switch (message) {
                 case PROGRAM_INSTALL_BEGIN:
+                    updateInstallState(address, Boolean.TRUE);
                     moteState[y][x] = MoteState.I;
                     break;
 
@@ -388,7 +391,6 @@ class NetworkMonitorLevel extends Level {
                                                  mdConfig.getProgramID(),
                                                  new StringBuffer());
 
-                    updateInstallState(address, Boolean.TRUE);
                 } else {
                     System.err.printf("Mote %s has not been configured\n",
                                       name);
@@ -474,6 +476,7 @@ class NetworkMonitorLevel extends Level {
             synchronized (installMap) {
                 while (installCount > 0) {
                     installMap.wait(timeout);
+                    installMap.wait(5000);
                 }
             }
             return NetworkMonitorLevel.this;
@@ -482,6 +485,30 @@ class NetworkMonitorLevel extends Level {
 
         public String getHelpText() {
             return "Wait for all current installs to complete";
+        }
+    }
+
+
+    private class CreateGatewayCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            System.out.println("CreateGatewayCommand:  TODO");
+        }
+
+
+        public String getHelpText() {
+            return "Creates a network gateway for the specified mote";
+        }
+    }
+
+
+    private class RemoveGatewayCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            System.out.println("RemoveGatewayCommand:  TODO");
+        }
+
+
+        public String getHelpText() {
+            return "Destroys the network gateway for the specified mote";
         }
     }
 }

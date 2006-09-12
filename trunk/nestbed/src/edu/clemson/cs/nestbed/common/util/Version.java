@@ -30,5 +30,5 @@ package edu.clemson.cs.nestbed.common.util;
 
 
 public interface Version {
-    public final static String VERSION = "@(#)NESTBed-0.5 -- #0534 (on: Monday, September 04, 2006 11:56:07.875 -0400)@";
+    public final static String VERSION = "@(#)NESTBed-0.5 -- #0585 (on: Monday, September 11, 2006 17:08:02.451 -0400)@";
 }

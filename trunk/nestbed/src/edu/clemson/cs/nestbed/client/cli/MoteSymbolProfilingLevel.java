@@ -107,7 +107,7 @@ class MoteSymbolProfilingLevel extends Level {
 
 
         addCommand("query", new QueryCommand());
-        addCommand("set",   new SetCommand());
+        addCommand("write", new SetCommand());
     }
 
 
@@ -157,42 +157,48 @@ class MoteSymbolProfilingLevel extends Level {
         public Level execute(String[] args) throws Exception {
             Level nextLevel = MoteSymbolProfilingLevel.this;
 
-            Variables.set("status", "0");
+            try {
+                Variables.set("status", "0");
 
-            if (args.length != 2) {
-                System.out.printf("usage:  %s <symbol>\n", args[0]);
-                Variables.set("status", "1");
-                return nextLevel;
-            }
+                if (args.length != 2) {
+                    System.out.printf("usage:  %s <symbol>\n", args[0]);
+                    Variables.set("status", "1");
+                    return nextLevel;
+                }
 
-            String name = args[1];
-            Entry  entry = getEntryWithName(name);
+                String name = args[1];
+                Entry  entry = getEntryWithName(name);
 
-            if (entry instanceof ProgramProfilingSymbolEntry) {
-                ProgramProfilingSymbolEntry ppsEntry;
-                int                         profilingSymbolID;
-                String                      programSourcePath;
-                String                      tosPlatform;
-                String                      moteSerialID;
-                int                         value;
+                if (entry instanceof ProgramProfilingSymbolEntry) {
+                    ProgramProfilingSymbolEntry ppsEntry;
+                    int                         profilingSymbolID;
+                    String                      programSourcePath;
+                    String                      tosPlatform;
+                    String                      moteSerialID;
+                    int                         value;
 
-                ppsEntry          = (ProgramProfilingSymbolEntry) entry;
-                profilingSymbolID = ppsEntry.getProgramProfilingSymbol()
+                    ppsEntry          = (ProgramProfilingSymbolEntry) entry;
+                    profilingSymbolID = ppsEntry.getProgramProfilingSymbol()
                                                                     .getID();
-                programSourcePath = program.getSourcePath();
-                tosPlatform       = moteType.getTosPlatform();
-                moteSerialID      = mote.getMoteSerialID();
+                    programSourcePath = program.getSourcePath();
+                    tosPlatform       = moteType.getTosPlatform();
+                    moteSerialID      = mote.getMoteSerialID();
 
-                value             = nucleusManager.querySymbol(
+                    value             = nucleusManager.querySymbol(
                                                             profilingSymbolID,
                                                             programSourcePath,
                                                             tosPlatform,
                                                             moteSerialID);
 
-                System.out.printf("%s = %d\n", name, value);
-            } else {
-                System.out.printf("Unknown symbol: %s\n", name);
-                Variables.set("status", "2");
+                    System.out.printf("%s = %d\n", name, value);
+                } else {
+                    System.out.printf("Unknown symbol: %s\n", name);
+                    Variables.set("status", "2");
+                }
+            } catch (RemoteException ex) {
+                Variables.set("status", "3");
+                System.out.println("Failed to query symbol, reason: " +
+                                   ex.getMessage());
             }
 
             return nextLevel;

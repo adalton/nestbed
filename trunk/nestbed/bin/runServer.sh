@@ -6,6 +6,7 @@ TOSBED_LIB=${TOSBED_HOME}/lib
 
 CLASSPATH=${TOSBED_HOME}/dist/nestbed.jar
 CLASSPATH=${CLASSPATH}:$(/opt/tinyos-1.x/tools/java/javapath)
+CLASSPATH=/opt/sun-jdk-1.5.0.08/jre/lib:${CLASSPATH}
 for i in ${TOSBED_LIB}/*; do
     CLASSPATH="${CLASSPATH}:$i"
 done

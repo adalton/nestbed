@@ -66,10 +66,11 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static Log log = LogFactory.getLog(
                                            ProgramDeploymentManagerImpl.class);
 
+    private final static int    MAX_POWER = 31;
     private final static int    MAX_RETRY = 2;
     private final static int    MAX_THREADS;
     private final static String MAKE;
-    private final static String MAKEOPTS = "-C";
+    private final static String MAKEOPTS  = "-C";
 
     static {
         String property;
@@ -238,9 +239,11 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                       "    programID:     " + programID    + "\n" +
                       "    retryCount:    " + retryCount);
             try {
+                notifyObservers(Message.PROGRAM_INSTALL_BEGIN, moteSerialID);
+
                 try {
-                    // Sleep randomly between 4 and 9 seconds
-                    Thread.sleep(1000 * (4 + random.nextInt(6)));
+                    // Sleep randomly between 1 and 20 seconds
+                    Thread.sleep(1000 * (1 + random.nextInt(20)));
                 } catch (InterruptedException ex) { }
 
                 Program         program;
@@ -259,8 +262,6 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                                     commPort);
                 processBuilder.redirectErrorStream(true);
 
-                notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
-                                moteSerialID);
 
                 process = processBuilder.start();
                 output.append(getProcessOutput(process, null));
@@ -283,18 +284,23 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 String msg = "process interrupted while waiting for " +
                              "install";
                 log.error(msg, ex);
+                notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                moteSerialID);
                 maybeRetry();
             } catch (IOException ex) {
                 String msg = "I/O Exception while installing program";
 
                 log.error(msg, ex);
+                notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                moteSerialID);
                 maybeRetry();
             }
         }
 
         private void maybeRetry() {
             if (++retryCount < MAX_RETRY) {
-                log.info("Install failed -- retrying");
+                log.info("Install failed on mote " + moteAddress + " (" +
+                         moteSerialID + ") -- retrying");
                 threadPool.execute(this);
             }
         }
@@ -315,15 +321,16 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                           getInstance().
                                       getMoteDeploymentConfigurationByProgramID(
                                         moteID, programID).getRadioPowerLevel();
-        MoteComm       moteComm   = new MoteComm(address, commPort);
+        if (powerLevel != MAX_POWER) {
+            MoteComm moteComm = new MoteComm(address, commPort);
 
+            controlMsg.set_cmd((short) ControlCommands.SET_POWER.ordinal());
+            controlMsg.set_arg((short) powerLevel);
 
-        controlMsg.set_cmd((short) ControlCommands.SET_POWER.ordinal());
-        controlMsg.set_arg((short) powerLevel);
-
-        moteComm.start();
-        moteComm.send(controlMsg);
-        moteComm.stop();
+            moteComm.start();
+            moteComm.send(controlMsg);
+            moteComm.stop();
+        }
     }
 
 

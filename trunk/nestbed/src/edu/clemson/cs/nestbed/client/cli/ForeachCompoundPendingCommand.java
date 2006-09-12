@@ -28,6 +28,7 @@
  */
 package edu.clemson.cs.nestbed.client.cli;
 
+
 public class ForeachCompoundPendingCommand extends CompoundPendingCommand {
     private String   variable;
     private String[] targets;
@@ -66,6 +67,10 @@ public class ForeachCompoundPendingCommand extends CompoundPendingCommand {
 
         String[] command = Level.readLineNoExpand();
 
+        while (command.length == 0) {
+            command = Level.readLineNoExpand();
+        }
+
         while (!command[0].equals("done")) {
             if (command[0].equals("foreach")) {
                 addPendingCommand(
@@ -75,7 +80,11 @@ public class ForeachCompoundPendingCommand extends CompoundPendingCommand {
             } else {
                 addPendingCommand(new GeneralPendingCommand(command));
             }
+
             command = Level.readLineNoExpand();
+            while (command.length == 0) {
+                command = Level.readLineNoExpand();
+            }
         }
     }
 

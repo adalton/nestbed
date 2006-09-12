@@ -48,18 +48,24 @@ public class TokenReader {
 
 
     public String[] readTokens() {
-        List<String> tokens = new ArrayList<String>();
+        String[] tokArray = { "exit" };
 
-        while (index < line.length()) {
-            tokens.add(nextToken());
+        if (line != null) {
+            List<String> tokens = new ArrayList<String>();
+
+            while (index < line.length()) {
+                tokens.add(nextToken());
+            }
+
+            if (state == ReadState.QUOTE) {
+                System.err.println("Error: Unterminated string constant");
+                tokens.clear();
+            }
+
+            tokArray =  tokens.toArray(new String[tokens.size()]);
         }
 
-        if (state == ReadState.QUOTE) {
-            System.err.println("Error: Unterminated string constant");
-            tokens.clear();
-        }
-
-        return tokens.toArray(new String[tokens.size()]);
+        return tokArray;
     }
 
 

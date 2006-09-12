@@ -134,7 +134,10 @@ public class ProgramMessageSymbolManagerImpl
                                                       throws RemoteException {
         writeLock.lock();
         try {
-            log.debug("getProgramMessageSymbolList() called");
+            log.debug("addProgramMessageSymbol():\n" +
+                      "    programID:       " + programID + "\n" +
+                      "    name:            " + name      + "\n" +
+                      "    bytecode.length: " + bytecode.length);
 
             ProgramMessageSymbol pmt;
             pmt = programMessageSymbolAdapter.addProgramMessageSymbol(programID,

@@ -30,7 +30,7 @@
 #define __NESTBEDRADIO_CONTROL_H
 
 enum {
-    AM_CONTROLMESSAGE = 17
+    AM_CONTROLMESSAGE = 170
 };
 
 enum Command {
