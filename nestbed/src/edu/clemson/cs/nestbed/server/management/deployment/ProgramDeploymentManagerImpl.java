@@ -76,7 +76,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
         String property;
 
         property = "nestbed.bin.make";
-        String make = System.getProperty("nestbed.bin.make");
+        String make = System.getProperty(property);
         if (make == null || !(new File(make).exists())) {
             log.fatal("Property '" + property + "' is not set " +
                       " or file does not exist: " + make);

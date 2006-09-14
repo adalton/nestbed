@@ -1,13 +1,12 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * Copyright (C) 2006 Free Software Initiative of Japan
  *
  * Author:      NIIBE Yutaka <gniibe at fsij.org>
- * Modified by: Andrew R. Dalton <andy.dalton at gmail.com>
+ * Modified by: Andrew R. Dalton <adalton at cs dot clemson dot edu>
  *
  * This file can be distributed under the terms and conditions of the
  * GNU General Public License version 2 (or later).
- *
  */
 
 #include <usb.h>
@@ -152,6 +151,8 @@ int main(int argc, const char* argv[]) {
                                                 &hubDevNum, &hubPort)) {
 
                         // We found the device!
+                        // This *must* be printed in a Java property-style
+                        // format
                         printf("bus=%d\ndevice=%d\nport=%d\n",
                                busNum, hubDevNum, hubPort);
                         exit(0);

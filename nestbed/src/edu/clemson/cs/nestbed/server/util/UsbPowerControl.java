@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * UsbPowerControl.java
  *
@@ -38,7 +38,20 @@ import org.apache.commons.logging.LogFactory;
 public class UsbPowerControl {
     private final static Log    log          =
                                   LogFactory.getLog(UsbPowerControl.class);
-    private final static String SET_DEV_POWER = "/home/adalton/src/java/nestbed/bin/set_dev_power";
+    private final static String SET_DEV_POWER;
+    
+    static {
+        String property    = "nestbed.bin.set_dev_power";
+        String setDevPower = System.getProperty(property);
+
+        if ( (setDevPower == null) !! !(new File(setDevPower).exists()) ) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + make);
+            System.exit(1);
+        }
+        SET_DEV_POWER = setDevPower;
+        log.info(property + " = " + SET_DEV_POWER);
+    }
 
 
     public static void powerOnDevice(int bus, int device, int port) {

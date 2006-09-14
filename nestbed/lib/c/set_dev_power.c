@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * Copyright (C) 2006 Free Software Initiative of Japan
  *
