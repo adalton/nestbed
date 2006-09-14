@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MotePowerManagerImpl.java
  *
@@ -39,6 +39,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.server.management.configuration.MoteManagerImpl;
+import edu.clemson.cs.nestbed.server.util.UsbPowerControl;
 
 
 public class MotePowerManagerImpl extends    UnicastRemoteObject
@@ -76,6 +77,9 @@ public class MotePowerManagerImpl extends    UnicastRemoteObject
             Mote mote = moteManager.getMote(moteID);
 
             if (mote != null) {
+                UsbPowerControl.powerOffDevice(mote.getHubBus(),
+                                               mote.getHubDevice(),
+                                               mote.getHubPort());
             }
         } catch (RemoteException ex) {
             throw ex;
@@ -94,6 +98,9 @@ public class MotePowerManagerImpl extends    UnicastRemoteObject
             Mote mote = moteManager.getMote(moteID);
 
             if (mote != null) {
+                UsbPowerControl.powerOnDevice(mote.getHubBus(),
+                                              mote.getHubDevice(),
+                                              mote.getHubPort());
             }
         } catch (RemoteException ex) {
             throw ex;
@@ -102,24 +109,6 @@ public class MotePowerManagerImpl extends    UnicastRemoteObject
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
-    }
-
-
-    public boolean poweredOn(int moteID) throws RemoteException {
-        try {
-            Mote mote = moteManager.getMote(moteID);
-
-            if (mote != null) {
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            String msg = "Exception in poweredOn";
-            log.error(msg, ex);
-            throw new RemoteException(msg, ex);
-        }
-
-        return true;
     }
 
 

@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MotePowerManager.java
  *
@@ -34,7 +34,6 @@ import java.rmi.RemoteException;
 
 
 public interface MotePowerManager extends Remote {
-    public void    powerOff(int moteID)  throws RemoteException;
-    public void    powerOn(int moteID)   throws RemoteException;
-    public boolean poweredOn(int moteID) throws RemoteException;
+    public void powerOff(int moteID) throws RemoteException;
+    public void powerOn(int moteID)  throws RemoteException;
 }

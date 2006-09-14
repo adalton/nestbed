@@ -38,14 +38,22 @@ public class Mote implements Serializable {
     private String   moteSerialID;
     private int      moteTypeID;
     private Date     timestamp;
+    private int      hubBus;
+    private int      hubDevice;
+    private int      hubPort;
 
 
-    public Mote(int id,         String moteSerialID,
-                int moteTypeID, Date   timestamp) {
+    public Mote(int  id,        String moteSerialID, int moteTypeID,
+                Date timestamp, int    bus,          int device,
+                int  port) {
         this.id           = id;
         this.moteSerialID = moteSerialID;
         this.moteTypeID   = moteTypeID;
         this.timestamp    = timestamp;
+
+        this.hubBus       = bus;
+        this.hubDevice    = device;
+        this.hubPort      = port;
     }
 
 
@@ -69,11 +77,29 @@ public class Mote implements Serializable {
 	}
 
 
+    public int getHubBus() {
+        return hubBus;
+    }
+
+
+    public int getHubDevice() {
+        return hubDevice;
+    }
+
+
+    public int getHubPort() {
+        return hubPort;
+    }
+
+
     public boolean equals(Mote mote) {
         return    (id         == mote.id)
                && (moteTypeID == mote.moteTypeID)
                && (moteSerialID.equals(mote.moteSerialID))
-               && (timestamp.equals(mote.timestamp));
+               && (timestamp.equals(mote.timestamp))
+               && (hubBus     == mote.hubBus)
+               && (hubDevice  == mote.hubDevice)
+               && (hubPort    == mote.hubPort);
     }
 
 
@@ -96,11 +122,14 @@ public class Mote implements Serializable {
         StringBuffer buf = new StringBuffer();
 
         buf.append("Mote:\n");
-        buf.append("-----------------------------------------------\n");
-        buf.append("id:            ").append(id          ).append("\n");
-        buf.append("moteSerialID:  ").append(moteSerialID).append("\n");
-        buf.append("moteTypeID:    ").append(moteTypeID  ).append("\n");
-        buf.append("timestamp:     ").append(timestamp   ).append("\n");
+        buf.append("----------------------------------------------\n");
+        buf.append("id:           ").append(id          ).append("\n");
+        buf.append("moteSerialID: ").append(moteSerialID).append("\n");
+        buf.append("moteTypeID:   ").append(moteTypeID  ).append("\n");
+        buf.append("timestamp:    ").append(timestamp   ).append("\n");
+        buf.append("hubBus:       ").append(hubBus      ).append("\n");
+        buf.append("hubDevice:    ").append(hubDevice   ).append("\n");
+        buf.append("hubPort:      ").append(hubPort     ).append("\n");
 
         return buf.toString();
     }

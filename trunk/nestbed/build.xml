@@ -26,9 +26,13 @@
   - 51 Franklin Street, Fifth Floor
   - Boston, MA  02110-1301, USA.
   -->
-<project name="nestbed" default="default" basedir=".">
+<project name="nestbed" default="default" basedir="."
+        xmlns:cpptasks="antlib:org.sf.net.antcontrib.cpptasks">
     <property file="${user.home}/build.properties"/>
     <property file="default.properties"/>
+
+    <taskdef resource="cpptasks.tasks"/>
+    <typedef resource="cpptasks.types"/>
 
     <path id="compile.classpath">
         <pathelement location="${lib.home}/useful.jar"/>
@@ -57,10 +61,34 @@
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
     <target        name="clean"
-                depends="distclean"
-            description="Delete old build and dist directories">
+                depends="distclean,cleanClasses,cleanDocs,cleanParser,cleanC"
+            description="Delete old build and dist directories"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="distclean"
+            description="Clean distribution directory">
+        <delete dir="${dist.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="cleanClasses"
+            description="Delete old class files">
         <delete dir="${classes.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="cleanDocs"
+            description="Delete old doc files">
         <delete dir="${docs.home}"/>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="cleanParser"
+            description="Delete old parser files">
         <delete file="${parser.home}/Parser.java"/>
         <delete file="${parser.home}/Token.java"/>
         <delete file="${parser.home}/Lexer.java"/>
@@ -68,9 +96,16 @@
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
-    <target        name="distclean"
-            description="Clean distribution directory">
-        <delete dir="${dist.home}"/>
+    <target        name="cleanC"
+            description="Delete old C files">
+        <delete file="${bin.home}/dependencies.xml"/>
+        <delete file="${bin.home}/history.xml"/>
+
+        <delete file="${bin.home}/get_dev_info.o"/>
+        <delete file="${bin.home}/get_dev_info"/>
+
+        <delete file="${bin.home}/set_dev_power.o"/>
+        <delete file="${bin.home}/set_dev_power"/>
     </target>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
@@ -100,6 +135,36 @@
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
     <target        name="compile"
+                depends="compileJava,compileC"
+            description="Compile sources"/>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="compileC"
+            description="Compile C sources">
+        <cc     name="gcc"
+            warnings="diagnostic"
+            optimize="speed"
+             outfile="${bin.home}/get_dev_info"
+             outtype="executable">
+
+            <fileset dir="${lib.home}/c" includes="get_dev_info.c"/>
+            <syslibset libs="usb"/>
+        </cc>
+
+        <cc     name="gcc"
+            optimize="speed"
+             outfile="${bin.home}/set_dev_power"
+             outtype="executable">
+
+            <fileset dir="${lib.home}/c" includes="set_dev_power.c"/>
+            <syslibset libs="usb"/>
+        </cc>
+    </target>
+
+    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <target        name="compileJava"
                 depends="parser,-updateBuildProperties"
             description="Compile Java sources">
         <mkdir dir="${classes.home}"/>

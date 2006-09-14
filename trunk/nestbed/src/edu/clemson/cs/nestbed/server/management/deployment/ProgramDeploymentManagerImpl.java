@@ -172,9 +172,13 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
 
     public void resetMote(int moteAddress, String moteSerialID, int programID)
                                                         throws RemoteException {
+        log.debug("Request to reset mote:\n" +
+                  "moteAddress:  " + moteAddress  + "\n" +
+                  "moteSerialID: " + moteSerialID);
+
         try {
-            String         commPort = "/dev/motes/" + moteSerialID;
-            MoteComm       moteComm = new MoteComm(moteAddress, commPort);
+            String         commPort   = "/dev/motes/" + moteSerialID;
+            MoteComm       moteComm   = new MoteComm(moteAddress, commPort);
             ControlMessage controlMsg = new ControlMessage();
 
             controlMsg.set_cmd((short) ControlCommands.RESET.ordinal());
@@ -311,7 +315,9 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                     String moteSerialID, int    programID)
                                            throws RemoteException, IOException {
 
-        try { Thread.sleep(3000); } catch (Exception ex) { }
+        log.debug("Setting radio power on mote:\n" +
+                  "address:       " + address + "\n" +
+                  "moteSerialID:  " + moteSerialID);
 
         ControlMessage controlMsg = new ControlMessage();
         Mote           mote       = MoteManagerImpl.getInstance().getMote(
@@ -322,6 +328,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                                       getMoteDeploymentConfigurationByProgramID(
                                         moteID, programID).getRadioPowerLevel();
         if (powerLevel != MAX_POWER) {
+            try { Thread.sleep(3000); } catch (Exception ex) { }
             MoteComm moteComm = new MoteComm(address, commPort);
 
             controlMsg.set_cmd((short) ControlCommands.SET_POWER.ordinal());

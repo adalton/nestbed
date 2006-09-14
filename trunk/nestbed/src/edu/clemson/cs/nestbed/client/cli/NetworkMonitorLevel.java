@@ -39,11 +39,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
+import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
@@ -63,6 +64,7 @@ class NetworkMonitorLevel extends Level {
     private MoteManager                        moteManager;
     private MoteTypeManager                    moteTypeManager;
     private ProgramDeploymentManager           progDeployMgr;
+    private MotePowerManager                   motePowerManager;
     private List<MoteTestbedAssignment>        moteTestbedAssignments;
     private int                                numRows;
     private int                                numCols;
@@ -115,37 +117,42 @@ class NetworkMonitorLevel extends Level {
             addEntry(new MoteManagementLevelEntry(i));
         }
 
-        addCommand("ls",      new MonitorLsCommand());
-        addCommand("install", new InstallCommand());
-        addCommand("reset",   new ResetCommand());
-        addCommand("wait",    new WaitCommand());
-        addCommand("mkgw",    new CreateGatewayCommand());
-        addCommand("rmgw",    new RemoveGatewayCommand());
+        addCommand("ls",       new MonitorLsCommand());
+        addCommand("install",  new InstallCommand());
+        addCommand("reset",    new ResetCommand());
+        addCommand("powerOff", new PowerOffCommand());
+        addCommand("powerOn",  new PowerOnCommand());
+        addCommand("wait",     new WaitCommand());
+        addCommand("mkgw",     new CreateGatewayCommand());
+        addCommand("rmgw",     new RemoveGatewayCommand());
     }
 
 
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        moteManager     = (MoteManager)
+        moteManager      = (MoteManager)
                               Naming.lookup(RMI_BASE_URL +
                                          "MoteManager");
 
-        moteTypeManager = (MoteTypeManager)
+        moteTypeManager  = (MoteTypeManager)
                               Naming.lookup(RMI_BASE_URL +
                                          "MoteTypeManager");
 
-        mtbaManager     = (MoteTestbedAssignmentManager)
+        mtbaManager      = (MoteTestbedAssignmentManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "MoteTestbedAssignmentManager");
 
-        mdConfigManager = (MoteDeploymentConfigurationManager)
+        mdConfigManager  = (MoteDeploymentConfigurationManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "MoteDeploymentConfigurationManager");
 
-        progDeployMgr   = (ProgramDeploymentManager)
+        progDeployMgr    = (ProgramDeploymentManager)
                                 Naming.lookup(RMI_BASE_URL +
                                          "ProgramDeploymentManager");
+        motePowerManager = (MotePowerManager)
+                                Naming.lookup(RMI_BASE_URL +
+                                         "MotePowerManager");
     }
 
 
@@ -465,6 +472,90 @@ class NetworkMonitorLevel extends Level {
     }
 
 
+    private class PowerOffCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = NetworkMonitorLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name = args[1];
+            try {
+                Entry  entry = getEntryWithName(name);
+
+                if (entry instanceof MoteManagementLevelEntry) {
+                    MoteManagementLevelEntry mmlEntry;
+                    Mote                     mote;
+
+                    mmlEntry = (MoteManagementLevelEntry) entry;
+                    mote     = mmlEntry.getMote();
+
+                    motePowerManager.powerOff(mote.getID());
+                } else {
+                    System.err.printf("Mote %s not found\n", name);
+                    Variables.set("status", "2");
+                }
+            } catch (Exception ex) {
+                System.out.printf("Error powering off mote %s\n", name);
+                System.out.printf("Message:  %s\n", ex.toString());
+                Variables.set("status", "3");
+            }
+            return nextLevel;
+        }
+
+
+        public String getHelpText() {
+            return "Powers off the selected mote";
+        }
+    }
+
+
+    private class PowerOnCommand implements Command {
+        public Level execute(String[] args) throws Exception {
+            Level nextLevel = NetworkMonitorLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name  = args[1];
+            try {
+                Entry  entry = getEntryWithName(name);
+
+                if (entry instanceof MoteManagementLevelEntry) {
+                    MoteManagementLevelEntry mmlEntry;
+                    Mote                     mote;
+
+                    mmlEntry = (MoteManagementLevelEntry) entry;
+                    mote     = mmlEntry.getMote();
+
+                    motePowerManager.powerOn(mote.getID());
+                } else {
+                    System.err.printf("Mote %s not found\n", name);
+                    Variables.set("status", "2");
+                }
+            } catch (Exception ex) {
+                System.out.printf("Error powering on mote %s\n", name);
+                System.out.printf("Message:  %s\n", ex.toString());
+                Variables.set("status", "3");
+            }
+            return nextLevel;
+        }
+
+
+        public String getHelpText() {
+            return "Powers on the selected mote";
+        }
+    }
+
+
     private class WaitCommand implements Command {
         public Level execute(String[] args) throws Exception {
             int timeout = 0;
@@ -492,6 +583,7 @@ class NetworkMonitorLevel extends Level {
     private class CreateGatewayCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println("CreateGatewayCommand:  TODO");
+            return NetworkMonitorLevel.this;
         }
 
 
@@ -504,6 +596,7 @@ class NetworkMonitorLevel extends Level {
     private class RemoveGatewayCommand implements Command {
         public Level execute(String[] args) throws Exception {
             System.out.println("RemoveGatewayCommand:  TODO");
+            return NetworkMonitorLevel.this;
         }
 
 
