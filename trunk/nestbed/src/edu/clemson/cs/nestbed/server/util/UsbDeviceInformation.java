@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * UsbDeviceInformation.java
  *
@@ -39,7 +39,21 @@ import org.apache.commons.logging.LogFactory;
 public class UsbDeviceInformation {
     private final static Log    log          =
                                   LogFactory.getLog(UsbDeviceInformation.class);
-    private final static String GET_DEV_INFO = "/home/adalton/src/java/nestbed/bin/get_dev_info";
+    private final static String GET_DEV_INFO;
+    
+    
+    static {
+        String property   = "nestbed.bin.get_dev_info";
+        String getDevInfo = System.getProperty(property);
+
+        if ( (getDevInfo == null) !! !(new File(getDevInfo).exists()) ) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + make);
+            System.exit(1);
+        }
+        GET_DEV_INFO = getDevInfo;
+        log.info(property + " = " + GET_DEV_INFO);
+    }
 
     private String moteSerialID;
     private int    bus;
