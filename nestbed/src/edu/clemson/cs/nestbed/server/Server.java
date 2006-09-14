@@ -62,6 +62,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManag
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
+import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
@@ -85,6 +86,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManag
 import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramWeaverManagerImpl;
+import edu.clemson.cs.nestbed.server.management.power.MotePowerManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.NucleusManagerImpl;
 import edu.clemson.cs.nestbed.server.management.sfcontrol.SerialForwarderManagerImpl;
@@ -146,6 +148,7 @@ public class Server {
     private SerialForwarderManager                sfManager;
     private ShutdownTrigger                       shutdownTrigger;
     private TestbedManager                        testbedManger;
+    private MotePowerManager                      motePowerManager;
 
 
 
@@ -181,6 +184,7 @@ public class Server {
         programWeaverManager     = ProgramWeaverManagerImpl.getInstance();
         nucleusManager           = NucleusManagerImpl.getInstance();
         sfManager                = SerialForwarderManagerImpl.getInstance();
+        motePowerManager         = MotePowerManagerImpl.getInstance();
 
         bindRemoteObjects();
     }
@@ -252,6 +256,9 @@ public class Server {
 
         Naming.rebind(RMI_BASE_URL + "SerialForwarderManager", sfManager);
         log.debug("SerialForwarderManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "MotePowerManager", motePowerManager);
+        log.debug("MotePowerManager successfully bound.");
     }
 
 

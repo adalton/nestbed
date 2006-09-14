@@ -44,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.server.adaptation.AdaptationException;
 import edu.clemson.cs.nestbed.server.adaptation.MoteAdapter;
+import edu.clemson.cs.nestbed.server.util.UsbDeviceInformation;
 
 
 public class MoteSqlAdapter extends   SqlAdapter
@@ -77,17 +78,27 @@ public class MoteSqlAdapter extends   SqlAdapter
             resultSet  = statement.executeQuery(query);
 
             while (resultSet.next()) {
-                int    id;
-                String moteSerialID;
-                int    moteTypeID;
-                Date   timestamp;
+                int                  id;
+                String               moteSerialID;
+                int                  moteTypeID;
+                Date                 timestamp;
+                int                  bus;
+                int                  device;
+                int                  port;
+                UsbDeviceInformation usbDevInfo;
 
                 id           = resultSet.getInt(    Index.ID.index());
                 moteSerialID = resultSet.getString( Index.MOTESERIALID.index());
                 moteTypeID   = resultSet.getInt(    Index.MOTETYPEID.index());
                 timestamp    = resultSet.getDate(   Index.TIMESTAMP.index());
 
-                Mote mote = new Mote(id, moteSerialID, moteTypeID, timestamp);
+                usbDevInfo   = new UsbDeviceInformation(moteSerialID);
+                bus          = usbDevInfo.getBus();
+                device       = usbDevInfo.getDevice();
+                port         = usbDevInfo.getPort();
+
+                Mote mote = new Mote(id, moteSerialID, moteTypeID, timestamp,
+                                     bus, device, port);
 
                 motes.put(id, mote);
             }

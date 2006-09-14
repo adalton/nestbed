@@ -64,6 +64,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConf
 import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
@@ -100,6 +101,7 @@ public class MoteManagementPanel extends MotePanel {
     private ProgramDeploymentManager           progDeployMgr;
     private MoteTestbedAssignment              mtbAssignment;
     private SerialForwarderManager             sfManager;
+    private MotePowerManager                   motePowerManager;
 
     private Program                            program;
     private int                                projDepConfID;
@@ -158,14 +160,17 @@ public class MoteManagementPanel extends MotePanel {
     private final void lookupRemoteManagers() throws NotBoundException,
                                                      MalformedURLException,
                                                      RemoteException {
-        messageManager = (MessageManager) Naming.lookup(
-                          RMI_BASE_URL + "MessageManager");
+        messageManager   = (MessageManager) Naming.lookup(
+                            RMI_BASE_URL + "MessageManager");
 
-        progDeployMgr  = (ProgramDeploymentManager) Naming.lookup(
-                          RMI_BASE_URL + "ProgramDeploymentManager");
+        progDeployMgr    = (ProgramDeploymentManager) Naming.lookup(
+                            RMI_BASE_URL + "ProgramDeploymentManager");
 
-        sfManager      = (SerialForwarderManager) Naming.lookup(
-                          RMI_BASE_URL + "SerialForwarderManager");
+        sfManager        = (SerialForwarderManager) Naming.lookup(
+                            RMI_BASE_URL + "SerialForwarderManager");
+
+        motePowerManager = (MotePowerManager) Naming.lookup(
+                            RMI_BASE_URL + "MotePowerManager");
     }
 
 
@@ -359,6 +364,8 @@ public class MoteManagementPanel extends MotePanel {
         private JMenuItem  title;
         private JMenuItem  viewMoteDetails;
         private JMenuItem  resetMote;
+        private JMenuItem  powerOff;
+        private JMenuItem  powerOn;
         private JMenuItem  runSerialForwarder;
 
 
@@ -370,7 +377,9 @@ public class MoteManagementPanel extends MotePanel {
             viewMoteDetails    = new JMenuItem("View Mote Details");
             runSerialForwarder = new JMenuItem("Create Gateway");
             installProgram     = new JMenuItem();
-            resetMote          = new JMenuItem("Reset mote");
+            resetMote          = new JMenuItem("Reset Mote");
+            powerOff           = new JMenuItem("Power Off");
+            powerOn            = new JMenuItem("Power On");
 
             title.setEnabled(false);
             menu.add(title);
@@ -442,6 +451,41 @@ public class MoteManagementPanel extends MotePanel {
             });
             menu.add(resetMote);
 
+            powerOff.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        int choice;
+
+                        choice = JOptionPane.showConfirmDialog(
+                                    MoteManagementPanel.this,
+                                    "Are you sure you want to power off mote " +
+                                    mtbAssignment.getMoteAddress(),
+                                    "Power Down Confirmation",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.QUESTION_MESSAGE);
+                        if (choice == JOptionPane.YES_OPTION) {
+                            motePowerManager.powerOff(mote.getID());
+                        }
+
+                    } catch (Exception ex) {
+                        log.error("Exception\n", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
+                    }
+                }
+            });
+            menu.add(powerOff);
+
+            powerOn.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        motePowerManager.powerOn(mote.getID());
+                    } catch (Exception ex) {
+                        log.error("Exception\n", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
+                    }
+                }
+            });
+            menu.add(powerOn);
 
             runSerialForwarder.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
