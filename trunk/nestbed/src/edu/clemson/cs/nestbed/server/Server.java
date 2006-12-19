@@ -165,6 +165,7 @@ public class Server {
 
         ParentClassLoader.setParent(Server.class.getClassLoader());
 
+        moteManager              = MoteManagerImpl.getInstance();
         shutdownTrigger          = new ShutdownTrigger();
         programSymbolManager     = ProgramSymbolManagerImpl.getInstance();
         progProfSymbolManager    = ProgramProfilingSymbolManagerImpl.getInstance();
@@ -173,7 +174,6 @@ public class Server {
         projDepConfigManager     = ProjectDeploymentConfigurationManagerImpl.getInstance();
         projectManager           = ProjectManagerImpl.getInstance();
         moteTypeManager          = MoteTypeManagerImpl.getInstance();
-        moteManager              = MoteManagerImpl.getInstance();
         moteTbAssignManager      = MoteTestbedAssignmentManagerImpl.getInstance();
         testbedManger            = TestbedManagerImpl.getInstance();
         progMsgSymbolManager     = ProgramMessageSymbolManagerImpl.getInstance();

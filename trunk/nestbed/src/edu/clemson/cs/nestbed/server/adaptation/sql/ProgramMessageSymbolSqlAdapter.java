@@ -135,6 +135,12 @@ public class ProgramMessageSymbolSqlAdapter extends SqlAdapter
             preparedStatement.setInt(         1, programID);
             preparedStatement.setString(      2, name);
             preparedStatement.setBinaryStream(3, stream, bytecode.length);
+
+            log.info("INSERT INTO ProgramMessageSymbols(programID, name, " +
+                                "bytecode) VALUES (" +
+                                programID + ", '" +
+                                name      + "', " +
+                                "<bytecode>)");
             preparedStatement.executeUpdate();
 
 
