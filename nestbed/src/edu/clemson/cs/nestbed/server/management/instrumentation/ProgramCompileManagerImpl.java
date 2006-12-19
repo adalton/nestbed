@@ -181,8 +181,10 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
 
         ProcessBuilder processBuilder;
 
-        log.info("Generating MIG classes for messageType: " + messageType +
-                 " to directory " + directory.getAbsolutePath());
+        log.info("Generating MIG classes from header file: " +
+                 headerFile.getAbsolutePath() + " for messageType: " +
+                 messageType + " to directory " +
+                 directory.getAbsolutePath());
 
         processBuilder = new ProcessBuilder(MIG, "java",
                                             "-java-classname=" + messageType,
@@ -194,7 +196,17 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
 
-        try { process.waitFor(); } catch (InterruptedException ex) { }
+        try {
+            process.waitFor();
+            int exitValue = process.exitValue();
+
+            if (exitValue != 0) {
+                log.error("MIG Failed with exit code:  " + exitValue);
+                throw new IOException("MIG Failed with exit code " + exitValue);
+            }
+        } catch (InterruptedException ex) {
+            log.warn("MIG interrupted");
+        }
     }
 
 
@@ -250,7 +262,6 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         log.info("getMessageList(): directory = " + dir.getAbsolutePath() +
                  ", tosPlatform = " + tosPlatform);
         List<String>   messageList    = new ArrayList<String>();
-        /*
         ProcessBuilder processBuilder = 
                                 new ProcessBuilder(GET_TYPES,
                                                    dir.getAbsolutePath(),
@@ -268,7 +279,6 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
             messageList.add(line);
         }
         in.close();
-        */
 
         return messageList;
     }

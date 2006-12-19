@@ -23,8 +23,6 @@
 #define NUM_FIELDS              16
 
 
-
-
 static void usage(const char* progname) {
     fprintf(stderr, "Usage: %s -s <SERIAL>\n", progname);
 }

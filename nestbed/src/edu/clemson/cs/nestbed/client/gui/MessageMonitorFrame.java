@@ -123,6 +123,16 @@ public class MessageMonitorFrame extends JFrame {
     }
 
 
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+
+        for (Method i : methodFieldMap.keySet()) {
+            buffer.append(i.getName().substring(4)).append(":  ");
+            buffer.append(methodFieldMap.get(i).getText()).append("\n");
+        }
+        return buffer.toString();
+    }
+
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {

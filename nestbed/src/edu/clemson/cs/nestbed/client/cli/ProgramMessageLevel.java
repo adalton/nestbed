@@ -69,7 +69,7 @@ class ProgramMessageLevel extends Level {
                                                                 program.getID());
 
         for (ProgramMessageSymbol i : messageSymbols) {
-            addEntry(new Entry(i.getName()));
+            addEntry(new ProgramMessageSymbolEntry(i));
         }
 
 
@@ -85,11 +85,46 @@ class ProgramMessageLevel extends Level {
     }
 
 
+    private class ProgramMessageSymbolEntry extends Entry {
+        private ProgramMessageSymbol programMessageSymbol;
+
+
+        public ProgramMessageSymbolEntry(ProgramMessageSymbol pmse) {
+            super(pmse.getName());
+            this.programMessageSymbol = pmse;
+        }
+
+
+        public ProgramMessageSymbol getProgramMessageSymbol() {
+            return programMessageSymbol;
+        }
+    }
+
+
     private class ProfileCommand implements Command {
         public Level execute(String[] args) throws Exception {
-            System.out.println("ProfileCommand:  TODO");
-            Variables.set("status", "1");
-            return ProgramMessageLevel.this;
+            Level nextLevel = ProgramMessageLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <name>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name  = args[1];
+            Entry  entry = getEntryWithName(name);
+
+            if (entry instanceof ProgramMessageSymbolEntry) {
+                ProgramMessageSymbolEntry pmsEntry;
+                ProgramMessageSymbol      pms;
+
+                pmsEntry = (ProgramMessageSymbolEntry) entry;
+                pms      = pmsEntry.getProgramMessageSymbol();
+
+                // TODO:  manager.createNew(...);
+            }
+            return nextLevel;
         }
 
 

@@ -29,6 +29,7 @@
 package edu.clemson.cs.nestbed.server.util;
 
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
@@ -44,9 +45,9 @@ public class UsbPowerControl {
         String property    = "nestbed.bin.set_dev_power";
         String setDevPower = System.getProperty(property);
 
-        if ( (setDevPower == null) !! !(new File(setDevPower).exists()) ) {
+        if ( (setDevPower == null) || !(new File(setDevPower).exists()) ) {
             log.fatal("Property '" + property + "' is not set " +
-                      " or file does not exist: " + make);
+                      " or file does not exist: " + setDevPower);
             System.exit(1);
         }
         SET_DEV_POWER = setDevPower;
@@ -70,7 +71,8 @@ public class UsbPowerControl {
         int            exitValue;
 
         try {
-            processBuilder = new ProcessBuilder(SET_DEV_POWER,
+            //processBuilder = new ProcessBuilder(SET_DEV_POWER,
+            processBuilder = new ProcessBuilder("/usr/bin/sudo", SET_DEV_POWER,
                                                 "-b", Integer.toString(bus),
                                                 "-d", Integer.toString(device),
                                                 "-P", Integer.toString(port),

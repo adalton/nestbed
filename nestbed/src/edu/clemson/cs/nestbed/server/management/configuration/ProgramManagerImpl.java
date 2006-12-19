@@ -168,6 +168,9 @@ public class ProgramManagerImpl extends    RemoteObservableImpl
 
             program   = programAdapter.createNewProgram(projectID, name,
                                                         description);
+
+            log.info("Program created:\n" + program + "(" + program.getID() + ")");
+
             programID = program.getID();
             dir       = FileUtils.makeProgramDir(PROG_ROOT, testbedID,
                                                  projectID, programID);

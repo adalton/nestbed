@@ -29,6 +29,7 @@
 package edu.clemson.cs.nestbed.server.util;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -46,10 +47,12 @@ public class UsbDeviceInformation {
         String property   = "nestbed.bin.get_dev_info";
         String getDevInfo = System.getProperty(property);
 
-        if ( (getDevInfo == null) !! !(new File(getDevInfo).exists()) ) {
+        if ( (getDevInfo == null) || !(new File(getDevInfo).exists()) ) {
             log.fatal("Property '" + property + "' is not set " +
-                      " or file does not exist: " + make);
-            System.exit(1);
+                      " or file does not exist: " + getDevInfo);
+            //tmp
+            //System.exit(1);
+            getDevInfo = null;
         }
         GET_DEV_INFO = getDevInfo;
         log.info(property + " = " + GET_DEV_INFO);
@@ -92,8 +95,12 @@ public class UsbDeviceInformation {
         Process        process;
         int            exitValue;
 
+        // tmp
+        //if (GET_DEV_INFO == null) return;
+
         try {
-            processBuilder = new ProcessBuilder(GET_DEV_INFO, "-s", moteSerialID);
+            //processBuilder = new ProcessBuilder(GET_DEV_INFO, "-s", moteSerialID);
+            processBuilder = new ProcessBuilder("/usr/bin/sudo", GET_DEV_INFO, "-s", moteSerialID);
             process        = processBuilder.start();
 
             process.waitFor();
