@@ -100,6 +100,10 @@ public class SerialForwarderManagerImpl extends    UnicastRemoteObject
 
             sf.stopListenServer();
             sf.listenServerStopped();
+
+            log.info("Serial forwarder for mote " + moteID + " disabled");
+        } else {
+            log.warn("No serial forwarder running for mote: " + moteID);
         }
     }
 

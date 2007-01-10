@@ -60,7 +60,7 @@ class ProjectDeploymentConfigurationLevel extends Level {
         addEntry(new NetworkMonitorLevelEntry());
 
 
-        addCommand("cat", new CatCommand());
+        //addCommand("cat", new CatCommand());
     }
 
 

@@ -68,7 +68,7 @@ class SpecificProgramLevel extends Level {
         addEntry(new MessagesLevelEntry());
         addEntry(new SymbolsLevelEntry());
 
-        addCommand("cat", new CatCommand());
+        //addCommand("cat", new CatCommand());
     }
 
 

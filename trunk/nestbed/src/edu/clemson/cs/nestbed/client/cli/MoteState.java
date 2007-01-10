@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MoteState.java
  *
@@ -29,10 +29,21 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 public enum MoteState {
-    U,  // Unknown
-    P,  // Programmed
-    I,  // Installing
-    F,  // Install failed
-    S   // SF Running
+    U("Unknown"),
+    P("Programmed"),
+    I("Installing"),
+    F("Install Failed"),
+    G("Gateway Running");
+
+    private String longForm;
+
+    MoteState(String longForm) {
+        this.longForm = longForm;
+    }
+
+    public String getLongForm() {
+        return longForm;
+    }
+
 }
 

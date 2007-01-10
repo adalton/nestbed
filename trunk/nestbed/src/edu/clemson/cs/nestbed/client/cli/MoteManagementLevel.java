@@ -1,4 +1,4 @@
-/* $Id:$ */
+/* $Id$ */
 /*
  * MoteManagementLevel.java
  *
@@ -53,7 +53,9 @@ class MoteManagementLevel extends Level {
     private Project                            project;
     private ProjectDeploymentConfiguration     config;
     private MoteTestbedAssignment              mtbAssignment;
-    private MoteState                          moteState;
+    private MoteState[][]                      moteState;
+    private int                                stateRow;
+    private int                                stateCol;
     private MoteManager                        moteManager;
     private Mote                               mote;
     private MoteTypeManager                    moteTypeManager;
@@ -68,7 +70,9 @@ class MoteManagementLevel extends Level {
                                Project                        project,
                                ProjectDeploymentConfiguration config,
                                MoteTestbedAssignment          mtbAssignment,
-                               MoteState                      moteState,
+                               int                            stateRow,
+                               int                            stateCol,
+                               MoteState[][]                  moteState,
                                Level                          parent)
                                                             throws Exception {
 
@@ -80,6 +84,8 @@ class MoteManagementLevel extends Level {
         this.config        = config;
         this.mtbAssignment = mtbAssignment;
         this.moteState     = moteState;
+        this.stateRow      = stateRow;
+        this.stateCol      = stateCol;
         this.mote          = moteManager.getMote(mtbAssignment.getMoteID());
         this.moteType      = moteTypeManager.getMoteType(mote.getMoteTypeID());
         this.mdConfig      = mdConfigManager.getMoteDeploymentConfiguration(
@@ -91,8 +97,6 @@ class MoteManagementLevel extends Level {
         addEntry(new MoteDetailFileEntry());
         addEntry(new MoteSymbolProfilingLevelEntry());
         addEntry(new MoteMessageProfilingLevelEntry());
-
-        addCommand("cat", new CatCommand());
     }
 
 
@@ -154,21 +158,25 @@ class MoteManagementLevel extends Level {
             buffer.append(moteType.getTotalEEPROM());
             buffer.append("\n");
 
+
+
             buffer.append("\n");
 
-            buffer.append("Program Name:        ");
             if (program != null) {
+                buffer.append("Activity State:      ");
+                buffer.append(moteState[stateRow][stateCol].getLongForm());
+                buffer.append("\n");
+
+                buffer.append("\n");
+
+                buffer.append("Program Name:        ");
                 buffer.append(program.getName());
-            } else {
-                buffer.append("<Unconfigured>");
-            }
-            buffer.append("\n");
+                buffer.append("\n");
 
-            buffer.append("Program Description: ");
-            if (program != null) {
+                buffer.append("Program Description: ");
                 buffer.append(program.getDescription());
             } else {
-                buffer.append("<Unconfigured>");
+                buffer.append("Unconfigured\n");
             }
 
             return buffer.toString();

@@ -80,7 +80,7 @@ class ModuleLevel extends Level {
     }
 
 
-    private class ProgramSymbolEntry extends Entry {
+    private class ProgramSymbolEntry extends FileEntry {
         private ProgramSymbol programSymbol;
 
 
@@ -88,6 +88,16 @@ class ModuleLevel extends Level {
             super(programSymbol.getSymbol());
 
             this.programSymbol = programSymbol;
+        }
+
+
+        public String getFileContents() throws Exception {
+            StringBuffer s = new StringBuffer(100);
+
+            s.append("Module: ").append(programSymbol.getModule()).append("\n");
+            s.append("Symbol: ").append(programSymbol.getSymbol()).append("\n");
+
+            return s.toString();
         }
 
 

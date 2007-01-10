@@ -71,7 +71,7 @@ class ProjectLevel extends Level {
 
         addCommand("rmconf", new RmConfCommand());
         addCommand("mkconf", new MkConfCommand());
-        addCommand("cat",    new CatCommand());
+        //addCommand("cat",    new CatCommand());
     }
 
 

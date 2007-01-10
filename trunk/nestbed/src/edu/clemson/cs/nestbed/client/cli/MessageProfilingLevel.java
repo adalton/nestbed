@@ -69,7 +69,7 @@ class MessageProfilingLevel extends Level {
             ProgramMessageSymbol messageSymbol;
             messageSymbol = symbolManager.getProgramMessageSymbol(
                                                 i.getProgramMessageSymbolID());
-            addEntry(new Entry(messageSymbol.getName()));
+            addEntry(new MessageSymbolEntry(messageSymbol));
         }
 
 
@@ -87,6 +87,27 @@ class MessageProfilingLevel extends Level {
         symbolManager      = (ProgramMessageSymbolManager)
                             Naming.lookup(RMI_BASE_URL +
                                          "ProgramMessageSymbolManager");
+    }
+
+
+    private class MessageSymbolEntry extends FileEntry {
+        private ProgramMessageSymbol programMessageSymbol;
+
+        public MessageSymbolEntry(ProgramMessageSymbol programMessageSymbol) {
+            super(programMessageSymbol.getName());
+
+            this.programMessageSymbol = programMessageSymbol;
+        }
+
+
+        public String getFileContents() throws Exception {
+            StringBuffer s = new StringBuffer(100);
+
+            s.append("Name: ").append(programMessageSymbol.getName());
+            s.append("\n");
+
+            return s.toString();
+        }
     }
 
 
