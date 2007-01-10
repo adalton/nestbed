@@ -37,13 +37,15 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
-import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
+import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
+import edu.clemson.cs.nestbed.common.model.MoteType;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
@@ -57,6 +59,7 @@ class MoteConfigLevel extends Level {
     private ProjectDeploymentConfiguration     config;
     private MoteTestbedAssignment[][]          assignments;
     private MoteManager                        moteManager;
+    private MoteTypeManager                    moteTypeManager;
     private ProgramManager                     programManager;
     private MoteTestbedAssignmentManager       mtbaManager;
     private MoteDeploymentConfigurationManager mdConfigManager;
@@ -120,6 +123,10 @@ class MoteConfigLevel extends Level {
         moteManager     = (MoteManager)
                               Naming.lookup(RMI_BASE_URL +
                                          "MoteManager");
+
+        moteTypeManager = (MoteTypeManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "MoteTypeManager");
 
         programManager  = (ProgramManager)
                               Naming.lookup(RMI_BASE_URL +
@@ -188,10 +195,12 @@ class MoteConfigLevel extends Level {
     }
 
 
-    private class MoteTestbedAssignmentEntry extends Entry {
+    private class MoteTestbedAssignmentEntry extends FileEntry {
         private MoteTestbedAssignment       moteTestbedAssignment;
         private Mote                        mote;
+        private MoteType                    moteType;
         private MoteDeploymentConfiguration mdConfig;
+        private Program                     program;
 
 
         public MoteTestbedAssignmentEntry(MoteTestbedAssignment mtbAssign)
@@ -201,11 +210,45 @@ class MoteConfigLevel extends Level {
             this.moteTestbedAssignment = mtbAssign;
             this.mote                  = moteManager.getMote(
                                                         mtbAssign.getMoteID());
+            this.moteType              = moteTypeManager.getMoteType(
+                                                        mote.getMoteTypeID());
             this.mdConfig              = mdConfigManager.
-                                              getMoteDeploymentConfiguration(
-                                                     config.getID(),
-                                                     moteTestbedAssignment.
+                                             getMoteDeploymentConfiguration(
+                                                 config.getID(),
+                                                 moteTestbedAssignment.
                                                                    getMoteID());
+            if (this.mdConfig != null) {
+                this.program = programManager.getProgram(
+                                                    mdConfig.getProgramID());
+            }
+        }
+
+
+        public String getFileContents() throws Exception {
+            StringBuffer s = new StringBuffer(2000);
+
+            s.append("Address:             ");
+            s.append(Integer.toString(moteTestbedAssignment.getMoteAddress()));
+            s.append("\n");
+
+            s.append("Location:            (");
+            s.append(moteTestbedAssignment.getMoteLocationX()).append(", ");
+            s.append(moteTestbedAssignment.getMoteLocationY()).append(")\n");
+
+            s.append("Serial ID:           ").append(mote.getMoteSerialID()).append("\n");
+            s.append("Type:                ").append(moteType.getName()).append("\n");
+            s.append("Total ROM:           ").append(moteType.getTotalROM()).append("\n");
+            s.append("Total RAM:           ").append(moteType.getTotalRAM()).append("\n");
+            s.append("Total EEPROM:        ").append(moteType.getTotalEEPROM()).append("\n");
+
+            if (mdConfig != null) {
+                s.append("\n");
+                s.append("Program Name:        ").append(program.getName()).append("\n");
+                s.append("Program Description: ").append(program.getDescription()).append("\n");
+                s.append("Radio Power Level:   ").append(mdConfig.getRadioPowerLevel()).append("\n");
+            }
+
+            return s.toString();
         }
 
 

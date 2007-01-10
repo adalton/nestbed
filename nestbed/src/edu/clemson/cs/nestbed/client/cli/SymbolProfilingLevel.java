@@ -151,7 +151,7 @@ class SymbolProfilingLevel extends Level {
     }
 
 
-    private class ProgramProfilingSymbolEntry extends Entry {
+    private class ProgramProfilingSymbolEntry extends FileEntry {
         private ProgramProfilingSymbol programProfilingSymbol;
         private ProgramSymbol          programSymbol;
 
@@ -162,6 +162,16 @@ class SymbolProfilingLevel extends Level {
 
             this.programProfilingSymbol = ppSymbol;
             this.programSymbol          = pSymbol;
+        }
+
+
+        public String getFileContents() throws Exception {
+            StringBuffer s = new StringBuffer(100);
+
+            s.append("Module: ").append(programSymbol.getModule()).append("\n");
+            s.append("Symbol: ").append(programSymbol.getSymbol()).append("\n");
+
+            return s.toString();
         }
 
 

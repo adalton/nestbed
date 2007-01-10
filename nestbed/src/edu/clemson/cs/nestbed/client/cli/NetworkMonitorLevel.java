@@ -43,6 +43,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConfigurationManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTestbedAssignmentManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
+import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.model.Mote;
@@ -63,6 +64,7 @@ class NetworkMonitorLevel extends Level {
     private MoteDeploymentConfigurationManager mdConfigManager;
     private MoteManager                        moteManager;
     private MoteTypeManager                    moteTypeManager;
+    private SerialForwarderManager             sfManager;
     private ProgramDeploymentManager           progDeployMgr;
     private MotePowerManager                   motePowerManager;
     private List<MoteTestbedAssignment>        moteTestbedAssignments;
@@ -138,6 +140,10 @@ class NetworkMonitorLevel extends Level {
         moteTypeManager  = (MoteTypeManager)
                               Naming.lookup(RMI_BASE_URL +
                                          "MoteTypeManager");
+
+        sfManager        = (SerialForwarderManager)
+                              Naming.lookup(RMI_BASE_URL +
+                                         "SerialForwarderManager");
 
         mtbaManager      = (MoteTestbedAssignmentManager)
                                 Naming.lookup(RMI_BASE_URL +
@@ -246,6 +252,7 @@ class NetworkMonitorLevel extends Level {
         private MoteType                    moteType;
         private MoteDeploymentConfiguration mdConfig;
 
+
         public MoteManagementLevelEntry(MoteTestbedAssignment mtbAssign)
                                                         throws RemoteException {
             super(Integer.toString(mtbAssign.getMoteAddress()));
@@ -265,8 +272,18 @@ class NetworkMonitorLevel extends Level {
             int y = mtbAssignment.getMoteLocationY();
 
             return new MoteManagementLevel(testbed, project, config,
-                                           mtbAssignment, moteState[y][x],
+                                           mtbAssignment, y, x, moteState,
                                            NetworkMonitorLevel.this);
+        }
+
+
+        public int getStateRow() {
+            return mtbAssignment.getMoteLocationY();
+        }
+
+
+        public int getStateCol() {
+            return mtbAssignment.getMoteLocationX();
         }
 
 
@@ -582,8 +599,52 @@ class NetworkMonitorLevel extends Level {
 
     private class CreateGatewayCommand implements Command {
         public Level execute(String[] args) throws Exception {
-            System.out.println("CreateGatewayCommand:  TODO");
-            return NetworkMonitorLevel.this;
+            Level nextLevel = NetworkMonitorLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name = args[1];
+            try {
+                Entry entry = getEntryWithName(name);
+
+                if (entry instanceof MoteManagementLevelEntry) {
+                    MoteManagementLevelEntry mmlEntry;
+                    Mote                     mote;
+                    int                      stateRow;
+                    int                      stateCol;
+
+
+                    mmlEntry = (MoteManagementLevelEntry) entry;
+                    mote     = mmlEntry.getMote();
+                    stateRow = mmlEntry.getStateRow();
+                    stateCol = mmlEntry.getStateCol();
+
+                    if (moteState[stateRow][stateCol] != MoteState.P) {
+                        System.err.printf("Cannot start gateway for " +
+                                          "a mote in state: %s\n",
+                                      moteState[stateRow][stateCol].toString());
+                        Variables.set("status", "4");
+                    } else {
+                        sfManager.enableSerialForwarder(mote.getID(),
+                                                        Integer.parseInt(name));
+                        moteState[stateRow][stateCol] = MoteState.G;
+                    }
+                } else {
+                    System.err.printf("Mote %s not found\n", name);
+                    Variables.set("status", "2");
+                }
+            } catch (Exception ex) {
+                System.out.printf("Error creating gateway for mote %s\n", name);
+                System.out.printf("Message:  %s\n", ex.toString());
+                Variables.set("status", "3");
+            }
+
+            return nextLevel;
         }
 
 
@@ -595,8 +656,44 @@ class NetworkMonitorLevel extends Level {
 
     private class RemoveGatewayCommand implements Command {
         public Level execute(String[] args) throws Exception {
-            System.out.println("RemoveGatewayCommand:  TODO");
-            return NetworkMonitorLevel.this;
+            Level nextLevel = NetworkMonitorLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage:  %s <moteAddress>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name = args[1];
+            try {
+                Entry entry = getEntryWithName(name);
+
+                if (entry instanceof MoteManagementLevelEntry) {
+                    MoteManagementLevelEntry mmlEntry;
+                    Mote                     mote;
+                    int                      stateRow;
+                    int                      stateCol;
+
+                    mmlEntry = (MoteManagementLevelEntry) entry;
+                    mote     = mmlEntry.getMote();
+                    stateRow = mmlEntry.getStateRow();
+                    stateCol = mmlEntry.getStateCol();
+
+                    sfManager.disableSerialForwarder(mote.getID());
+                    moteState[stateRow][stateCol] = MoteState.P;
+                } else {
+                    System.err.printf("Mote %s not found\n", name);
+                    Variables.set("status", "2");
+                }
+            } catch (Exception ex) {
+                System.out.printf("Error destroying gateway for mote %s\n",
+                                  name);
+                System.out.printf("Message:  %s\n", ex.toString());
+                Variables.set("status", "3");
+            }
+
+            return nextLevel;
         }
 
 

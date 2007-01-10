@@ -36,6 +36,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
+import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.common.model.ProgramMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
@@ -44,12 +45,13 @@ import edu.clemson.cs.nestbed.common.model.Testbed;
 
 
 class ProgramMessageLevel extends Level {
-    private Testbed                        testbed;
-    private Project                        project;
-    private ProjectDeploymentConfiguration config;
-    private Program                        program;
-    private ProgramMessageSymbolManager    messageManager;
-    private List<ProgramMessageSymbol>     messageSymbols;
+    private Testbed                              testbed;
+    private Project                              project;
+    private ProjectDeploymentConfiguration       config;
+    private Program                              program;
+    private ProgramMessageSymbolManager          messageManager;
+    private ProgramProfilingMessageSymbolManager profSymManager;
+    private List<ProgramMessageSymbol>           messageSymbols;
 
 
     public ProgramMessageLevel(Testbed                        testbed,
@@ -81,17 +83,30 @@ class ProgramMessageLevel extends Level {
                                                      NotBoundException,
                                                      MalformedURLException {
         messageManager = (ProgramMessageSymbolManager)
-                Naming.lookup(RMI_BASE_URL + "ProgramMessageSymbolManager");
+           Naming.lookup(RMI_BASE_URL + "ProgramMessageSymbolManager");
+
+        profSymManager = (ProgramProfilingMessageSymbolManager)
+           Naming.lookup(RMI_BASE_URL + "ProgramProfilingMessageSymbolManager");
     }
 
 
-    private class ProgramMessageSymbolEntry extends Entry {
+    private class ProgramMessageSymbolEntry extends FileEntry {
         private ProgramMessageSymbol programMessageSymbol;
 
 
         public ProgramMessageSymbolEntry(ProgramMessageSymbol pmse) {
             super(pmse.getName());
             this.programMessageSymbol = pmse;
+        }
+
+
+        public String getFileContents() throws Exception {
+            StringBuffer s = new StringBuffer(100);
+
+            s.append("Name: ").append(programMessageSymbol.getName());
+            s.append("\n");
+
+            return s.toString();
         }
 
 
@@ -122,7 +137,8 @@ class ProgramMessageLevel extends Level {
                 pmsEntry = (ProgramMessageSymbolEntry) entry;
                 pms      = pmsEntry.getProgramMessageSymbol();
 
-                // TODO:  manager.createNew(...);
+                profSymManager.createNewProfilingMessageSymbol(config.getID(),
+                                                               pms.getID());
             }
             return nextLevel;
         }

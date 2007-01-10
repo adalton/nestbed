@@ -33,7 +33,9 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
@@ -56,7 +58,7 @@ class MoteSymbolProfilingLevel extends Level {
     private Project                        project;
     private ProjectDeploymentConfiguration config;
     private MoteTestbedAssignment          mtbAssignment;
-    private MoteState                      moteState;
+    private MoteState[][]                  moteState;
     private Mote                           mote;
     private MoteType                       moteType;
     private MoteDeploymentConfiguration    mdConfig;
@@ -65,13 +67,14 @@ class MoteSymbolProfilingLevel extends Level {
     private List<ProgramProfilingSymbol>   profilingSymbols;
     private ProgramSymbolManager           progSymMgr;
     private NucleusManager                 nucleusManager;
+    private Map<String, Integer>           nameValueMap;
 
 
     public MoteSymbolProfilingLevel(Testbed                        testbed,
                                     Project                        project,
                                     ProjectDeploymentConfiguration config,
                                     MoteTestbedAssignment         mtbAssignment,
-                                    MoteState                      moteState,
+                                    MoteState[][]                  moteState,
                                     Mote                           mote,
                                     MoteType                       moteType,
                                     MoteDeploymentConfiguration    mdConfig,
@@ -91,6 +94,7 @@ class MoteSymbolProfilingLevel extends Level {
         this.moteType      = moteType;
         this.mdConfig      = mdConfig;
         this.program       = program;
+        this.nameValueMap  = new HashMap<String, Integer>();
 
         if (program != null) {
             this.profilingSymbols = profSymMgr.getProgramProfilingSymbols(
@@ -128,7 +132,7 @@ class MoteSymbolProfilingLevel extends Level {
     }
 
 
-    private class ProgramProfilingSymbolEntry extends Entry {
+    private class ProgramProfilingSymbolEntry extends FileEntry {
         private ProgramProfilingSymbol programProfilingSymbol;
         private ProgramSymbol          programSymbol;
 
@@ -139,6 +143,23 @@ class MoteSymbolProfilingLevel extends Level {
 
             this.programProfilingSymbol = pps;
             this.programSymbol          = ps;
+        }
+
+
+        public String getFileContents() throws Exception {
+            String  name          = getName();
+            Integer integerValue = nameValueMap.get(name);
+            int     value;
+            String  contents;
+            
+            if (integerValue != null) {
+                value = nameValueMap.get(name);
+                contents = getName() + " = " + value;
+            } else {
+                contents = getName() + " = " + "<unknown>";
+            }
+
+            return contents;
         }
 
 
@@ -191,6 +212,7 @@ class MoteSymbolProfilingLevel extends Level {
                                                             moteSerialID);
 
                     System.out.printf("%s = %d\n", name, value);
+                    nameValueMap.put(name, value);
                 } else {
                     System.out.printf("Unknown symbol: %s\n", name);
                     Variables.set("status", "2");
@@ -213,9 +235,59 @@ class MoteSymbolProfilingLevel extends Level {
 
     private class SetCommand implements Command {
         public Level execute(String[] args) throws Exception {
-            System.out.println("set:  TODO");
-            Variables.set("status", "1");
-            return MoteSymbolProfilingLevel.this;
+            Level nextLevel = MoteSymbolProfilingLevel.this;
+
+            try {
+                Variables.set("status", "0");
+
+                if (args.length != 3) {
+                    System.err.printf("usage:  %s <symbol> <value>\n", args[0]);
+                    Variables.set("status", "1");
+                    return nextLevel;
+                }
+
+                String name  = args[1];
+                int    value;
+                
+                try {
+                    value = Integer.parseInt(args[2]);
+                } catch (NumberFormatException ex) {
+                    System.err.printf("%s is not a number\n", args[2]);
+                    Variables.set("status", "2");
+                    return nextLevel;
+                }
+
+                Entry entry = getEntryWithName(name);
+
+                if (entry instanceof ProgramProfilingSymbolEntry) {
+                    ProgramProfilingSymbolEntry ppsEntry;
+                    int                         profilingSymbolID;
+                    String                      programSourcePath;
+                    String                      tosPlatform;
+                    String                      moteSerialID;
+
+                    ppsEntry          = (ProgramProfilingSymbolEntry) entry;
+                    profilingSymbolID = ppsEntry.getProgramProfilingSymbol()
+                                                                    .getID();
+                    programSourcePath = program.getSourcePath();
+                    tosPlatform       = moteType.getTosPlatform();
+                    moteSerialID      = mote.getMoteSerialID();
+
+                    nucleusManager.setSymbol(value, profilingSymbolID,
+                                             programSourcePath, tosPlatform,
+                                             moteSerialID);
+                    nameValueMap.put(name, value);
+                } else {
+                    System.out.printf("Unknown symbol: %s\n", name);
+                    Variables.set("status", "3");
+                }
+            } catch (RemoteException ex) {
+                Variables.set("status", "4");
+                System.out.println("Failed to set symbol, reason: " +
+                                   ex.getMessage());
+            }
+
+            return nextLevel;
         }
 
 

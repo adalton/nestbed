@@ -66,7 +66,7 @@ class TestbedLevel extends Level {
 
         addCommand("rmproj", new RmProjCommand());
         addCommand("mkproj", new MkProjCommand());
-        addCommand("cat",    new CatCommand());
+        //addCommand("cat",    new CatCommand());
     }
 
 

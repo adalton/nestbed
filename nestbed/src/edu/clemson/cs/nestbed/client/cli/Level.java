@@ -89,6 +89,7 @@ abstract class Level {
         addCommand("shell",   new ShellCommand());
         addCommand("foreach", new ForeachCommand());
         addCommand("iferror", new IfErrorCommand());
+        addCommand("cat",     new CatCommand());
 
         // All levels have these LevelEntries
         addEntry(new RootLevelEntry());
@@ -628,13 +629,27 @@ abstract class Level {
                 return nextLevel;
             }
 
+            boolean found = false;
             for (Entry i : getEntries()) {
-                if (i.getName().equals(args[1]) && (i instanceof FileEntry)) {
-                    FileEntry fileEntry = (FileEntry) i;
-                    System.out.println(fileEntry.getFileContents());
-                    break;
+                if (i.getName().equals(args[1])) {
+                    found = true;
+
+                    if (i instanceof FileEntry) {
+                        FileEntry fileEntry = (FileEntry) i;
+                        System.out.println(fileEntry.getFileContents());
+                        break;
+                    } else {
+                        System.err.printf("cat: %s is not a file\n", args[1]);
+                        Variables.set("status", "2");
+                    }
                 }
             }
+
+            if (!found) {
+                System.err.printf("cat: %s: file not found\n", args[1]);
+                Variables.set("status", "3");
+            }
+
             return nextLevel;
         }
 
