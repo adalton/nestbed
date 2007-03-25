@@ -124,10 +124,10 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
                 if (values.length > 0) {
                     value = ((Integer) values[0].value).intValue();
                 } else {
-                    throw new RemoteException("Error reading symbol");
+                    throw new RemoteException("Error reading symbol - value.length == 0");
                 }
             } else {
-                throw new RemoteException("Error reading symbol");
+                throw new RemoteException("Error reading symbol - results.size() == 0");
             }
         } catch (RemoteException ex) {
             throw ex;
