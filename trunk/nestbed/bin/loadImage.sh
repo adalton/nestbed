@@ -1,7 +1,7 @@
 #!/bin/bash
 # $Id$
 
-JAVA_OPTS="-Djdbc.drivers=com.mysql.jdbc.Driver:org.apache.commons.dbcp.PoolingDriver -Djava.security.policy=/home/adalton/src/java/nestbed/java.policy"
+JAVA_OPTS="-Djdbc.drivers=com.mysql.jdbc.Driver:org.apache.commons.dbcp.PoolingDriver -Djava.security.policy=/opt/nestbed/misc/java.policy"
 
 TOSBED_HOME=/home/adalton/src/java/nestbed
 TOSBED_LIB=${TOSBED_HOME}/lib
