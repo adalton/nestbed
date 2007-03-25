@@ -383,7 +383,7 @@ class NetworkMonitorLevel extends Level {
 
             synchronized(installMap) {
                 if (     (installMap.get(address) != null) && 
-                         (installMap.get(address) == Boolean.FALSE) ) {
+                         (installMap.get(address) == Boolean.TRUE) ) {
                     System.err.printf("Already installing on mote %d\n",
                                       address);
                     Variables.set("status", "2");
