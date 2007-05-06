@@ -38,6 +38,8 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
+import java.rmi.registry.LocateRegistry;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -129,7 +131,6 @@ public class Server {
         }
     }
 
-
     private MessageManager                        messageManager;
     private MoteDeploymentConfigurationManager    moteDepConfigManager;
     private MoteManager                           moteManager;
@@ -165,6 +166,9 @@ public class Server {
         log.info("Version:  " + Version.VERSION);
 
         ParentClassLoader.setParent(Server.class.getClassLoader());
+
+        // Create the RMI registry
+        LocateRegistry.createRegistry(1099);
 
         moteManager              = MoteManagerImpl.getInstance();
         shutdownTrigger          = new ShutdownTrigger();

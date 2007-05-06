@@ -1,8 +1,7 @@
 #!/bin/bash
 # $Id$
 
-source ~/.gentoo/java-env
-cd /home/adalton/src/java/nestbed/bin/
+cd ${NESTBED_HOME}/bin/
 
 while [ true ]; do
     echo "Starting RMI Registry..."

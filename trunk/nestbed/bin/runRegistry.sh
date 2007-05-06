@@ -1,13 +1,10 @@
 #!/bin/bash
 # $Id$
 
-TOSBED_HOME=/home/adalton/src/java/nestbed
-TOSBED_LIB=${TOSBED_HOME}/lib
-
-CLASSPATH=${TOSBED_HOME}/dist/nestbed.jar
-for i in ${TOSBED_LIB}/*; do
+CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
+for i in ${NESTBED_LIB}/*; do
     CLASSPATH="${CLASSPATH}:$i"
 done
 
 export CLASSPATH
-exec rmiregistry
+exec $(java-config-2 --get-env=JAVA_HOME)/bin/rmiregistry

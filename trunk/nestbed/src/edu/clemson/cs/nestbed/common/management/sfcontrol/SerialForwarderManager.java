@@ -35,7 +35,7 @@ import java.rmi.RemoteException;
 
 
 public interface SerialForwarderManager extends Remote {
-    public void enableSerialForwarder(int moteID, int moteAddress)
+    public int enableSerialForwarder(int moteID, int moteAddress)
                                                         throws RemoteException;
 
     public void disableSerialForwarder(int moteID) throws RemoteException;

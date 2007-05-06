@@ -631,9 +631,10 @@ class NetworkMonitorLevel extends Level {
                                       moteState[stateRow][stateCol].toString());
                         Variables.set("status", "4");
                     } else {
-                        sfManager.enableSerialForwarder(mote.getID(),
+                        int port = sfManager.enableSerialForwarder(mote.getID(),
                                                         Integer.parseInt(name));
                         moteState[stateRow][stateCol] = MoteState.G;
+                        System.out.println("Gateway enabled on port " + port);
                     }
                 } else {
                     System.err.printf("Mote %s not found\n", name);

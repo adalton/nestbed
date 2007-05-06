@@ -1,0 +1,29 @@
+#!/sbin/runscript
+
+NESTBED_HOME=${NESTBED_HOME:-/opt/nestbed}
+NESTBED_LIB=${NESTBED_LIB:-/opt/nestbed/lib}
+
+CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
+for i in ${NESTBED_LIB}/*; do
+    CLASSPATH="${CLASSPATH}:$i"
+done
+CLASSPATH=${CLASSPATH}:$(java-config-2 --tools)
+
+PIDFILE=/var/run/nestbedServer.pid
+
+depend() {
+    use dns
+    need net mysql
+}
+
+start() {
+    ebegin "Starting the NESTBed Server"
+    start-stop-daemon --quiet --start --background --make-pidfile --pidfile ${PIDFILE} --chuid nestbed:nestbed --exec $(java-config-2 --java) -- -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
+    eend $? "Failed to start the NESTBed Server"
+}
+
+stop() {
+    ebegin "Stopping the NESTBed Server"
+    start-stop-daemon --stop --quiet --pidfile ${PIDFILE}
+    eend $? "Failed to stop the NESTBed Server"
+}

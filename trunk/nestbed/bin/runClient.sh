@@ -1,13 +1,11 @@
 #!/bin/bash
 # $Id$
 
-CLASSPATH="/home/adalton/src/java/nestbed/dist/nestbed.jar"
-CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/log4j.jar"
-CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/useful.jar"
-CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/commons-logging.jar"
-CLASSPATH="${CLASSPATH}:/home/adalton/src/java/nestbed/lib/tinyos.jar"
+JAVA_OPTS="-Djava.security.policy=${NESTBED_HOME}/misc/java.policy"
+CLASSPATH="${NESTBED_HOME}/dist/nestbed.jar"
 
-JAVA_OPTS="-Djava.security.policy=/home/adalton/src/java/nestbed/misc/java.policy"
+for i in log4j.jar useful.jar commons-logging.jar tinyos.jar; do
+    CLASSPATH="${CLASSPATH}:${NESTBED_LIB}/$i"
+done
 
-echo $CLASSPATH
-exec java -classpath ${CLASSPATH} ${JAVA_OPTS} edu.clemson.cs.nestbed.client.Client $*
+exec $(java-config-2 --java) -classpath ${CLASSPATH} ${JAVA_OPTS} edu.clemson.cs.nestbed.client.Client $*

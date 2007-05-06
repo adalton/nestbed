@@ -1,15 +1,13 @@
 #!/bin/bash
 # $Id$
 
-TOSBED_HOME=/home/adalton/src/java/nestbed
-TOSBED_LIB=${TOSBED_HOME}/lib
-
-CLASSPATH=${TOSBED_HOME}/dist/nestbed.jar
+CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
 CLASSPATH=${CLASSPATH}:$(/opt/tinyos-1.x/tools/java/javapath)
-CLASSPATH=/opt/sun-jdk-1.5.0.08/jre/lib:${CLASSPATH}
-for i in ${TOSBED_LIB}/*; do
+CLASSPATH=$(java-config-2 --get-env=JAVA_HOME)/jre/lib:${CLASSPATH}
+
+for i in ${NESTBED_LIB}/*; do
     CLASSPATH="${CLASSPATH}:$i"
 done
-CLASSPATH=${CLASSPATH}:${JAVA_HOME}/lib/tools.jar
+CLASSPATH=${CLASSPATH}:$(java-config-2 --tools)
 
-exec java -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
+exec $(java-config-2 --java) -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
