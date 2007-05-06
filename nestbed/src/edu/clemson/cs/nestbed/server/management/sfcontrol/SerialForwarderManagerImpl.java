@@ -73,13 +73,15 @@ public class SerialForwarderManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public void enableSerialForwarder(int moteID, int moteAddress)
+    public int enableSerialForwarder(int moteID, int moteAddress)
                                                         throws RemoteException {
+        int port = 9000 + moteAddress;
+
         try {
             Mote mote = MoteManagerImpl.getInstance().getMote(moteID);
 
             SerialForwarder sf = new SerialForwarder(new String[] {
-                    "-port", Integer.toString(9000 + moteAddress),
+                    "-port", Integer.toString(port),
                     "-comm", "serial@/dev/motes/" + mote.getMoteSerialID() +
                                     ":telos",
                     "-no-gui",
@@ -90,6 +92,8 @@ public class SerialForwarderManagerImpl extends    UnicastRemoteObject
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
+
+        return port;
     }
 
 

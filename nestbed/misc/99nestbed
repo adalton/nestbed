@@ -1,0 +1,6 @@
+NESTBED_HOME="/opt/nestbed"
+NESTBED_LIB="/opt/nestbed/lib"
+TOSROOT="/opt/tinyos-1.x"
+TOSDIR="/opt/tinyos-1.x/tos"
+PATH="/opt/msp430/bin"
+ROOTPATH="/opt/msp430/bin"
