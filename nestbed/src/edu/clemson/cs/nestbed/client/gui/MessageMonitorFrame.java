@@ -263,13 +263,13 @@ public class MessageMonitorFrame extends JFrame {
             this.running         = false;
 
             try {
-            ClassLoader classLoader = messageSymbol.getClassLoader();
-            Class       c           = classLoader.loadClass(
+                ClassLoader classLoader = messageSymbol.getClassLoader();
+                Class       c           = classLoader.loadClass(
                                                MessageObserver.class.getName());
-            Constructor constructor = c.getConstructor(
-                                                MessageMonitorFrame.class);
-            messageObserver = (MessageObserver)
-                        constructor.newInstance(MessageMonitorFrame.this);
+                Constructor constructor = c.getConstructor(
+                                                    MessageMonitorFrame.class);
+                messageObserver = (MessageObserver)
+                            constructor.newInstance(MessageMonitorFrame.this);
             } catch (Exception ex) {
                 log.error("Exception:\n", ex);
                 ClientUtils.displayErrorMessage(MessageMonitorFrame.this, ex);

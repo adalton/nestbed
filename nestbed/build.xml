@@ -179,6 +179,7 @@
                   optimize="${compile.optimize}">
 
             <compilerarg value="-Xlint:all"/>
+            <compilerarg value="-Xlint:-path"/>
             <compilerarg value="-Xlint:-serial"/>
             <compilerarg value="-Xlint:-fallthrough"/>
 
