@@ -30,11 +30,14 @@
 package edu.clemson.cs.nestbed.client.cli;
 
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.List;
+
+import java.rmi.server.UnicastRemoteObject;
 
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingMessageSymbolManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramMessageSymbolManager;
@@ -43,6 +46,7 @@ import edu.clemson.cs.nestbed.common.model.ProgramProfilingMessageSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
 
 class MessageProfilingLevel extends Level {
@@ -50,7 +54,7 @@ class MessageProfilingLevel extends Level {
     private Project                               project;
     private ProjectDeploymentConfiguration        config;
     private ProgramMessageSymbolManager           symbolManager;
-    private ProgramProfilingMessageSymbolManager  profilingSymbolMgr;
+    private ProgramProfilingMessageSymbolManager  progProfMsgSymManager;
     private List<ProgramProfilingMessageSymbol>   profilingMessages;
 
 
@@ -63,16 +67,18 @@ class MessageProfilingLevel extends Level {
         this.testbed           = testbed;
         this.project           = project;
         this.config            = config;
-        this.profilingMessages = profilingSymbolMgr.
+        this.profilingMessages = progProfMsgSymManager.
                             getProgramProfilingMessageSymbols(config.getID());
 
         for (ProgramProfilingMessageSymbol i : profilingMessages) {
             ProgramMessageSymbol messageSymbol;
             messageSymbol = symbolManager.getProgramMessageSymbol(
                                                 i.getProgramMessageSymbolID());
-            addEntry(new MessageSymbolEntry(messageSymbol));
+            addEntry(new MessageSymbolEntry(messageSymbol, i));
         }
 
+        progProfMsgSymManager.addRemoteObserver(
+                                new ProgramProfilingMessageSymbolObserver());
 
         addCommand("rm", new RmCommand());
     }
@@ -81,23 +87,35 @@ class MessageProfilingLevel extends Level {
     private final void lookupRemoteManagers() throws RemoteException,
                                                      NotBoundException,
                                                      MalformedURLException {
-        profilingSymbolMgr = (ProgramProfilingMessageSymbolManager)
-                            Naming.lookup(RMI_BASE_URL +
+        progProfMsgSymManager = (ProgramProfilingMessageSymbolManager)
+                                Naming.lookup(RMI_BASE_URL +
                                          "ProgramProfilingMessageSymbolManager");
 
-        symbolManager      = (ProgramMessageSymbolManager)
-                            Naming.lookup(RMI_BASE_URL +
+        symbolManager         = (ProgramMessageSymbolManager)
+                                Naming.lookup(RMI_BASE_URL +
                                          "ProgramMessageSymbolManager");
     }
 
 
     private class MessageSymbolEntry extends FileEntry {
-        private ProgramMessageSymbol programMessageSymbol;
+        private ProgramMessageSymbol          programMessageSymbol;
+        private ProgramProfilingMessageSymbol programProfilingMessageSymbol;
 
-        public MessageSymbolEntry(ProgramMessageSymbol programMessageSymbol) {
-            super(programMessageSymbol.getName());
+        public MessageSymbolEntry(ProgramMessageSymbol          pms,
+                                  ProgramProfilingMessageSymbol ppms) {
+            super(pms.getName());
 
-            this.programMessageSymbol = programMessageSymbol;
+            this.programMessageSymbol          = pms;
+            this.programProfilingMessageSymbol = ppms;
+        }
+
+
+        public ProgramMessageSymbol getProgramMessageSymbol() {
+            return programMessageSymbol;
+        }
+
+        public ProgramProfilingMessageSymbol getProgramProfilingMessageSymbol() {
+            return programProfilingMessageSymbol;
         }
 
 
@@ -114,14 +132,84 @@ class MessageProfilingLevel extends Level {
 
     private class RmCommand implements Command {
         public Level execute(String[] args) throws Exception {
-            System.out.println("RmCommand:  TODO");
-            Variables.set("status", "1");
-            return MessageProfilingLevel.this;
+            Level nextLevel = MessageProfilingLevel.this;
+            Variables.set("status", "0");
+
+            if (args.length != 2) {
+                System.out.printf("usage: %s <messageSymbol>\n", args[0]);
+                Variables.set("status", "1");
+                return nextLevel;
+            }
+
+            String name = args[1];
+            Entry entry = getEntryWithName(name);
+
+            if (entry instanceof MessageSymbolEntry) {
+                MessageSymbolEntry            msEntry;
+                ProgramProfilingMessageSymbol ppms;
+
+                msEntry = (MessageSymbolEntry) entry;
+                ppms     = msEntry.getProgramProfilingMessageSymbol();
+
+                progProfMsgSymManager.deleteProgramProfilingMessageSymbol(
+                                                                ppms.getID());
+            }
+
+            return nextLevel;
         }
 
 
         public String getHelpText() {
             return "Removes the specified message from the profiling list";
+        }
+    }
+
+
+    protected class ProgramProfilingMessageSymbolObserver
+                                             extends    UnicastRemoteObject
+                                             implements RemoteObserver {
+
+        public ProgramProfilingMessageSymbolObserver() throws RemoteException {
+            super();
+        }
+
+
+        public void update(Serializable msg, Serializable arg)
+                                                    throws RemoteException {
+            ProgramProfilingMessageSymbolManager.Message message;
+            ProgramProfilingMessageSymbol                profilingMsgSymbol;
+
+            message            = (ProgramProfilingMessageSymbolManager.Message)
+                                  msg;
+            profilingMsgSymbol = (ProgramProfilingMessageSymbol) arg;
+
+
+            switch (message) {
+            case NEW_SYMBOL: {
+                ProgramMessageSymbol msgSymbol;
+
+                msgSymbol = symbolManager.getProgramMessageSymbol(
+                                profilingMsgSymbol.getProgramMessageSymbolID());
+
+                addEntry(new MessageSymbolEntry(msgSymbol, profilingMsgSymbol));
+                break;
+            }
+
+            case DELETE_SYMBOL: {
+                ProgramMessageSymbol msgSymbol;
+
+                msgSymbol = symbolManager.getProgramMessageSymbol(
+                                profilingMsgSymbol.getProgramMessageSymbolID());
+
+                Entry entry = getEntryWithName(msgSymbol.getName());
+                removeEntry(entry);
+                break;
+            }
+
+            default:
+                System.err.println("Unknown message:  " + msg);
+                break;
+            }
         }
     }
 }

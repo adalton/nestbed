@@ -208,8 +208,8 @@ class MoteManagementLevel extends Level {
 
 
         public Level getLevel() throws Exception {
-            //return new MoteMessageProfilingLevel();
-            return MoteManagementLevel.this;
+            return new MoteMessageProfilingLevel(config, program, mote,
+                                                 MoteManagementLevel.this);
         }
     }
 }

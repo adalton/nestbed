@@ -237,14 +237,18 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
 
 
         public void run() {
-            log.debug("Installing\n" +
-                      "    address:       " + moteAddress  + "\n" +
-                      "    moteSerialID:  " + moteSerialID + "\n" +
-                      "    tosPlatform:   " + tosPlatform  + "\n" +
-                      "    programID:     " + programID    + "\n" +
-                      "    retryCount:    " + retryCount);
             try {
-                notifyObservers(Message.PROGRAM_INSTALL_BEGIN, moteSerialID);
+                log.debug("Installing\n" +
+                          "    address:       " + moteAddress  + "\n" +
+                          "    moteSerialID:  " + moteSerialID + "\n" +
+                          "    tosPlatform:   " + tosPlatform  + "\n" +
+                          "    programID:     " + programID    + "\n" +
+                          "    retryCount:    " + retryCount);
+
+                if (retryCount == 0) {
+                    notifyObservers(Message.PROGRAM_INSTALL_BEGIN,
+                                    moteSerialID);
+                }
 
                 try {
                     // Sleep randomly between 1 and 20 seconds
@@ -254,7 +258,6 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 Program         program;
                 ProcessBuilder  processBuilder;
                 String          commPort;
-                Process         process;
 
                 commPort       = "/dev/motes/" + moteSerialID;
                 program        = ProgramManagerImpl.getInstance().getProgram(
@@ -268,7 +271,7 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 processBuilder.redirectErrorStream(true);
 
 
-                process = processBuilder.start();
+                Process process = processBuilder.start();
                 output.append(getProcessOutput(process, null));
 
                 process.waitFor();
@@ -280,34 +283,42 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
 
                     notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
                                     moteSerialID);
-                } else {
+                } else if (!maybeRetry()) {
                     notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
                                     moteSerialID);
-                    maybeRetry();
                 }
             } catch (InterruptedException ex) {
                 String msg = "process interrupted while waiting for " +
                              "install";
                 log.error(msg, ex);
-                notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
-                                moteSerialID);
-                maybeRetry();
+
+                if (!maybeRetry()) {
+                    notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                    moteSerialID);
+                }
             } catch (IOException ex) {
                 String msg = "I/O Exception while installing program";
-
                 log.error(msg, ex);
-                notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
-                                moteSerialID);
-                maybeRetry();
+
+                if (!maybeRetry()) {
+                    notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                    moteSerialID);
+                }
             }
         }
 
-        private void maybeRetry() {
+        private boolean maybeRetry() {
+            boolean retry = false;
+
             if (++retryCount < MAX_RETRY) {
                 log.info("Install failed on mote " + moteAddress + " (" +
                          moteSerialID + ") -- retrying");
+
+                retry = true;
                 threadPool.execute(this);
             }
+
+            return retry;
         }
     }
 
