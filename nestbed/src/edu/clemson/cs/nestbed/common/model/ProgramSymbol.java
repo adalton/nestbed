@@ -2,11 +2,11 @@
 /*
  * ProgramSymbol.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -39,15 +39,20 @@ public class ProgramSymbol implements Serializable, Comparable {
     private int    programID;
     private String module;
     private String symbol;
+    private int    address;
+    private short  size;
     private Date   timestamp;
 
 
-    public ProgramSymbol(int    id,     int  programID, String module,
-                         String symbol, Date timestamp) {
+    public ProgramSymbol(int    id,     int programID, String module,
+                         String symbol, int address,   short  size,
+                         Date   timestamp) {
         this.id        = id;
         this.programID = programID;
         this.module    = module;
         this.symbol    = symbol;
+        this.address   = address;
+        this.size      = size;
         this.timestamp = timestamp;
     }
 
@@ -70,6 +75,16 @@ public class ProgramSymbol implements Serializable, Comparable {
 	public String getSymbol() {
 		return symbol;
 	}
+
+
+    public int getAddress() {
+        return address;
+    }
+
+
+    public short getSize() {
+        return size;
+    }
 
 
 	public Date getTimestamp() {

@@ -2,11 +2,11 @@
 /*
  * NestbedControlM.nc
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
- * Copyright (C) 2006
+ * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  *
  * This program is free software; you can redistribute it and/or
@@ -27,44 +27,68 @@
  * Boston, MA  02110-1301, USA.
  */
 module NestbedControlM {
-    provides interface StdControl;
-    uses     interface Leds;
-    uses     interface ReceiveMsg    as ReceivePower;
-    uses     interface CC2420Control as Radio;
-    uses     interface Reset;
+    uses interface Boot;
+    uses interface Leds;
+    uses interface SplitControl  as AMControl;
+    uses interface Receive       as UARTReceive;
+    uses interface Timer<TMilli> as ResetTimer;
+    uses interface CC2420Config  as Radio;
 }
 
 implementation {
-    command result_t StdControl.init() {
-        call Leds.init();
-        return SUCCESS;
-    }
+    event message_t* UARTReceive.receive(message_t* bufPtr, void* payload,
+                                         uint8_t length) {
+        if (length == sizeof(ControlMessage)) {
+            ControlMessage* controlMessage = (ControlMessage*) payload;
 
+            switch (controlMessage->cmd) {
+            case SET_POWER:
+                call Radio.setRFPower(controlMessage->arg);
+                call Leds.set(controlMessage->arg);
+                break;
 
-    event TOS_MsgPtr ReceivePower.receive(TOS_MsgPtr msgPtr) {
-        ControlMessage* controlMessage = (ControlMessage*) msgPtr->data;
+            case RESET:
+                // We can't just reset here -- the Java side of the house is
+                // expecting an ACK.  If we reset now, the ACK will never
+                // arrive and the Java stuff will resend the message (which
+                // will reset the device again!).
+                call ResetTimer.startOneShot(250);
+                break;
 
-        switch (controlMessage->cmd) {
-        case SET_POWER:
-            call Radio.SetRFPower(controlMessage->arg);
-            call Leds.set(controlMessage->arg);
-            break;
-
-        case RESET:
-            call Reset.reset();
-            // Should not reach this point
-            break;
-
-        default:
-            // Unknown command
-            call Leds.set(7);
-            break;
+            default:
+                // Unknown command
+                call Leds.set(7);
+                break;
+            }
         }
 
-        return msgPtr;
+        return bufPtr;
     }
 
 
-    command result_t StdControl.start() { return SUCCESS; }
-    command result_t StdControl.stop()  { return SUCCESS; }
+    event void ResetTimer.fired() {
+        WDTCTL = 0;
+        // Should not reach this point
+    }
+
+    event void Radio.syncDone(error_t error) {
+        // Do nothing
+    }
+
+
+    event void Boot.booted() {
+        call AMControl.start();
+    }
+
+
+    event void AMControl.startDone(error_t err) {
+        if (err != SUCCESS) {
+            call AMControl.start();
+        }
+    }
+
+
+    event void AMControl.stopDone(error_t err) {
+        // Do nothing
+    }
 }

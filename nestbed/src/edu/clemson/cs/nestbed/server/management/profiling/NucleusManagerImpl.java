@@ -2,11 +2,11 @@
 /*
  * NucleusManagerImpl.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -30,13 +30,17 @@
 package edu.clemson.cs.nestbed.server.management.profiling;
 
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
-import net.tinyos.nucleus.NucleusInterface;
-import net.tinyos.nucleus.NucleusResult;
-import net.tinyos.nucleus.NucleusValue;
+import net.tinyos.message.Message;
+import net.tinyos.message.MessageListener;
+import net.tinyos.message.MoteIF;
+import net.tinyos.packet.BuildSource;
+import net.tinyos.packet.PhoenixSource;
+import net.tinyos.util.Messenger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +58,8 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
     private final static NucleusManager instance;
     private final static Log            log =
                                 LogFactory.getLog(NucleusManagerImpl.class);
+    private final static LogMessenger   logMessenger = new LogMessenger();
+
 
     static {
         NucleusManager impl = null;
@@ -74,64 +80,53 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
     }
 
 
-    public int querySymbol(int    id,       String sourcePath,
-                           String moteType, String moteSerialID)
+    public long querySymbol(int    id,       String sourcePath,
+                            String moteType, String moteSerialID)
                                                     throws RemoteException {
-        int value = -1;
+        long value = -1;
 
         try {
-            int    queryDelay = 10;
-            String device     = "/dev/motes/" + moteSerialID; 
-
+            String device = "/dev/motes/" + moteSerialID; 
             log.info("Query symbol on device: " + device);
-            NucleusInterface nucleusInterface = new NucleusInterface(device,
-                                                                     "telos");
 
-            ProgramProfilingSymbol pps     = ProgramProfilingSymbolManagerImpl.
-                                                getInstance().
-                                                    getProgramProfilingSymbol(id);
-            ProgramSymbol    programSymbol = ProgramSymbolManagerImpl.
-                                                getInstance().
-                                                    getProgramSymbol(
+            ProgramProfilingSymbol pps;
+            ProgramSymbol          programSymbol;
+            String                 moduleName;
+            String                 symbolName;
+
+            pps           = ProgramProfilingSymbolManagerImpl.getInstance().
+                                                  getProgramProfilingSymbol(id);
+            programSymbol = ProgramSymbolManagerImpl.getInstance().
+                                                  getProgramSymbol(
                                                       pps.getProgramSymbolID());
-            String           moduleName    = programSymbol.getModule();
-            String           symbolName    = programSymbol.getSymbol();
+            moduleName    = programSymbol.getModule();
+            symbolName    = programSymbol.getSymbol();
 
             if (!moduleName.equals("<global>")) {
                 symbolName = moduleName + "." + symbolName;
             }
-            String schema = sourcePath + "/build/" + moteType +
-                            "/nucleusSchema.xml";
 
-            log.debug("Nucleus schema file: " + schema);
+            String                 source  = "serial@" + device + ":telos";
+            PhoenixSource          phoenix = BuildSource.makePhoenix(source,
+                                                                  logMessenger);
+            MoteIF                 moteIF  = new MoteIF(phoenix);
+            MemoryProfilingMessage payload = new MemoryProfilingMessage();
+            MemoryProfilingMessageListener listener
+                    = new MemoryProfilingMessageListener();
 
-            nucleusInterface.loadSchema(schema);
+            moteIF.registerListener(new MemoryProfilingMessage(),
+                                    listener);
 
-            log.info("Query for symbol: " + symbolName);
-            List result = nucleusInterface.get(NucleusInterface.DEST_LINK,
-                                               0x7E, queryDelay,
-                                               new String[] { symbolName },
-                                               new int[]    { 0 });
-            nucleusInterface.close();
+            payload.set_read((byte) 1);
+            payload.set_offset((byte) 0);
+            payload.set_address(programSymbol.getAddress());
+            payload.set_size(programSymbol.getSize());
 
-            if (result.size() > 0) {
-                NucleusResult nucleusResult = (NucleusResult) result.get(0);
+            moteIF.send(0, payload);
 
-                @SuppressWarnings({"unchecked"})
-                NucleusValue[] values = (NucleusValue[])
-                        nucleusResult.attrs.values().toArray(new NucleusValue[0]);
-
-                if (values.length > 0) {
-                    value = ((Integer) values[0].value).intValue();
-                } else {
-                    throw new RemoteException("Error reading symbol - value.length == 0");
-                }
-            } else {
-                throw new RemoteException("Error reading symbol - results.size() == 0");
-            }
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
+            value = listener.getValue();
+            phoenix.shutdown();
+        } catch (IOException ex) {
             String msg = "Exception in querySymbol";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
@@ -147,58 +142,84 @@ public class NucleusManagerImpl extends    UnicastRemoteObject
         boolean okay = false;
 
         try {
-            String                 device;
-            NucleusInterface       nucleusInterface;
+            String device = "/dev/motes/" + moteSerialID; 
+            log.info("Setting symbol on device: " + device + " to value " + value);
+
             ProgramProfilingSymbol pps;
             ProgramSymbol          programSymbol;
             String                 moduleName;
             String                 symbolName;
 
-            device           = "/dev/motes/" + moteSerialID; 
-            log.info("Set symbol on device: " + device + " to " + value);
-            nucleusInterface = new NucleusInterface(device, "telos");
-
-            pps              = ProgramProfilingSymbolManagerImpl.getInstance().
-                                                getProgramProfilingSymbol(id);
-            programSymbol    = ProgramSymbolManagerImpl.getInstance().
-                                                    getProgramSymbol(
+            pps           = ProgramProfilingSymbolManagerImpl.getInstance().
+                                                  getProgramProfilingSymbol(id);
+            programSymbol = ProgramSymbolManagerImpl.getInstance().
+                                                  getProgramSymbol(
                                                       pps.getProgramSymbolID());
-            moduleName       = programSymbol.getModule();
-            symbolName       = programSymbol.getSymbol();
+            moduleName    = programSymbol.getModule();
+            symbolName    = programSymbol.getSymbol();
 
             if (!moduleName.equals("<global>")) {
                 symbolName = moduleName + "." + symbolName;
             }
-            String schema = sourcePath + "/build/" + moteType +
-                            "/nucleusSchema.xml";
-
-            log.debug("Nucleus schema file: " + schema);
-
-            nucleusInterface.loadSchema(schema);
-
             log.info("Set symbol: " + symbolName + " to " + value);
-            okay = nucleusInterface.set(NucleusInterface.DEST_LINK,
-                                        symbolName, 0,
-                                        new short[]  { (short) value });
-            if (okay) {
-                log.info("Symbol set successfully");
-            } else {
-                log.warn("Symbol not set successfully");
-            }
-            nucleusInterface.close();
-        } catch (RemoteException ex) {
-            throw ex;
-        } catch (Exception ex) {
+
+            String                 source  = "serial@" + device + ":telos";
+            PhoenixSource          phoenix = BuildSource.makePhoenix(source,
+                                                                  logMessenger);
+            MoteIF                 moteIF  = new MoteIF(phoenix);
+            MemoryProfilingMessage payload = new MemoryProfilingMessage();
+
+            payload.set_read((byte) 0);
+            payload.set_offset((byte) 0);
+            payload.set_address(programSymbol.getAddress());
+            payload.set_size(programSymbol.getSize());
+            payload.set_value(value);
+
+            moteIF.send(0, payload);
+            phoenix.shutdown();
+
+            okay = true;
+        } catch (IOException ex) {
             String msg = "Exception in setSymbol";
             log.error(msg, ex);
             throw new RemoteException(msg, ex);
         }
-
         return okay;
     }
 
 
     private NucleusManagerImpl() throws RemoteException {
         super();
+    }
+
+
+    private static class LogMessenger implements Messenger {
+        public void message(String s) {
+            log.error(s);
+        }
+    }
+
+
+    private class MemoryProfilingMessageListener implements MessageListener {
+        private long    value;
+        private boolean recorded = false;
+
+
+        public synchronized void messageReceived(int to, Message message) {
+            MemoryProfilingMessage msg = (MemoryProfilingMessage) message;
+            value    = msg.get_value();
+            recorded = true;
+            notifyAll();
+        }
+
+
+        public synchronized long getValue() {
+            while (!recorded) {
+                try { wait(); } catch (InterruptedException ex) { }
+            }
+
+            recorded = false;
+            return value;
+        }
     }
 }

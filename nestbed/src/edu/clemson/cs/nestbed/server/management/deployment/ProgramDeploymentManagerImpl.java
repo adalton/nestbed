@@ -2,11 +2,11 @@
 /*
  * ProgramDeploymentManagerImpl.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -70,21 +70,20 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static int    MAX_POWER = 31;
     private final static int    MAX_RETRY = 2;
     private final static int    MAX_THREADS;
-    private final static String MAKE;
-    private final static String MAKEOPTS  = "-C";
+    private final static String INSTALL;
 
     static {
         String property;
 
-        property = "nestbed.bin.make";
-        String make = System.getProperty(property);
-        if (make == null || !(new File(make).exists())) {
+        property = "nestbed.bin.install";
+        String install = System.getProperty(property);
+        if (install == null || !(new File(install).exists())) {
             log.fatal("Property '" + property + "' is not set " +
-                      " or file does not exist: " + make);
+                      " or file does not exist: " + install);
             System.exit(1);
         }
-        MAKE = make;
-        log.info(property + " = " + MAKE);
+        INSTALL = install;
+        log.info(property + " = " + INSTALL);
 
 
 
@@ -262,11 +261,11 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 commPort       = "/dev/motes/" + moteSerialID;
                 program        = ProgramManagerImpl.getInstance().getProgram(
                                                                     programID);
-                processBuilder = new ProcessBuilder(MAKE, MAKEOPTS, 
+
+                processBuilder = new ProcessBuilder(INSTALL,
                                                     program.getSourcePath(),
-                                                    tosPlatform, "nucleus",
-                                                    "reinstall." +
-                                                    moteAddress, "bsl," +
+                                                    tosPlatform,
+                                                    Integer.toString(moteAddress),
                                                     commPort);
                 processBuilder.redirectErrorStream(true);
 
@@ -280,12 +279,14 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 if (exitValue == 0) {
                     setRadioPowerLevel(moteAddress,  commPort,
                                        moteSerialID, programID);
-
                     notifyObservers(Message.PROGRAM_INSTALL_SUCCESS,
                                     moteSerialID);
-                } else if (!maybeRetry()) {
-                    notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
-                                    moteSerialID);
+                } else {
+                    log.error(moteSerialID + " -- Install failed with exit code: " + exitValue);
+                    if (!maybeRetry()) {
+                        notifyObservers(Message.PROGRAM_INSTALL_FAILURE,
+                                        moteSerialID);
+                    }
                 }
             } catch (InterruptedException ex) {
                 String msg = "process interrupted while waiting for " +
@@ -326,7 +327,6 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private void setRadioPowerLevel(int    address,      String commPort,
                                     String moteSerialID, int    programID)
                                            throws RemoteException, IOException {
-
         log.debug("Setting radio power on mote:\n" +
                   "address:       " + address + "\n" +
                   "moteSerialID:  " + moteSerialID);

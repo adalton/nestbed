@@ -2,11 +2,11 @@
 /*
  * ProgramSymbolManagerImpl.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -149,8 +149,8 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
         }
     }
 
-
-    public void createProgramSymbol(int programID, String module, String symbol)
+    public void createProgramSymbol(int programID, String module, String symbol,
+                                    int address,   int    size)
                                                         throws RemoteException {
         writeLock.lock();
         try {
@@ -158,7 +158,9 @@ public class ProgramSymbolManagerImpl extends    RemoteObservableImpl
             ProgramSymbol programSymbol =
                         programSymbolAdapter.createNewProgramSymbol(programID,
                                                                     module,
-                                                                    symbol);
+                                                                    symbol,
+                                                                    address,
+                                                                    size);
 
             programSymbols.put(programSymbol.getID(), programSymbol);
         } catch (AdaptationException ex) {

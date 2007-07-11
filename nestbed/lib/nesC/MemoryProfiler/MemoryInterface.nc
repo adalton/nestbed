@@ -1,12 +1,12 @@
 /* $Id$ */
 /*
- * Includes.java
+ * MemoryInterface.nc
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
- * Copyright (C) 2006-2007
+ * Copyright (C) 2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -27,17 +27,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.nesc.parser.ast;
-
-
-public class Includes extends AstNode {
-    public Includes(IncludeList includeList) {
-        this.includeList = includeList;
-    }
-
-    public IncludeList includeList;
-
-    public String toString() {
-        return "includes " + includeList.toString() + "\n";
-    }
+interface MemoryInterface {
+    command uint32_t readFromAddress(uint16_t address, uint8_t size, uint8_t offset);
+    command void     writeToAddress( uint16_t address, uint8_t size, uint8_t offset, uint32_t value);
 }

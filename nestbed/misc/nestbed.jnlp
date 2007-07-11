@@ -3,11 +3,11 @@
 /*
  * nestbed.jnlp
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -34,7 +34,7 @@
     codebase="http://nestbed.cs.clemson.edu/nestbed/"
         href="http://nestbed.cs.clemson.edu/nestbed/nestbed.jnlp">
     <information>
-        <title>NESTBed Manager</title>
+        <title>NESTbed Manager</title>
         <vendor>DSRG, Clemson University</vendor>
         <homepage href="http://dsrg.cs.clemson.edu/nestbed/"/>
         <description>Network Embedded Sensor Testbed</description>
@@ -53,9 +53,6 @@
         <jar href="lib/jdom-tinyos.jar"/>
         <jar href="lib/log4j.jar"/>
         <jar href="lib/sax.jar"/>
-        <jar href="lib/nucleus.jar"/>
-        <jar href="lib/drip.jar"/>
-        <jar href="lib/drain.jar"/>
         <jar href="lib/tinyos.jar"/>
         <jar href="lib/useful.jar"/>
     </resources>

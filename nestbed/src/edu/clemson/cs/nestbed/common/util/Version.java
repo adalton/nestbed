@@ -2,11 +2,11 @@
 /*
  * Version.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -31,5 +31,5 @@ package edu.clemson.cs.nestbed.common.util;
 
 
 public interface Version {
-    public final static String VERSION = "@(#)NESTBed-0.5 -- #0730 (on: Wednesday, May 16, 2007 12:47:53.513 -0400)@";
+    public final static String VERSION = "@(#)NESTbed-0.6 -- #0813 (on: Wednesday, July 11, 2007 18:41:18.602 -0400)@";
 }

@@ -2,11 +2,11 @@
 /*
  * Server.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -161,7 +161,7 @@ public class Server {
                       new LogOutputStream(System.class, Level.ERROR)), true));
 
         log.info("******************************************************\n" +
-                 "** NESTBed Server Starting\n" +
+                 "** NESTbed Server Starting\n" +
                  "******************************************************");
         log.info("Version:  " + Version.VERSION);
 

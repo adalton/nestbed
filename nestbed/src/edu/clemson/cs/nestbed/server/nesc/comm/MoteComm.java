@@ -2,11 +2,11 @@
 /*
  * MoteComm.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -131,7 +131,9 @@ public class MoteComm implements MessageListener {
 
 
     public void send(Message message) throws IOException {
+        log.debug("Sending message:\n" + message);
         moteIf.send(address, message);
+        log.debug("Sending complete");
     }
 
 

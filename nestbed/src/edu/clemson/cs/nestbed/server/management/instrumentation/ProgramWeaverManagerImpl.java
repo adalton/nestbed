@@ -2,11 +2,11 @@
 /*
  * ProgramWeaverManagerImpl.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -48,6 +48,7 @@ import edu.clemson.cs.nestbed.common.model.Program;
 import edu.clemson.cs.nestbed.server.nesc.weaver.MakefileWeaver;
 import edu.clemson.cs.nestbed.server.nesc.weaver.WiringDiagramWeaver;
 import edu.clemson.cs.nestbed.server.management.configuration.ProgramManagerImpl;
+import edu.clemson.cs.nestbed.server.util.FileUtils;
 
 
 public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
@@ -132,6 +133,14 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
                                                        Exception {
         WiringDiagramWeaver weaver = new WiringDiagramWeaver(componentNesc);
 
+        weaver.addComponentReference("MemoryProfilerC", "NESTbedMemoryProfiler");
+        weaver.addConnection("NESTbedMemoryProfiler", "Boot",
+                             "MainC",                 "Boot");
+
+        weaver.addComponentReference("NestbedControlC", "NestbedControl");
+        weaver.addConnection("NestbedControl", "Boot",
+                             "MainC",          "Boot");
+/*
         weaver.addComponentReference("MgmtQueryC", "NucleusInterface");
         weaver.addConnection("Main",             "StdControl",
                              "NucleusInterface", "StdControl");
@@ -140,32 +149,34 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
         weaver.addConnection("Main",             "StdControl",
                              "NucleusSet",       "StdControl");
 
-        weaver.addComponentReference("NestbedControlC", "NestbedControl");
-        weaver.addConnection("Main",           "StdControl",
-                             "NestbedControl", "StdControl");
 
+*/
         for (String i : updatedComponents.keySet()) {
             weaver.updateComponent(i, updatedComponents.get(i));
         }
 
         weaver.regenerateNescSource();
+
+        File parentDir   = componentNesc.getParentFile();
+        File analysisDir = new File(parentDir,   "analysis");
+        File newFile     = new File(analysisDir, componentNesc.getName());
+
+        FileUtils.copyFile(newFile, componentNesc);
     }
 
 
     private void updateMakefile(File makefile) throws FileNotFoundException,
                                                       Exception {
         MakefileWeaver mfWeaver = new MakefileWeaver(makefile);
-        mfWeaver.addLine("TOSMAKE_PATH += " +
-                         "$(TOSDIR)/../contrib/nucleus/scripts");
 
         for (String directory : NESC_LIBRARY_DIRECTORIES) {
             mfWeaver.addLine("CFLAGS += -I" + directory);
         }
 
-        mfWeaver.addLine("CFLAGS += -DTOSH_MAX_TASKS_LOG2=8");
+//        mfWeaver.addLine("CFLAGS += -DTOSH_MAX_TASKS_LOG2=8");
 
         mfWeaver.addLine("# The following line *MUST* be last");
-        mfWeaver.addLine("include $(TOSROOT)/tools/make/Makerules");
+        mfWeaver.addLine("include $(TOSROOT)/support/make/Makerules");
 
         mfWeaver.regenerateMakefile();
     }

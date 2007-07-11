@@ -2,11 +2,11 @@
 /*
  * ProgramCompileManagerImpl.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -42,11 +42,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,6 +67,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
     private final static String MAKEOPTS = "-C";
     private final static String GET_TYPES;
     private final static String GET_FILE;
+    private final static String GET_SYMBOLS;
     private final static int    MAX_THREADS;
 
 
@@ -124,6 +120,17 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
         GET_FILE = getFile;
         log.info(property + " = " + GET_FILE);
 
+
+
+        property = "nestbed.bin.getProgramSymbols";
+        String getSymbols = System.getProperty(property);
+        if (getSymbols == null || !(new File(getSymbols).exists())) {
+            log.fatal("Property '" + property + "' is not set " +
+                      " or file does not exist: " + getSymbols);
+            System.exit(1);
+        }
+        GET_SYMBOLS = getSymbols;
+        log.info(property + " = " + GET_SYMBOLS);
 
 
 
@@ -285,33 +292,40 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
     }
 
 
-    private void loadProgramSymbols(Program program, String tosPlatform) 
-                                                        throws JDOMException,
-                                                               IOException {
-        SAXBuilder builder    = new SAXBuilder();
-        Document   schema     = builder.build(program.getSourcePath() +
-                                                   "/build/" + tosPlatform +
-                                                   "/nucleusSchema.xml");
-        List       attributes = schema.getRootElement().getChild(
-                                                   "symbols").getChildren();
 
-        for (Object i : attributes) {
-            Element  attribute = (Element) i;
-            String   name      = attribute.getAttributeValue("name");
-            String[] values    = name.split("\\.");
-            String   module;
-            String   symbol;
+    private void loadProgramSymbols(Program program, String tosPlatform)
+                                                            throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                                                GET_SYMBOLS,
+                                                program.getSourcePath() +
+                                                "/build/" + tosPlatform +
+                                                "/main.exe");
 
-            if (values.length == 2) {
-                module = values[0];
-                symbol = values[1];
-            } else {
-                module = "<global>";
-                symbol = values[0];
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
+
+        BufferedReader in = new BufferedReader(
+                                new InputStreamReader(
+                                    process.getInputStream()));
+
+        for (String line = in.readLine(); line != null; line = in.readLine()) {
+            try {
+                log.debug("Program symbol line: " + line);
+
+                String[] tokens  = line.split("\\s");
+                int      address = Integer.parseInt(tokens[0], 16);
+                int      size    = Integer.parseInt(tokens[1], 16);
+                String   module  = tokens[2].substring(0, tokens[2].indexOf('.'));
+                String   symbol  = tokens[2].substring(tokens[2].indexOf('.') + 1);
+
+                log.debug("Address = " + address + "size = "   + size    +
+                          "module = "  + module  + "symbol = " + symbol);
+
+                ProgramSymbolManagerImpl.getInstance().createProgramSymbol(
+                                    program.getID(), module, symbol, address, size);
+            } catch (StringIndexOutOfBoundsException ex) {
+                log.error(ex);
             }
-
-            ProgramSymbolManagerImpl.getInstance().createProgramSymbol(
-                                              program.getID(), module, symbol);
         }
     }
 
@@ -400,7 +414,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
 
                 processBuilder = new ProcessBuilder(MAKE, MAKEOPTS,
                                                     prog.getSourcePath(),
-                                                    tosPlatform, "nucleus");
+                                                    tosPlatform);
                 processBuilder.redirectErrorStream(true);
                 process = processBuilder.start();
                 output.append(getProcessOutput(process,
@@ -419,9 +433,6 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                 }
 
                 notifyObservers(Message.COMPILE_COMPLETED, exitSuccess);
-            } catch (JDOMException ex) {
-                log.error("JDOMException:", ex);
-                failed = true;
             } catch (IOException ex) {
                 log.error("I/O Exception while compiling new program", ex);
                 failed = true;

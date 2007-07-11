@@ -2,11 +2,11 @@
 /*
  * WiringDiagramWeaver.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -32,145 +32,84 @@ package edu.clemson.cs.nestbed.server.nesc.weaver;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.clemson.cs.nestbed.server.nesc.parser.Lexer;
-import edu.clemson.cs.nestbed.server.nesc.parser.Parser;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.AstNode;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.Connection;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.ConfigurationDecl;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.ConfigurationDecls;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.Component;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.ComponentList;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.ComponentRef;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.Cuses;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.Endpoint;
-import edu.clemson.cs.nestbed.server.nesc.parser.ast.ParameterisedIdentifier;
-import edu.clemson.cs.nestbed.server.util.FileUtils;
+import edu.clemson.cs.nesctk.NescToolkit;
+import edu.clemson.cs.nesctk.SourceFile;
+import edu.clemson.cs.nesctk.ast.*;
+import edu.clemson.cs.nesctk.util.AstUtils;
 
 
 public class WiringDiagramWeaver {
     private final static Log log = LogFactory.getLog(WiringDiagramWeaver.class);
 
-    private File      nescFile;
-    private File      nescFileBackup;
-    private Component component;
+    private NescToolkit toolkit;
+    private SourceFile  sourceFile;
 
 
-    public WiringDiagramWeaver(File nescFile) throws FileNotFoundException,
-                                                     IOException,
-                                                     Exception {
-        this.nescFile       = nescFile;
-        this.nescFileBackup = new File(nescFile + ".orig");
+    public WiringDiagramWeaver(File nescFile) throws Exception {
+        log.info("Top-Level configuration " + nescFile.getAbsolutePath());
 
-        FileUtils.copyFile(nescFile, nescFileBackup);
+        toolkit = new NescToolkit(nescFile, nescFile.getParentFile());
 
-
-        log.debug("Parsing " + nescFile + " for wiring diagram.");
-
-        Lexer lexer   = new Lexer(nescFile);
-        Parser parser = new Parser(lexer);
-        parser.parse();
-
-        this.component = parser.getComponent();
+        Map<String, SourceFile> sourceFileMap = toolkit.load();
+        sourceFile = sourceFileMap.get(nescFile.getName());
     }
 
 
     public void addComponentReference(String name, String as) throws Exception {
-        ComponentRef  componentRef = new ComponentRef(name, as);
-        List<AstNode> cusesList    = component.getNodesOfType(Cuses.class);
+        ConfigurationComponent configurationComponent = (ConfigurationComponent)
+                                                       sourceFile.getTreeRoot();
 
-        if (cusesList.size() > 0) {
-            Cuses cuses = (Cuses) cusesList.get(0);
-            cuses.componentList = new ComponentList(cuses.componentList,
-                                                    componentRef);
-            log.debug("Added Component reference:  " + componentRef);
-        } else {
-            throw new Exception("No Cuses found in AST.");
-        }
+        AstUtils.addComponentToConfiguration(configurationComponent, name, as);
     }
 
 
     public void addConnection(String leftComp,  String leftInterface,
-                              String rightComp, String rightInterface) 
-                                                            throws Exception {
-        ParameterisedIdentifier id1;
-        ParameterisedIdentifier id2;
+                              String rightComp, String rightInterface)
+                                                              throws Exception {
+        ConfigurationComponent configurationComponent = (ConfigurationComponent)
+                                                       sourceFile.getTreeRoot();
 
-        id1 = new ParameterisedIdentifier(leftComp);
-        id2 = new ParameterisedIdentifier(leftInterface);
-        Endpoint left = new Endpoint(new Endpoint(id1), id2);
-
-        id1 = new ParameterisedIdentifier(rightComp);
-        id2 = new ParameterisedIdentifier(rightInterface);
-        Endpoint right = new Endpoint(new Endpoint(id1), id2);
-
-
-        Connection    connection = new Connection(left, "->", right);
-        List<AstNode> connDecls  = component.getNodesOfType(
-                                                    ConfigurationDecls.class);
-
-        boolean connDeclFound = false;
-        for (Iterator<AstNode> i = connDecls.iterator();    i.hasNext()
-                                                         && !connDeclFound; ) {
-            ConfigurationDecls decls = (ConfigurationDecls) i.next();
-
-            if (decls.configurationDecl.connection != null) {
-                ConfigurationDecl decl = new ConfigurationDecl(connection);
-                decls.configurationDecls = new ConfigurationDecls(
-                                                decls.configurationDecls,
-                                                decl);
-                connDeclFound = true;
-            }
-        }
-
-        if (connDeclFound) {
-            log.debug("Added Connection:  " + connection);
-        } else {
-            throw new Exception("Unable to find ConfigurationDecl");
-        }
+        AstUtils.addWiring(configurationComponent, leftComp,  leftInterface,
+                                                   rightComp, rightInterface);
     }
 
 
     public void updateComponent(String oldComponent, String newComponent)
-                                                            throws Exception {
-        for (AstNode i : component.getNodesOfType(Cuses.class)) {
+                                                              throws Exception {
+        for (AstNode i : sourceFile.getTreeRoot().getNodesOfType(Cuses.class, true)) {
             Cuses cuses = (Cuses) i;
 
-            for (ComponentList j = cuses.getComponentList(); j != null;
-                                                j = j.getComponentList()) {
-                if (j.getComponentRef().getComponent().equals(oldComponent)) {
-                    j.getComponentRef().setComponent(newComponent);
+            for (ComponentRefList j = cuses.getComponentRefList();
+                                                      j != null; j = j.next()) {
+                if (j.getItem().getComponentName().equals(oldComponent)) {
+                    j.getItem().setComponentName(newComponent);
                 }
             }
         }
 
 
 
-        for (AstNode i : component.getNodesOfType(Endpoint.class)) {
+        for (AstNode i : sourceFile.getTreeRoot().getNodesOfType(Endpoint.class)) {
             Endpoint                endpoint;
             ParameterisedIdentifier id;
 
             endpoint = (Endpoint) i;
-            id       = endpoint.getParameterisedIdentifier();
+            id       = endpoint.getItem();
 
 
-            if (id.getIdentifier().equals(oldComponent)) {
-                id.setIdentifier(newComponent);
+            if (id.getIdentifierName().equals(oldComponent)) {
+                id.setIdentifierName(newComponent);
             }
         }
     }
 
 
     public void regenerateNescSource() throws FileNotFoundException {
-        PrintWriter out = new PrintWriter(nescFile);
-        out.println(component);
-        out.close();
+        AstUtils.regenerateSource(sourceFile);
     }
 }

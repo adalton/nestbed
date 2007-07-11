@@ -2,11 +2,11 @@
 /*
  * MessageManager.java
  *
- * Network Embedded System Testbed (NESTBed)
+ * Network Embedded System Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *

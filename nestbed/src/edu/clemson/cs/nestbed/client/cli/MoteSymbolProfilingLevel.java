@@ -2,11 +2,11 @@
 /*
  * MoteSymbolProfilingLevel.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -197,7 +197,7 @@ class MoteSymbolProfilingLevel extends Level {
                     String                      programSourcePath;
                     String                      tosPlatform;
                     String                      moteSerialID;
-                    int                         value;
+                    long                        value;
 
                     ppsEntry          = (ProgramProfilingSymbolEntry) entry;
                     profilingSymbolID = ppsEntry.getProgramProfilingSymbol()
@@ -212,8 +212,8 @@ class MoteSymbolProfilingLevel extends Level {
                                                             tosPlatform,
                                                             moteSerialID);
 
-                    System.out.printf("%s = %d\n", name, value);
-                    nameValueMap.put(name, value);
+                    System.out.printf("%s = %d\n", name, (int) value);
+                    nameValueMap.put(name, (int) value);
                 } else {
                     System.out.printf("Unknown symbol: %s\n", name);
                     Variables.set("status", "2");

@@ -2,11 +2,11 @@
 /*
  * BuildTestbed.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -41,17 +41,49 @@ import org.apache.log4j.BasicConfigurator;
 import edu.clemson.cs.nestbed.server.adaptation.MoteAdapter;
 import edu.clemson.cs.nestbed.server.adaptation.sql.MoteSqlAdapter;
 import edu.clemson.cs.nestbed.common.model.Mote;
+import edu.clemson.cs.nestbed.common.util.VariableProperties;
 
 
 public class BuildTestbed {
     private final static Log log = LogFactory.getLog(BuildTestbed.class);
-    //private final static String CONN_STR = "jdbc:apache:commons:dbcp:/nestbed";
-    //private final static String CONN_STR = ;
+
+    static {
+        Properties variableProperties = new VariableProperties();
+        try {
+            InputStream propertyStream = BuildTestbed.class.getClassLoader().
+                                       getResourceAsStream("server.properties");
+            System.out.println("Loading server.properties");
+            variableProperties.load(propertyStream);
+            propertyStream.close();
+        } catch (Exception ex) {
+            System.err.println("Unable to load server.properties");
+        }
+
+
+        try {
+            InputStream propertyStream = BuildTestbed.class.getClassLoader().
+                                       getResourceAsStream("common.properties");
+            System.out.println("Loading common.properties");
+            variableProperties.load(propertyStream);
+            propertyStream.close();
+        } catch (Exception ex) {
+            System.err.println("Unable to load common.properties");
+        }
+
+
+        Properties systemProperties = System.getProperties();
+        for (Enumeration e = variableProperties.propertyNames();
+                                                        e.hasMoreElements(); ) {
+            String p = e.nextElement().toString();
+            System.out.printf("Setting property %s = %s\n", p, variableProperties.getProperty(p));
+            systemProperties.setProperty(p, variableProperties.getProperty(p));
+        }
+    }
 
     public static void main(String[] args)  {
         try {
             BasicConfigurator.configure();
-            loadProperties();
+            //loadProperties();
 
             if(args.length < 2) {
                 System.out.println("Usage: BuildTestbed <testbedID> <inputfile>");
@@ -114,6 +146,7 @@ public class BuildTestbed {
         }
     }
 
+/*
     private static void loadProperties() throws IOException {
         Properties  systemProperties;
         InputStream propertyStream;
@@ -129,5 +162,5 @@ public class BuildTestbed {
         systemProperties.load(propertyStream);
         propertyStream.close();
     }
-
+*/
 }

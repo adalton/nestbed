@@ -2,11 +2,11 @@
 /*
  * ProgramSymbolSqlAdapter.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -57,6 +57,8 @@ public class ProgramSymbolSqlAdapter extends    SqlAdapter
         PROGID,
         MODULE,
         SYMBOL,
+        ADDRESS,
+        SIZE,
         TIMESTAMP;
 
         public int index() {
@@ -99,9 +101,9 @@ public class ProgramSymbolSqlAdapter extends    SqlAdapter
     }
 
 
-    public ProgramSymbol createNewProgramSymbol(int    programID,
-                                                String module,
-                                                String symbol)
+    public ProgramSymbol createNewProgramSymbol(int    programID, String module,
+                                                String symbol,    int   address,
+                                                int    size)
                                                     throws AdaptationException {
         ProgramSymbol programSymbol = null;
         Connection    connection    = null;
@@ -110,9 +112,11 @@ public class ProgramSymbolSqlAdapter extends    SqlAdapter
 
         try {
             String query =
-                "INSERT INTO ProgramSymbols (programID, module, symbol)" +
+                "INSERT INTO ProgramSymbols " +
+                "(programID, module, symbol, address, size)" +
                 " VALUES (" + programID + ", '" + module +
-                          "',  '" + symbol + "')";
+                          "',  '" + symbol + "', " + address +
+                          ", " + size + ")";
 
             connection = DriverManager.getConnection(CONN_STR);
             statement  = connection.createStatement();
@@ -197,13 +201,16 @@ public class ProgramSymbolSqlAdapter extends    SqlAdapter
 
 
     private final ProgramSymbol getProgramSymbol(ResultSet resultSet)
-                                                         throws SQLException {
+                                                           throws SQLException {
         int    id        = resultSet.getInt(   Index.ID.index());
         int    programID = resultSet.getInt(   Index.PROGID.index());
         String module    = resultSet.getString(Index.MODULE.index());
         String symbol    = resultSet.getString(Index.SYMBOL.index());
+        int    address   = resultSet.getInt(   Index.ADDRESS.index());
+        short  size      = resultSet.getShort( Index.SIZE.index());
         Date   timestamp = resultSet.getDate(  Index.TIMESTAMP.index());
 
-        return new ProgramSymbol(id, programID, module, symbol, timestamp);
+        return new ProgramSymbol(id,      programID, module,    symbol,
+                                 address, size,      timestamp);
     }
 }
