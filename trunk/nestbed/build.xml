@@ -37,7 +37,6 @@
 
     <path id="compile.classpath">
         <pathelement location="${lib.home}/useful.jar"/>
-        <pathelement location="${lib.home}/javacup.jar"/>
         <pathelement location="${lib.home}/nesctk.jar"/>
     </path>
 
@@ -64,7 +63,7 @@
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
     <target        name="clean"
-                depends="distclean,cleanClasses,cleanDocs,cleanParser,cleanC"
+                depends="distclean,cleanClasses,cleanDocs,cleanC"
             description="Delete old build and dist directories"/>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
@@ -87,20 +86,6 @@
             description="Delete old doc files">
         <delete dir="${docs.home}"/>
     </target>
-
-    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-
-    <target        name="cleanParser"
-            description="Delete old parser files">
-    </target>
-<!--
-    <target        name="cleanParser"
-            description="Delete old parser files">
-        <delete file="${parser.home}/Parser.java"/>
-        <delete file="${parser.home}/Token.java"/>
-        <delete file="${parser.home}/Lexer.java"/>
-    </target>
--->
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
@@ -173,7 +158,7 @@
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
     <target        name="compileJava"
-                depends="parser,-updateBuildProperties"
+                depends="-updateBuildProperties"
             description="Compile Java sources">
         <mkdir dir="${classes.home}"/>
 
@@ -265,40 +250,6 @@
             <fileset dir="${docs.home}"/>
         </copy>
     </target>
-
-    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-
-    <target        name="-isParserReady"
-            description="Checks to see if the parser needs to be built">
-        <condition property="parser_needs_building">
-            <not>
-                <uptodate targetfile="${parser.home}/Parser.java"> 
-                    <srcfiles dir="${parser.home}" includes="nesc.*"/>
-                </uptodate>
-            </not>
-        </condition>
-    </target>
-
-    <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-
-    <target        name="parser"
-                depends="-isParserReady"
-            description="Parse the java_cup nesC grammar"></target>
-<!--
-    <target        name="parser"
-                depends="-isParserReady"
-            description="Parse the java_cup nesC grammar"
-                     if="parser_needs_building">
-        <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
-            <arg line="parser.sh"/>
-        </exec>
-        For now, I'm sticking this in parser.sh since there isn't a jflex ebuild
-
-        <jflex    file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/nesc.jflex"
-               destdir="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/"
-                 nobak="on"/>
-    </target>
--->
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
