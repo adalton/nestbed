@@ -1,0 +1,65 @@
+<!-- $Id$ -->
+<!--
+/*
+ * nestbed.jocl
+ *
+ * Network Embedded Sensor Testbed (NESTBed)
+ *
+ * Copyright (C) 2006-2007
+ * Dependable Systems Research Group
+ * Department of Computer Science
+ * Clemson University
+ * Andrew R. Dalton and Jason O. Hallstrom
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the
+ *
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301, USA.
+ */
+-->
+<object class="org.apache.commons.dbcp.PoolableConnectionFactory"
+        xmlns="http://apache.org/xml/xmlns/jakarta/commons/jocl">
+
+    <!-- The first argument is the ConnectionFactory -->
+    <object class="org.apache.commons.dbcp.DriverManagerConnectionFactory">
+        <string value="jdbc:mysql://localhost:3306/nestbed?user=nestbed&amp;password=1nest.bed9"/>
+        <object class="java.util.Properties" null="true"/>
+    </object>
+
+    <!-- The next argument is the ObjectPool -->
+    <object class="org.apache.commons.pool.impl.GenericObjectPool">
+        <object class="org.apache.commons.pool.PoolableObjectFactory" null="true"/>
+        <int     value="10"/>    <!-- Max active -->
+        <byte    value="1"/>     <!-- When exhausted action, 0 = fail, 1 = block, 2 = grow -->
+        <long    value="2000"/>  <!-- Max wait -->
+        <int     value="10"/>    <!-- Max idle -->
+        <boolean value="false"/> <!-- Test on borrow -->
+        <boolean value="false"/> <!-- Test on return -->
+        <long    value="10000"/> <!-- Time between eviction runs -->
+        <int     value="5"/>     <!-- Number of connections to test per eviction run -->
+        <long    value="5000"/>  <!-- Min evictable idle time -->
+        <boolean value="true"/>  <!-- Test while idle -->
+    </object>
+
+    <!-- The next argument is the KeyedObjectPoolFactory -->
+    <object class="org.apache.commons.pool.impl.StackKeyedObjectPoolFactory">
+        <int value="5"/> <!-- max idle -->
+    </object>
+
+    <string  value="SELECT COUNT(*) FROM Testbeds"/> <!-- validation query -->
+    <boolean value="false"/>                         <!-- default read only -->
+    <boolean value="false"/>                          <!-- default auto commit -->
+</object>
+<!-- vim:  set filetype=xml: -->
