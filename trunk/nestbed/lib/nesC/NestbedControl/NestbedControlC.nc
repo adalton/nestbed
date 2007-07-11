@@ -2,11 +2,11 @@
 /*
  * NestbedControlC.nc
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
- * Copyright (C) 2006
+ * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  *
  * This program is free software; you can redistribute it and/or
@@ -26,26 +26,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-includes NestbedControl;
+#include "NestbedControl.h"
 
 configuration NestbedControlC {
-    provides interface StdControl;
+    uses interface Boot;
 }
 
 implementation {
-    components Main;
-    components GenericComm;
-    components CC2420ControlM;
-    components ResetC;
-    components NestbedControlM as Comp;
-    components NoLeds          as LedsComponent;
+    components LedsC;
+    // components NoLedsC as LedsC;
+    components new SerialAMReceiverC(AM_CONTROLMESSAGE);
+    components SerialActiveMessageC;
+    components NestbedControlM;
+    components new TimerMilliC() as ResetTimer;
+    components CC2420ControlC;
 
-    Main.StdControl   -> GenericComm.Control;
 
-    Comp.Leds         -> LedsComponent.Leds;
-    Comp.ReceivePower -> GenericComm.ReceiveMsg[AM_CONTROLMESSAGE];
-    Comp.Radio        -> CC2420ControlM.CC2420Control;
-    Comp.Reset        -> ResetC.Reset;
+    Boot                        =  NestbedControlM.Boot;
 
-    StdControl        =  Comp.StdControl;
+    NestbedControlM.Leds        -> LedsC.Leds;
+    NestbedControlM.AMControl   -> SerialActiveMessageC.SplitControl;
+    NestbedControlM.UARTReceive -> SerialAMReceiverC.Receive;
+    NestbedControlM.ResetTimer  -> ResetTimer.Timer;
+    NestbedControlM.Radio       -> CC2420ControlC.CC2420Config;
 }

@@ -2,11 +2,11 @@
 /*
  * NestbedControl.h
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
- * Copyright (C) 2006
+ * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  *
  * This program is free software; you can redistribute it and/or
@@ -38,9 +38,12 @@ enum Command {
     RESET,
 };
 
-typedef struct ControlMessage {
-    uint8_t cmd;
-    uint8_t arg;
-} ControlMessage;
+nx_struct ControlMessage {
+    nx_uint8_t cmd;
+    nx_uint8_t arg;
+};
 
+typedef nx_struct ControlMessage ControlMessage;
+
+// vim: :set ft=nc:
 #endif

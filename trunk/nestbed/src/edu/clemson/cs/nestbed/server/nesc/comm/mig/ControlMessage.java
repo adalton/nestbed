@@ -142,14 +142,14 @@ public class ControlMessage extends net.tinyos.message.Message {
      * Return the value (as a short) of the field 'cmd'
      */
     public short get_cmd() {
-        return (short)getUIntElement(offsetBits_cmd(), 8);
+        return (short)getUIntBEElement(offsetBits_cmd(), 8);
     }
 
     /**
      * Set the value of the field 'cmd'
      */
     public void set_cmd(short value) {
-        setUIntElement(offsetBits_cmd(), 8, value);
+        setUIntBEElement(offsetBits_cmd(), 8, value);
     }
 
     /**
@@ -205,14 +205,14 @@ public class ControlMessage extends net.tinyos.message.Message {
      * Return the value (as a short) of the field 'arg'
      */
     public short get_arg() {
-        return (short)getUIntElement(offsetBits_arg(), 8);
+        return (short)getUIntBEElement(offsetBits_arg(), 8);
     }
 
     /**
      * Set the value of the field 'arg'
      */
     public void set_arg(short value) {
-        setUIntElement(offsetBits_arg(), 8, value);
+        setUIntBEElement(offsetBits_arg(), 8, value);
     }
 
     /**

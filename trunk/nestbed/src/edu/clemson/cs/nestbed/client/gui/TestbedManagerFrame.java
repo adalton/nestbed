@@ -2,11 +2,11 @@
 /*
  * TestbedManagerFrame.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -209,7 +209,7 @@ public class TestbedManagerFrame extends JFrame {
         int choice;
 
         choice = JOptionPane.showConfirmDialog(this,
-                                               "Do you wish to exit NESTBed?",
+                                               "Do you wish to exit NESTbed?",
                                                "Exit Confirmation",
                                                JOptionPane.YES_NO_OPTION,
                                                JOptionPane.QUESTION_MESSAGE);

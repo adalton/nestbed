@@ -191,6 +191,8 @@ CREATE TABLE `ProgramSymbols` (
   `programID` int(4) unsigned NOT NULL default '0',
   `module` varchar(50) NOT NULL default '',
   `symbol` varchar(50) NOT NULL default '',
+  `address` int(4) unsigned NOT NULL default '0',
+  `size`    int(1) unsigned NOT NULL default '0',
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `symbol` (`programID`,`module`,`symbol`),

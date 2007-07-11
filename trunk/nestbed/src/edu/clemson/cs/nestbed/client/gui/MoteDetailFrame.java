@@ -2,11 +2,11 @@
 /*
  * MoteDetailFrame.java
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
  * Copyright (C) 2006-2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -579,14 +579,13 @@ public class MoteDetailFrame extends JFrame {
                 profilingSymbol = model.getProfilingSymbol(
                                                     symbolTable.getSelectedRow());
                 if (profilingSymbol != null) {
-                    int value = nucleusManager.querySymbol(
+                    long value = nucleusManager.querySymbol(
                                                     profilingSymbol.getID(),
                                                     program.getSourcePath(),
                                                     moteType.getTosPlatform(),
                                                     mote.getMoteSerialID());
 
-                    //model.setValueAt(value, symbolTable.getSelectedRow(), 1);
-                    model.setValue(value, symbolTable.getSelectedRow());
+                    model.setValue((int) value, symbolTable.getSelectedRow());
                     symbolTable.repaint();
                 }
             } catch (Exception ex) {

@@ -1,12 +1,12 @@
 /* $Id$ */
 /*
- * InterfaceRef.java
+ * MemoryProfiler.h
  *
- * Network Embedded Sensor Testbed (NESTBed)
+ * Network Embedded Sensor Testbed (NESTbed)
  *
- * Copyright (C) 2006-2007
+ * Copyright (C) 2007
  * Dependable Systems Research Group
- * Department of Computer Science
+ * School of Computing
  * Clemson University
  * Andrew R. Dalton and Jason O. Hallstrom
  *
@@ -27,30 +27,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301, USA.
  */
-package edu.clemson.cs.nestbed.server.nesc.parser.ast;
+#ifndef MEMORY_PROFILER_H
+#define MEMORY_PROFILER_H
 
+nx_struct MemoryProfilingMessage {
+    nx_uint32_t address;
+    nx_uint32_t value;
+    nx_uint8_t  size;
+    nx_uint8_t  offset;
+    nx_bool     read;
+};
 
-public class InterfaceRef extends AstNode {
-    public String interfaceType;
-    public String renamedType;
+typedef nx_struct MemoryProfilingMessage MemoryProfilingMessage;
 
+enum {
+    AM_MEMORYPROFILINGMESSAGE = 7,
+};
 
-    public InterfaceRef(String interfaceType) {
-        this(interfaceType, null);
-    }
-
-    public InterfaceRef(String interfaceType, String renamedType) {
-        this.interfaceType = interfaceType;
-        this.renamedType   = renamedType;
-    }
-
-
-    public String toString() {
-        String retStr = "interface " + interfaceType.toString();
-
-        if (renamedType != null) {
-            retStr += " as " + renamedType.toString();
-        }
-        return retStr;
-    }
-}
+#endif

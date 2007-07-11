@@ -2,11 +2,11 @@
 <!--
   - build.xml
   -
-  - Network Embedded Sensor Testbed (NESTBed)
+  - Network Embedded Sensor Testbed (NESTbed)
   -
   - Copyright (C) 2006-2007
   - Dependable Systems Research Group
-  - Department of Computer Science
+  - School of Computing
   - Clemson University
   - Andrew R. Dalton and Jason O. Hallstrom
   -
@@ -38,7 +38,7 @@
     <path id="compile.classpath">
         <pathelement location="${lib.home}/useful.jar"/>
         <pathelement location="${lib.home}/javacup.jar"/>
-        <pathelement location="${lib.home}/nucleus.jar"/>
+        <pathelement location="${lib.home}/nesctk.jar"/>
     </path>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
@@ -92,10 +92,15 @@
 
     <target        name="cleanParser"
             description="Delete old parser files">
+    </target>
+<!--
+    <target        name="cleanParser"
+            description="Delete old parser files">
         <delete file="${parser.home}/Parser.java"/>
         <delete file="${parser.home}/Token.java"/>
         <delete file="${parser.home}/Lexer.java"/>
     </target>
+-->
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
@@ -278,19 +283,22 @@
 
     <target        name="parser"
                 depends="-isParserReady"
+            description="Parse the java_cup nesC grammar"></target>
+<!--
+    <target        name="parser"
+                depends="-isParserReady"
             description="Parse the java_cup nesC grammar"
                      if="parser_needs_building">
         <exec dir="${bin.home}" executable="/bin/bash" failonerror="true">
             <arg line="parser.sh"/>
         </exec>
-        <!--
         For now, I'm sticking this in parser.sh since there isn't a jflex ebuild
 
         <jflex    file="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/nesc.jflex"
                destdir="${src.home}/edu/clemson/cs/nestbed/server/nesc/parser/"
                  nobak="on"/>
-        -->
     </target>
+-->
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
