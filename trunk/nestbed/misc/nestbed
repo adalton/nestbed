@@ -36,9 +36,8 @@ export PATH=/opt/tinyos-2.x-tools/bin:/opt/msp430/bin:${PATH}
 export PYTHONPATH=/opt/tinyos-2.x-tools/lib/tinyos
 
 CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
-CLASSPATH=${CLASSPATH}:${TOSROOT}/support/sdk/java/tinyos.jar
 
-for i in ${NESTBED_LIB}/*; do
+for i in ${NESTBED_LIB}/*.jar; do
     CLASSPATH="${CLASSPATH}:$i"
 done
 CLASSPATH=${CLASSPATH}:$(java-config-2 --tools)
