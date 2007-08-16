@@ -1,0 +1,12 @@
+#labels Featured,Phase-Requirements
+#Steps to install the NESTbed system.
+
+= Introduction =
+
+= Necessary Software =
+NESTbed is a Java-based implementation of a wireless sensor network testbed.  Although it is written in Java, it depends on a set of third-party software packages.  Those software packages include:
+
+* Linux (The software was developed using [http://www.gentoo.org/ Gentoo], but other Linux distros may work as well).
+* [http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html udev]
+* [http://www.mysql.org/ MySQL]
+* [http://www.tinyos.net/ TinyOS 2.x]
