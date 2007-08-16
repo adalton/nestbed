@@ -1,12 +1,54 @@
-#labels Featured,Phase-Requirements
-#Steps to install the NESTbed system.
+#labels Featured,Phase-Deploy
+# Instructions for installing the *NESTbed* system
 
 = Introduction =
+This page will serve as a guide to individuals interested in installing the *NESTbed* system locally.
 
 = Necessary Software =
-NESTbed is a Java-based implementation of a wireless sensor network testbed.  Although it is written in Java, it depends on a set of third-party software packages.  Those software packages include:
+*NESTbed* is a Java-based implementation of a wireless sensor network testbed.  Although it is written in Java, it depends on a set of third-party software packages.  Those software packages include:
 
-* Linux (The software was developed using [http://www.gentoo.org/ Gentoo], but other Linux distros may work as well).
-* [http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html udev]
-* [http://www.mysql.org/ MySQL]
-* [http://www.tinyos.net/ TinyOS 2.x]
+  * Linux (The software was developed using [http://www.gentoo.org/ Gentoo], but other Linux distributions may work as well).
+  * [http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html udev]
+  * [http://libusb.sourceforge.net/ libusb]
+  * [http://www.mysql.org/ MySQL]
+  * [http://www.tinyos.net/ TinyOS 2.x]
+  * A web server such as [http://www.apache.org/ Apache]
+  * [http://java.sun.com/ Java 6]
+  * [http://ant.apache.org/ Apache Ant]
+  * [http://ant-contrib.sourceforge.net/ cpptasks] - Ant support for compiling C/C++ applications
+
+= Installation =
+These instructions assume you will install *NESTbed* in `/opt/nestbed`.
+
+  # Install all necessary software (listed above)
+  # `cd /opt`
+  # `svn co http://nestbed.googlecode.com/svn/trunk/nestbed`
+  # `cd nestbed/misc`
+  # Verify the paths in `99nestbed` and `nestbed` point to your TinyOS installation
+  # Update `common.properties` to include the IP of the machine that will host the *NESTbed* server (e.g., `testbed.rmi.baseurl=//<yourServerIp>/nestbed/`).
+  # Update `nestbed.jnlp` to include `codebase` and `href` references to the web server hosting the client application.
+  # If you want to install in a location other than `/opt/nestbed`, modify `server.properties` and modify the line that reads `nestbed.dir.root=/opt/nestbed`.
+  # In `serverLog.conf`, set the location where you want the server logs generated.  The default is `/var/www/localhost/htdocs/nestbed/serverLog.txt`
+  # cd ..
+  # `ant dist` (This will build the *NESTbed* software) *NOTE: need to resolve the keystore stuff*
+  # `mkdir </path/to/a/directory/available/from/the/webserver>`
+  # `cp -R dist/* </path/to/a/directory/available/from/the/webserver>`
+  # `cp misc/99nestbed /etc/env.d/`
+  # `env-update`
+  # `cp misc/nestbed /etc/init.d/`
+  # `cp misc/10-moteiv.rules /etc/udev/rules.d/`
+  # `udevstart` (This may not be necessary)
+  # `useradd -d / -n -s /sbin/nologin nestbed`
+  # `chown -R nestbed:nestbed /opt/nestbed`
+  # `/etc/init.d/nestbed start`
+
+
+
+
+
+
+
+
+
+
+
