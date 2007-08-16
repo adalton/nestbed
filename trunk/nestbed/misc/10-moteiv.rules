@@ -1,0 +1,2 @@
+# Udev rule for creating /dev/motes/<MoteSerialId> symlinks for NESTbed
+SUBSYSTEMS=="usb", ATTRS{manufacturer}=="Moteiv", KERNEL=="ttyUSB[0-9]*", NAME="%k", SYMLINK="motes/%s{serial}", GROUP="tty", MODE="0666"
