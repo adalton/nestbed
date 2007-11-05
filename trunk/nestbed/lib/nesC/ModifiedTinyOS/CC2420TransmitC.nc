@@ -33,7 +33,7 @@
  * Implementation of the transmit path for the ChipCon CC2420 radio.
  *
  * @author Jonathan Hui <jhui@archrock.com>
- * @version $Revision: 1.5 $ $Date: 2007/04/12 17:11:12 $
+ * @version $Revision: 1.1 $ $Date: 2007/07/04 00:37:16 $
  */
 
 #include "IEEE802154.h"
@@ -45,7 +45,8 @@ configuration CC2420TransmitC {
     interface CC2420Transmit;
     interface RadioBackoff;
     interface RadioTimeStamping;
-    interface CC2420Cca;
+    interface ReceiveIndicator as EnergyIndicator;
+    interface ReceiveIndicator as ByteIndicator;
   }
 }
 
@@ -56,8 +57,8 @@ implementation {
   CC2420Transmit = CC2420TransmitP;
   RadioBackoff = CC2420TransmitP;
   RadioTimeStamping = CC2420TransmitP;
-  CC2420Cca = CC2420TransmitP;
-
+  EnergyIndicator = CC2420TransmitP.EnergyIndicator;
+  ByteIndicator = CC2420TransmitP.ByteIndicator;
 
   components MainC;
   MainC.SoftwareInit -> CC2420TransmitP;
@@ -76,6 +77,7 @@ implementation {
 
   components new CC2420SpiC() as Spi;
   CC2420TransmitP.SpiResource -> Spi;
+  CC2420TransmitP.ChipSpiResource -> Spi;
   CC2420TransmitP.SNOP        -> Spi.SNOP;
   CC2420TransmitP.STXON       -> Spi.STXON;
   CC2420TransmitP.STXONCCA    -> Spi.STXONCCA;
@@ -88,16 +90,10 @@ implementation {
   components CC2420ReceiveC;
   CC2420TransmitP.CC2420Receive -> CC2420ReceiveC;
   
-  components new TimerMilliC() as LplDisableTimerC;
-  CC2420TransmitP.LplDisableTimer -> LplDisableTimerC;
-  
   components CC2420PacketC;
   CC2420TransmitP.CC2420Packet -> CC2420PacketC;
+  CC2420TransmitP.CC2420PacketBody -> CC2420PacketC;
   
   components LedsC;
   CC2420TransmitP.Leds -> LedsC;
-
-
-  components CC2420ControlC;
-  CC2420TransmitP.CC2420Config -> CC2420ControlC.CC2420Config;
 }

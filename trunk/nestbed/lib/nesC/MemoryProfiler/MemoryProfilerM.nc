@@ -51,7 +51,7 @@ implementation {
 
             if (mpmIn->read && !sending) {
                 MemoryProfilingMessage* mpmOut = call Packet.getPayload(&packet,
-                                                                        NULL);
+                                                                        sizeof(MemoryProfilingMessage));
                 call Leds.led0Toggle();
                 memcpy(mpmOut, mpmIn, sizeof(MemoryProfilingMessage));
                 mpmOut->value =
