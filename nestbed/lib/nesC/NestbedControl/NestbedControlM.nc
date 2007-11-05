@@ -43,7 +43,7 @@ implementation {
 
             switch (controlMessage->cmd) {
             case SET_POWER:
-                call Radio.setRFPower(controlMessage->arg);
+                //call Radio.setRFPower(controlMessage->arg);
                 call Leds.set(controlMessage->arg);
                 break;
 

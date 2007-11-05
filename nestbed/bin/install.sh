@@ -46,4 +46,4 @@ platform=$2
 address=$3
 device=$4
 
-exec /usr/bin/make -C ${directory} ${platform} reinstall.${address} bsl,${device}
+/usr/bin/make -C ${directory} ${platform} reinstall.${address} bsl,${device} > /tmp/output 2>&1

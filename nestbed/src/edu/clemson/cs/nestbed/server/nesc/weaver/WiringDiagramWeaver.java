@@ -64,7 +64,7 @@ public class WiringDiagramWeaver {
         ConfigurationComponent configurationComponent = (ConfigurationComponent)
                                                        sourceFile.getTreeRoot();
 
-        AstUtils.addComponentToConfiguration(configurationComponent, name, as);
+        AstUtils.addComponentToConfig(configurationComponent, name, as);
     }
 
 

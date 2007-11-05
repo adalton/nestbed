@@ -262,6 +262,12 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
                 program        = ProgramManagerImpl.getInstance().getProgram(
                                                                     programID);
 
+                log.info("Installing:  " + INSTALL + " "
+                                         + program.getSourcePath() + " "
+                                         + tosPlatform + " "
+                                         + moteAddress + " "
+                                         + commPort);
+
                 processBuilder = new ProcessBuilder(INSTALL,
                                                     program.getSourcePath(),
                                                     tosPlatform,
