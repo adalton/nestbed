@@ -71,6 +71,7 @@ module CC2420TransmitP {
 
   uses interface CC2420Receive;
   uses interface Leds;
+  uses interface CC2420Config;
 }
 
 implementation {
@@ -640,7 +641,8 @@ implementation {
     uint8_t tx_power = (call CC2420PacketBody.getMetadata( m_msg ))->tx_power;
 
     if ( !tx_power ) {
-      tx_power = CC2420_DEF_RFPOWER;
+      //tx_power = CC2420_DEF_RFPOWER;
+      tx_power = call CC2420Config.getRFPower();
     }
     
     call CSN.clr();
@@ -664,6 +666,7 @@ implementation {
     signal Send.sendDone( m_msg, err );
   }
   
+  event void CC2420Config.syncDone( error_t error ) { }
   
   
   /***************** Tasks ****************/
