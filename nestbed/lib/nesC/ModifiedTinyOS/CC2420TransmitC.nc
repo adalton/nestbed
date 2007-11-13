@@ -60,6 +60,9 @@ implementation {
   EnergyIndicator = CC2420TransmitP.EnergyIndicator;
   ByteIndicator = CC2420TransmitP.ByteIndicator;
 
+  components CC2420ControlP;
+  CC2420TransmitP.CC2420Config -> CC2420ControlP.CC2420Config;
+
   components MainC;
   MainC.SoftwareInit -> CC2420TransmitP;
   MainC.SoftwareInit -> Alarm;
