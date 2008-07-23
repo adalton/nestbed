@@ -33,8 +33,8 @@ configuration NestbedControlC {
 }
 
 implementation {
-    components LedsC;
-    // components NoLedsC as LedsC;
+    //components LedsC;
+    components NoLedsC as LedsC;
     components new SerialAMReceiverC(AM_CONTROLMESSAGE);
     components SerialActiveMessageC;
     components NestbedControlM;

@@ -625,17 +625,17 @@ class NetworkMonitorLevel extends Level {
                     stateRow = mmlEntry.getStateRow();
                     stateCol = mmlEntry.getStateCol();
 
-                    if (moteState[stateRow][stateCol] != MoteState.P) {
-                        System.err.printf("Cannot start gateway for " +
-                                          "a mote in state: %s\n",
-                                      moteState[stateRow][stateCol].toString());
-                        Variables.set("status", "4");
-                    } else {
+                    //if (moteState[stateRow][stateCol] != MoteState.P) {
+                    //    System.err.printf("Cannot start gateway for " +
+                    //                      "a mote in state: %s\n",
+                    //                  moteState[stateRow][stateCol].toString());
+                    //    Variables.set("status", "4");
+                    //} else {
                         int port = sfManager.enableSerialForwarder(mote.getID(),
                                                         Integer.parseInt(name));
                         moteState[stateRow][stateCol] = MoteState.G;
                         System.out.println("Gateway enabled on port " + port);
-                    }
+                    //}
                 } else {
                     System.err.printf("Mote %s not found\n", name);
                     Variables.set("status", "2");

@@ -54,6 +54,13 @@ public class WiringDiagramWeaver {
         log.info("Top-Level configuration " + nescFile.getAbsolutePath());
 
         toolkit = new NescToolkit(nescFile, nescFile.getParentFile());
+        toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net");
+        toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net/ctp");
+        toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net/le");
+
+        toolkit.appendGccArgument("-I");toolkit.appendGccArgument("/opt/tinyos-2.x/tos/lib/net");
+        toolkit.appendGccArgument("-I");toolkit.appendGccArgument("/opt/tinyos-2.x/tos/lib/net/ctp");
+        toolkit.appendGccArgument("-I");toolkit.appendGccArgument("/opt/tinyos-2.x/tos/lib/net/le");
 
         Map<String, SourceFile> sourceFileMap = toolkit.load();
         sourceFile = sourceFileMap.get(nescFile.getName());
