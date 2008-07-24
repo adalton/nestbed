@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -71,6 +72,8 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
     private final static int    MAX_RETRY = 2;
     private final static int    MAX_THREADS;
     private final static String INSTALL;
+    private final static String NESTBED_NESC_ROOT;
+    private final static String TRACE_RECORDER_DIR;
 
     static {
         String property;
@@ -85,6 +88,25 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
         INSTALL = install;
         log.info(property + " = " + INSTALL);
 
+        property = "nestbed.dir.lib.nesc";
+        String rootStr = System.getProperty(property);
+        File   root    = null;
+
+        if (rootStr == null) {
+            log.fatal("Property '" + property + "' is not set");
+            System.exit(1);
+
+        } else {
+            root = new File(rootStr);
+
+            if (!root.exists()) {
+                log.fatal("Directory " + rootStr + " does not exist!");
+                System.exit(1);
+            }
+        }
+        NESTBED_NESC_ROOT = root.getAbsolutePath();
+        log.info(property + " = " + NESTBED_NESC_ROOT);
+        TRACE_RECORDER_DIR = root.getAbsolutePath() + "/TraceRecorder";
 
 
         property = "nestbed.options.maxDeploymentThreads";
@@ -125,6 +147,52 @@ public class ProgramDeploymentManagerImpl extends    RemoteObservableImpl
 
     public static ProgramDeploymentManager getInstance() {
         return instance;
+    }
+
+    public List<String> installTraceReceiver(List<MoteTestbedAssignment> interestingMotes) throws RemoteException {
+        List<String> success = new ArrayList<String>();
+
+        for (MoteTestbedAssignment mta : interestingMotes) {
+            Mote   mote         = MoteManagerImpl.getInstance().getMote(mta.getMoteID());
+            int    address      = mta.getMoteAddress();
+            String moteSerialID = mote.getMoteSerialID();
+            String tosPlatform  = "telosb"; // Should really look this up
+            String commPort     = "/dev/motes/" + moteSerialID;
+
+            try {
+
+                ProcessBuilder  processBuilder;
+
+                log.info("Installing:  " + INSTALL + " "
+                                         + TRACE_RECORDER_DIR + " "
+                                         + tosPlatform + " "
+                                         + address + " "
+                                         + commPort);
+
+                processBuilder = new ProcessBuilder(INSTALL,
+                                                    TRACE_RECORDER_DIR,
+                                                    tosPlatform,
+                                                    Integer.toString(address),
+                                                    commPort);
+                processBuilder.redirectErrorStream(true);
+
+
+                Process process = processBuilder.start();
+                process.waitFor();
+
+                int exitValue = process.exitValue();
+
+                if (exitValue != 0) {
+                    log.error(moteSerialID + " -- Install failed with exit code: " + exitValue);
+                }
+                success.add(Integer.toString(address));
+
+            } catch (Exception ex) {
+                log.error("installTraceReceiver failed for mote: " + address, ex);
+            }
+        }
+
+        return success;
     }
 
 

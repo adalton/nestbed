@@ -64,6 +64,20 @@ public class GridPanel extends JPanel {
     }
 
 
+    public Component getComponentAt(int row, int col) {
+        return panel[row][col];
+    }
+
+    public int getRows() {
+        return panel.length;
+    }
+
+
+    public int getCols() {
+        return panel[0].length;
+    }
+
+
     public void addPanel(Component comp, int row, int col) {
         panel[row][col] = comp;
         add(comp);

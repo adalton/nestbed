@@ -1,0 +1,3 @@
+COMPONENT=TraceRetrieverAppC
+include $(MAKERULES)
+

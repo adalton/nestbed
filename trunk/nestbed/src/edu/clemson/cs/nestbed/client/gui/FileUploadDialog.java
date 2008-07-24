@@ -44,6 +44,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -65,10 +66,12 @@ public class FileUploadDialog extends    JDialog
     private String      name;
     private String      description;
     private String      directoryName;
+    private boolean     insertProbes;
 
     private JTextField  nameField;
     private JTextField  descField;
     private JTextField  dirField;
+    private JCheckBox   probeCheckBox = new JCheckBox();
 
     private JOptionPane optionPane;
 
@@ -87,6 +90,9 @@ public class FileUploadDialog extends    JDialog
         return (directoryName == null) ? null : new File(directoryName);
     }
 
+    public boolean getInsertProbes() {
+        return insertProbes;
+    }
 
     /** Creates the reusable dialog. */
     public FileUploadDialog(Frame aFrame, String title) {
@@ -98,7 +104,7 @@ public class FileUploadDialog extends    JDialog
         JButton fileButton = new JButton("...");
         JPanel  filePanel  = new JPanel();
         JPanel  panel      = new JPanel();
-        int     rows       = 6;
+        int     rows       = 7;
         int     cols       = 1;
 
         fileButton.addActionListener(new ActionListener() {
@@ -137,11 +143,19 @@ public class FileUploadDialog extends    JDialog
         panel.add(nameField);
         panel.add(new JLabel("Description:"));
         panel.add(descField);
+
+
         panel.add(new JLabel("Directory:"));
 
         filePanel.add(fileButton, BorderLayout.EAST);
         filePanel.add(dirField, BorderLayout.CENTER);
         panel.add(filePanel);
+
+        JPanel probePanel = new JPanel();
+        probePanel.add(new JLabel("Insert Probes?"));
+        probePanel.add(probeCheckBox);
+        panel.add(probePanel);
+
 
         Object[] options = { OK_STRING, CANCEL_STRING };
 
@@ -213,6 +227,7 @@ public class FileUploadDialog extends    JDialog
                 name          = nameField.getText().trim();
                 description   = descField.getText().trim();
                 directoryName = dirField.getText().trim();
+                insertProbes  = probeCheckBox.isSelected();
 
                 if        (name == null || name.equals("")) {
                     JOptionPane.showMessageDialog(FileUploadDialog.this,

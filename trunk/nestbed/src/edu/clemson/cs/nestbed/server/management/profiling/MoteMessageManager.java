@@ -80,6 +80,7 @@ public class MoteMessageManager implements MessageListener {
     }
 
 
+    @SuppressWarnings("unchecked")
     public void addMessageObserver(int            pmsID,
                                    RemoteObserver observer)
                                                        throws RemoteException {

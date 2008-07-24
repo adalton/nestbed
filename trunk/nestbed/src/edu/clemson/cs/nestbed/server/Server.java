@@ -65,6 +65,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManag
 import edu.clemson.cs.nestbed.common.management.deployment.ProgramDeploymentManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramProbeManager;
 import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.management.profiling.NucleusManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
@@ -89,6 +90,7 @@ import edu.clemson.cs.nestbed.server.management.configuration.ProgramSymbolManag
 import edu.clemson.cs.nestbed.server.management.deployment.ProgramDeploymentManagerImpl;
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramCompileManagerImpl;
 import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramWeaverManagerImpl;
+import edu.clemson.cs.nestbed.server.management.instrumentation.ProgramProbeManagerImpl;
 import edu.clemson.cs.nestbed.server.management.power.MotePowerManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.MessageManagerImpl;
 import edu.clemson.cs.nestbed.server.management.profiling.NucleusManagerImpl;
@@ -139,6 +141,7 @@ public class Server {
     private NucleusManager                        nucleusManager;
     private ProgramCompileManager                 programCompileManager;
     private ProgramWeaverManager                  programWeaverManager;
+    private ProgramProbeManager                   programProbeManager;
     private ProgramDeploymentManager              programDeploymentManager;
     private ProgramManager                        programManager;
     private ProgramMessageSymbolManager           progMsgSymbolManager;
@@ -187,6 +190,7 @@ public class Server {
         programDeploymentManager = ProgramDeploymentManagerImpl.getInstance();
         programCompileManager    = ProgramCompileManagerImpl.getInstance();
         programWeaverManager     = ProgramWeaverManagerImpl.getInstance();
+        programProbeManager      = ProgramProbeManagerImpl.getInstance();
         nucleusManager           = NucleusManagerImpl.getInstance();
         sfManager                = SerialForwarderManagerImpl.getInstance();
         motePowerManager         = MotePowerManagerImpl.getInstance();
@@ -255,6 +259,10 @@ public class Server {
         Naming.rebind(RMI_BASE_URL + "ProgramWeaverManager",
                       programWeaverManager);
         log.debug("ProgramCompileManager successfully bound.");
+
+        Naming.rebind(RMI_BASE_URL + "ProgramProbeManager",
+                      programProbeManager);
+        log.debug("ProgramProbeManager successfully bound.");
 
         Naming.rebind(RMI_BASE_URL + "NucleusManager", nucleusManager);
         log.debug("NucleusManager successfully bound.");

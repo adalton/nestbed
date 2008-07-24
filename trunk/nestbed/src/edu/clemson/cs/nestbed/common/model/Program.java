@@ -86,6 +86,7 @@ public class Program implements Serializable, Comparable {
 
 
     public String getInformation() {
+        /*
         StringBuffer buf = new StringBuffer();
 
         buf.append("Program:\n");
@@ -98,6 +99,8 @@ public class Program implements Serializable, Comparable {
         buf.append("timestamp:    ").append(timestamp  ).append("\n");
 
         return buf.toString();
+        */
+        return name;
     }
 
 

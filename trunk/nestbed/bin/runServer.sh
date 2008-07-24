@@ -31,7 +31,8 @@
 # 
 
 CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
-CLASSPATH=${CLASSPATH}:$(/opt/tinyos-1.x/tools/java/javapath)
+#CLASSPATH=${CLASSPATH}:$(/opt/tinyos-1.x/tools/java/javapath)
+CLASSPATH=${CLASSPATH}:${TOSROOT}/support/sdk/java/tinyos.jar
 CLASSPATH=$(java-config-2 --get-env=JAVA_HOME)/jre/lib:${CLASSPATH}
 
 for i in ${NESTBED_LIB}/*; do
@@ -39,4 +40,4 @@ for i in ${NESTBED_LIB}/*; do
 done
 CLASSPATH=${CLASSPATH}:$(java-config-2 --tools)
 
-exec $(java-config-2 --java) -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
+exec $(java-config-2 --java) -classpath ${CLASSPATH} -Xms768m -Xmx768m edu.clemson.cs.nestbed.server.Server
