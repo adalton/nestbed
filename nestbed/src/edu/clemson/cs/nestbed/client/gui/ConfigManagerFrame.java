@@ -112,6 +112,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.ProgramProfilingSy
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramSymbolManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramCompileManager;
 import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramWeaverManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramProbeManager;
 import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.Program;
@@ -122,17 +123,23 @@ import edu.clemson.cs.nestbed.common.model.ProgramSymbol;
 import edu.clemson.cs.nestbed.common.model.Project;
 import edu.clemson.cs.nestbed.common.model.ProjectDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.Testbed;
+import edu.clemson.cs.nestbed.common.trace.StaticProgramData;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 import edu.clemson.cs.nestbed.common.util.ZipUtils;
+
+import edu.clemson.cs.nesctk.tools.trace.instrumentor.ProbeSelectionGui;
 
 
 public class ConfigManagerFrame extends JFrame {
     private final static Log log = LogFactory.getLog(ConfigManagerFrame.class);
 
     private final static String RMI_BASE_URL;
-    private final static int    WINDOW_WIDTH  = 1000;
-    private final static int    WINDOW_HEIGHT = 650;
-    private final static int    SIZE_IGNORED  = 0;
+    private final static int    WINDOW_WIDTH           = 1000;
+    private final static int    WINDOW_HEIGHT          = 650;
+    private final static int    SIZE_IGNORED           = 0;
+    private final static int    PROBE_SELECTION_WIDTH  = 500;
+    private final static int    PROBE_SELECTION_HEIGHT = 700;
+
 
     static {
         RMI_BASE_URL = System.getProperty("testbed.rmi.baseurl");
@@ -154,6 +161,7 @@ public class ConfigManagerFrame extends JFrame {
     private ProgramMessageSymbolManager          progMsgSymManager;
     private ProgramCompileManager                programCompileManager;
     private ProgramWeaverManager                 programWeaverManager;
+    private ProgramProbeManager                  programProbeManager;
 
     private List<MoteTestbedAssignment>          mtbAssignmentData;
 
@@ -273,6 +281,10 @@ public class ConfigManagerFrame extends JFrame {
         programWeaverManager  = (ProgramWeaverManager)
                                      Naming.lookup(RMI_BASE_URL +
                                                        "ProgramWeaverManager");
+
+        programProbeManager   = (ProgramProbeManager)
+                                     Naming.lookup(RMI_BASE_URL +
+                                                       "ProgramProbeManager");
     }
 
 
@@ -895,9 +907,10 @@ public class ConfigManagerFrame extends JFrame {
                                        "Project Upload");
             fud.setVisible(true);
 
-            String name        = fud.getName();
-            String description = fud.getDescription();
-            File   directory   = fud.getDirectory();
+            String  name         = fud.getName();
+            String  description  = fud.getDescription();
+            File    directory    = fud.getDirectory();
+            boolean insertProbes = fud.getInsertProbes();
 
             try {
                 if (name != null) {
@@ -915,9 +928,21 @@ public class ConfigManagerFrame extends JFrame {
                     programWeaverManager.weaveInComponents(programID,
                                                            crd.getRewiringMap());
 
-                    compiling = true;
-                    programCompileManager.compileProgram(programID,
-                                                         tosPlatform);
+                    if (insertProbes) {
+                        Map<String, List<String>> moduleFunctionListMap;
+                        SaveProbesActionListener  actionListener;
+                        ProbeSelectionGui         probeSelection;
+
+                        moduleFunctionListMap = programProbeManager.getModuleFunctionListMap(programID);
+                        actionListener = new SaveProbesActionListener(programID);
+                        probeSelection = new ProbeSelectionGui(actionListener, moduleFunctionListMap);
+                        actionListener.setProbeSelectionGui(probeSelection);
+
+                        probeSelection.setSize(PROBE_SELECTION_WIDTH, PROBE_SELECTION_HEIGHT);
+                        probeSelection.setVisible(true);
+                    } else {
+                        compileProgram(programID);
+                    }
                 }
             } catch (RemoteException ex) {
                 log.error("Remote Exception", ex);
@@ -932,6 +957,12 @@ public class ConfigManagerFrame extends JFrame {
         }
     }
 
+
+    private void compileProgram(int programID) throws RemoteException {
+        compiling = true;
+        programCompileManager.compileProgram(programID,
+                                             tosPlatform);
+    }
 
     public class DeleteProgramActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -1426,6 +1457,31 @@ public class ConfigManagerFrame extends JFrame {
 
         public boolean equals(Object obj) {
             return super.equals(obj);
+        }
+    }
+
+    protected class SaveProbesActionListener implements ActionListener {
+        private ProbeSelectionGui probeSelectionGui;
+        private int               programID;
+
+        public SaveProbesActionListener(int programID) {
+            this.programID = programID;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            try {
+                probeSelectionGui.setVisible(false);
+                probeSelectionGui.dispose();
+                programProbeManager.insertProbes(programID, probeSelectionGui.getModuleIncludeMap());
+                compileProgram(programID);
+            } catch (RemoteException ex) {
+                log.error("RemoteException:", ex);
+                ClientUtils.displayErrorMessage(ConfigManagerFrame.this, ex);
+            }
+        }
+
+        public void setProbeSelectionGui(ProbeSelectionGui probeSelectionGui) {
+            this.probeSelectionGui = probeSelectionGui;
         }
     }
 }

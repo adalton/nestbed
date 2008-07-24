@@ -443,6 +443,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                 log.error("Exception:", ex);
                 failed = true;
             } finally {
+                /*
                 if (failed) {
                     try {
                         progMgr.deleteProgram(prog.getID());
@@ -450,6 +451,7 @@ public class ProgramCompileManagerImpl extends    RemoteObservableImpl
                         log.error("Exception in failure hander", ex);
                     }
                 }
+                */
             }
         }
     }

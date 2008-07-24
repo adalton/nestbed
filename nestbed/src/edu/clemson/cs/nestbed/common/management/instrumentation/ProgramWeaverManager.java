@@ -32,6 +32,7 @@ package edu.clemson.cs.nestbed.common.management.instrumentation;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.io.File;
 import java.util.Map;
 
 
@@ -39,4 +40,8 @@ public interface ProgramWeaverManager extends Remote {
     public void weaveInComponents(int                 programID,
                                   Map<String, String> updatedComponents)
                                                         throws RemoteException;
+
+    public String findComponentFromMakefile(File makefile)
+                                                throws RemoteException;
+
 }

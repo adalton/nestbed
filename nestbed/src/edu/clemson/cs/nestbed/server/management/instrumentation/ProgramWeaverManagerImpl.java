@@ -140,28 +140,12 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
         weaver.addComponentReference("NestbedControlC", "NestbedControl");
         weaver.addConnection("NestbedControl", "Boot",
                              "MainC",          "Boot");
-/*
-        weaver.addComponentReference("MgmtQueryC", "NucleusInterface");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusInterface", "StdControl");
 
-        weaver.addComponentReference("RemoteSetC", "NucleusSet");
-        weaver.addConnection("Main",             "StdControl",
-                             "NucleusSet",       "StdControl");
-
-
-*/
         for (String i : updatedComponents.keySet()) {
             weaver.updateComponent(i, updatedComponents.get(i));
         }
 
         weaver.regenerateNescSource();
-
-        File parentDir   = componentNesc.getParentFile();
-        File analysisDir = new File(parentDir,   "analysis");
-        File newFile     = new File(analysisDir, componentNesc.getName());
-
-        FileUtils.copyFile(newFile, componentNesc);
     }
 
 
@@ -173,8 +157,6 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
             mfWeaver.addLine("CFLAGS += -I" + directory);
         }
 
-//        mfWeaver.addLine("CFLAGS += -DTOSH_MAX_TASKS_LOG2=8");
-
         mfWeaver.addLine("# The following line *MUST* be last");
         mfWeaver.addLine("include $(TOSROOT)/support/make/Makerules");
 
@@ -182,15 +164,15 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
     }
 
 
-    private String findComponentFromMakefile(File makefile)
-                                                throws FileNotFoundException,
-                                                       Exception {
-        Scanner scanner   = new Scanner(makefile);
+    public String findComponentFromMakefile(File makefile)
+                                                throws RemoteException {
         String  component = null;
-
-        log.debug("Makefile:  " + makefile);
+        Scanner scanner   = null;
 
         try {
+            log.debug("Makefile:  " + makefile);
+            scanner = new Scanner(makefile);
+
             while (scanner.hasNext() && component == null) {
                 String  line    = scanner.nextLine();
                 String  regExp  = "^COMPONENT=(\\S+)";
@@ -201,6 +183,8 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
                     component = matcher.group(1);
                 }
             }
+        } catch (FileNotFoundException fnfe) {
+            throw new RemoteException("FileNotFoundException", fnfe);
         } finally {
             try { scanner.close(); } catch (Exception ex) { /* empty */ }
         }
@@ -208,7 +192,7 @@ public class ProgramWeaverManagerImpl extends    UnicastRemoteObject
 
         if (component == null) {
             // FIXME:  Shouldn't be throwing generic Exceptions
-            throw new Exception("No main component found in Makefile.");
+            throw new RemoteException("No main component found in Makefile.");
         }
 
         return component;

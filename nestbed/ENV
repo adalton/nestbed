@@ -1,0 +1,5 @@
+export TOSROOT=/opt/tinyos-2.x
+export TOSDIR=${TOSROOT}/tos
+export NESTBED_HOME=/home/adalton/src/java/nestbed
+export NESTBED_LIB=${NESTBED_HOME}/lib
+

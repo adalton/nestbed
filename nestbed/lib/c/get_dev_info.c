@@ -142,8 +142,8 @@ int main(int argc, const char* argv[]) {
                 if (strncmp(serial, devSerial, SERIAL_MAX_LEN) == 0) {
                     int busNum    = atoi(bus->dirname);
                     int devDevNum = atoi(dev->filename);
-                    int hubDevNum;
-                    int hubPort;
+                    int hubDevNum = 0;
+                    int hubPort   = 0;
 
                     if (getHubDeviceInformation(busNum,     devDevNum,
                                                 &hubDevNum, &hubPort)) {

@@ -189,7 +189,7 @@ DROP TABLE IF EXISTS `ProgramSymbols`;
 CREATE TABLE `ProgramSymbols` (
   `id` int(4) unsigned NOT NULL auto_increment,
   `programID` int(4) unsigned NOT NULL default '0',
-  `module` varchar(50) NOT NULL default '',
+  `module` varchar(512) NOT NULL default '',
   `symbol` varchar(50) NOT NULL default '',
   `address` int(4) unsigned NOT NULL default '0',
   `size`    int(1) unsigned NOT NULL default '0',

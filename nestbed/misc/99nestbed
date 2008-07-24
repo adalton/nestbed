@@ -27,8 +27,8 @@
 # 51 Franklin Street, Fifth Floor
 # Boston, MA  02110-1301, USA.
 #
-NESTBED_HOME="/opt/nestbed"
-NESTBED_LIB="/opt/nestbed/lib"
+NESTBED_HOME="/home/adalton/src/java//nestbed"
+NESTBED_LIB="/home/adalton/src/java//nestbed/lib"
 TOSROOT="/opt/tinyos-2.x"
 TOSDIR="/opt/tinyos-2.x/tos"
 PATH="/opt/tinyos-2.x-tools/bin:/opt/msp430/bin"

@@ -65,6 +65,7 @@ import edu.clemson.cs.nestbed.common.management.configuration.MoteDeploymentConf
 import edu.clemson.cs.nestbed.common.management.configuration.MoteManager;
 import edu.clemson.cs.nestbed.common.management.configuration.MoteTypeManager;
 import edu.clemson.cs.nestbed.common.management.configuration.ProgramManager;
+import edu.clemson.cs.nestbed.common.management.instrumentation.ProgramProbeManager;
 import edu.clemson.cs.nestbed.common.management.power.MotePowerManager;
 import edu.clemson.cs.nestbed.common.management.profiling.MessageManager;
 import edu.clemson.cs.nestbed.common.management.sfcontrol.SerialForwarderManager;
@@ -73,8 +74,10 @@ import edu.clemson.cs.nestbed.common.model.MoteDeploymentConfiguration;
 import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.model.MoteType;
 import edu.clemson.cs.nestbed.common.model.Program;
+import edu.clemson.cs.nestbed.common.trace.StaticProgramData;
 import edu.clemson.cs.nestbed.common.util.RemoteObserver;
 
+import edu.clemson.cs.nesctk.tools.trace.callgraph.CGVisualization;
 
 /**
  * TODO:  Much of this is copied from MoteConfigPanel.java.  It would be nice
@@ -103,6 +106,7 @@ public class MoteManagementPanel extends MotePanel {
     private MoteTestbedAssignment              mtbAssignment;
     private SerialForwarderManager             sfManager;
     private MotePowerManager                   motePowerManager;
+    private ProgramProbeManager                programProbeManager;
 
     private Program                            program;
     private int                                projDepConfID;
@@ -138,8 +142,7 @@ public class MoteManagementPanel extends MotePanel {
         setIcon(new ImageIcon(moteType.getImage()).getImage());
 
         if (this.moteDepConfig != null) {
-            this.program    = programManager.getProgram(
-                                                moteDepConfig.getProgramID());
+            this.program = programManager.getProgram(moteDepConfig.getProgramID());
         }
 
         Dimension labelSize = new Dimension(LABEL_WIDTH, LABEL_HEIGHT);
@@ -172,6 +175,13 @@ public class MoteManagementPanel extends MotePanel {
 
         motePowerManager = (MotePowerManager) Naming.lookup(
                             RMI_BASE_URL + "MotePowerManager");
+
+        programProbeManager = (ProgramProbeManager) Naming.lookup(
+                            RMI_BASE_URL + "ProgramProbeManager");
+    }
+
+    public Program getProgram() {
+        return program;
     }
 
 
@@ -368,6 +378,7 @@ public class MoteManagementPanel extends MotePanel {
         private JMenuItem  powerOff;
         private JMenuItem  powerOn;
         private JMenuItem  runSerialForwarder;
+        private JMenuItem  viewCallGraph;
 
 
         public MotePanelMouseListener() {
@@ -381,6 +392,7 @@ public class MoteManagementPanel extends MotePanel {
             resetMote          = new JMenuItem("Reset Mote");
             powerOff           = new JMenuItem("Power Off");
             powerOn            = new JMenuItem("Power On");
+            viewCallGraph      = new JMenuItem("View Call Graph");
 
             title.setEnabled(false);
             menu.add(title);
@@ -507,6 +519,26 @@ public class MoteManagementPanel extends MotePanel {
                 }
             });
             menu.add(runSerialForwarder);
+
+
+            viewCallGraph.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        if (program != null) {
+                            StaticProgramData spd = programProbeManager.getStaticData(program);
+                            CGVisualization viz = new CGVisualization(spd.getModules(),
+                                                                      spd.getFunctions(),
+                                                                      spd.getCallMap(),
+                                                                      spd.getWirings());
+                            viz.showSelectionGui();
+                        }
+                    } catch (Exception ex) {
+                        log.error("Exception\n", ex);
+                        ClientUtils.displayErrorMessage(MoteManagementPanel.this, ex);
+                    }
+                }
+            });
+            menu.add(viewCallGraph);
         }
 
 

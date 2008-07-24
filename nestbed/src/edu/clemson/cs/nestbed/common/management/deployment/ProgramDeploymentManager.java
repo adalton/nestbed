@@ -31,7 +31,9 @@ package edu.clemson.cs.nestbed.common.management.deployment;
 
 
 import java.rmi.RemoteException;
+import java.util.List;
 
+import edu.clemson.cs.nestbed.common.model.MoteTestbedAssignment;
 import edu.clemson.cs.nestbed.common.util.RemoteObservable;
 
 
@@ -43,6 +45,7 @@ public interface ProgramDeploymentManager extends RemoteObservable {
     }
 
     public void deployConfiguration(int id) throws RemoteException;
+    public List<String> installTraceReceiver(List<MoteTestbedAssignment> interestingMotes) throws RemoteException;
 
     public void installProgram(int          moteAddress, String moteSerialID,
                                String       tosPlatform, int    programID,

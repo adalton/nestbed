@@ -41,6 +41,7 @@ import edu.clemson.cs.nesctk.NescToolkit;
 import edu.clemson.cs.nesctk.SourceFile;
 import edu.clemson.cs.nesctk.ast.*;
 import edu.clemson.cs.nesctk.util.AstUtils;
+import edu.clemson.cs.nesctk.util.FileUtils;
 
 
 public class WiringDiagramWeaver {
@@ -51,9 +52,11 @@ public class WiringDiagramWeaver {
 
 
     public WiringDiagramWeaver(File nescFile) throws Exception {
+        nescFile = nescFile.getAbsoluteFile();
+
         log.info("Top-Level configuration " + nescFile.getAbsolutePath());
 
-        toolkit = new NescToolkit(nescFile, nescFile.getParentFile());
+        toolkit = new NescToolkit(nescFile, nescFile.getAbsoluteFile().getParentFile());
         toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net");
         toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net/ctp");
         toolkit.addIncludePath("/opt/tinyos-2.x/tos/lib/net/le");
@@ -64,6 +67,7 @@ public class WiringDiagramWeaver {
 
         Map<String, SourceFile> sourceFileMap = toolkit.load();
         sourceFile = sourceFileMap.get(nescFile.getName());
+        FileUtils.deleteRecursive(new File(nescFile.getParent(), "analysis"));
     }
 
 
@@ -117,6 +121,6 @@ public class WiringDiagramWeaver {
 
 
     public void regenerateNescSource() throws FileNotFoundException {
-        AstUtils.regenerateSource(sourceFile);
+        AstUtils.regenerateSource(sourceFile, sourceFile.getSourceFile());
     }
 }

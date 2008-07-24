@@ -33,16 +33,9 @@
 cd ${NESTBED_HOME}/bin/
 
 while [ true ]; do
-    echo "Starting RMI Registry..."
-    ./runRegistry.sh &
-    sleep 3s
-
     echo "Starting NESTbed Server..."
     ./runServer.sh
     echo "... NESTbed Server has terminated."
-
-    echo "Killing RMI Registry..."
-    killall rmiregistry
 
     echo "Waiting 5 seconds to restart..."
     sleep 5s

@@ -38,6 +38,13 @@
     <path id="compile.classpath">
         <pathelement location="${lib.home}/useful.jar"/>
         <pathelement location="${lib.home}/nesctk.jar"/>
+        <pathelement location="${lib.home}/collections-generic-4.01.jar"/>
+        <pathelement location="${lib.home}/commons-collections.jar"/>
+        <pathelement location="${lib.home}/jung-algorithms-2.0a.jar"/>
+        <pathelement location="${lib.home}/jung-api-2.0a.jar"/>
+        <pathelement location="${lib.home}/jung-awt-rendering-2.0a.jar"/>
+        <pathelement location="${lib.home}/jung-graph-impl-2.0a.jar"/>
+        <pathelement location="${lib.home}/jung-visualization-2.0a.jar"/>
     </path>
 
     <!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->

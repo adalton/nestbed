@@ -45,6 +45,7 @@
     <resources>
         <j2se version="1.5+"/>
         <jar href="nestbed.jar"/>
+        <jar href="lib/nesctk.jar"/>
         <jar href="lib/commons-collections.jar"/>
         <jar href="lib/commons-dbcp.jar"/>
         <jar href="lib/commons-logging.jar"/>
