@@ -1,0 +1,66 @@
+#!/sbin/runscript
+# $Id$
+#
+# nestbed
+#
+# Network Embedded Sensor Testbed (NESTbed)
+#
+# Copyright (C) 2006-2007
+# Dependable Systems Research Group
+# School of Computing
+# Clemson University
+# Andrew R. Dalton and Jason O. Hallstrom
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+#
+# Free Software Foundation, Inc.
+# 51 Franklin Street, Fifth Floor
+# Boston, MA  02110-1301, USA.
+#
+export NESTBED_HOME=${NESTBED_HOME:-/opt/nestbed}
+export NESTBED_LIB=${NESTBED_LIB:-/opt/nestbed/lib}
+export TOSROOT=${TOSROOT:-/opt/tinyos-2.x}
+export TOSDIR=${TOSDIR:-/opt/tinyos-2.x/tos}
+export PATH=/opt/tinyos-2.x-tools/bin:/opt/msp430/bin:${PATH}
+export PYTHONPATH=/opt/tinyos-2.x-tools/lib/tinyos
+
+CLASSPATH=${NESTBED_HOME}/dist/nestbed.jar
+
+for i in ${NESTBED_LIB}/*.jar; do
+    CLASSPATH="${CLASSPATH}:$i"
+done
+CLASSPATH=${CLASSPATH}:$(java-config-2 --tools)
+
+PIDFILE=/var/run/nestbedServer.pid
+
+depend() {
+    use dns
+    need net mysql
+}
+
+start() {
+    ebegin "Starting the NESTbed Server"
+    start-stop-daemon --quiet --start --background --make-pidfile \
+        --pidfile ${PIDFILE} --chuid nestbed:nestbed \
+        --exec $(java-config-2 --java) -- -classpath ${CLASSPATH} edu.clemson.cs.nestbed.server.Server
+    eend $? "Failed to start the NESTbed Server"
+}
+
+stop() {
+    ebegin "Stopping the NESTbed Server"
+    start-stop-daemon --stop --quiet --pidfile ${PIDFILE}
+    eend $? "Failed to stop the NESTbed Server"
+}
+
+# vim: :set ft=sh:
