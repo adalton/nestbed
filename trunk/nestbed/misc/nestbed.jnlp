@@ -43,19 +43,25 @@
         <all-permissions/>
     </security>
     <resources>
-        <j2se version="1.5+"/>
+        <j2se version="1.6+" inital-heap-size="256m" max-heap-size="256m"/>
         <jar href="nestbed.jar"/>
         <jar href="lib/nesctk.jar"/>
         <jar href="lib/commons-collections.jar"/>
         <jar href="lib/commons-dbcp.jar"/>
         <jar href="lib/commons-logging.jar"/>
         <jar href="lib/commons-pool.jar"/>
+        <jar href="lib/collections-generic-4.01.jar"/>
         <jar href="lib/jdbc-mysql.jar"/>
-        <jar href="lib/jdom-tinyos.jar"/>
         <jar href="lib/log4j.jar"/>
-        <jar href="lib/sax.jar"/>
         <jar href="lib/tinyos.jar"/>
         <jar href="lib/useful.jar"/>
+        <jar href="lib/javacup.jar"/>
+        <jar href="lib/jline-0.9.9.jar"/>
+        <jar href="lib/jung-algorithms-2.0a.jar"/>
+        <jar href="lib/jung-api-2.0a.jar"/>
+        <jar href="lib/jung-awt-rendering-2.0a.jar"/>
+        <jar href="lib/jung-graph-impl-2.0a.jar"/>
+        <jar href="lib/jung-visualization-2.0a.jar"/>
     </resources>
     <application-desc main-class="edu.clemson.cs.nestbed.client.Client"/>
 </jnlp>
